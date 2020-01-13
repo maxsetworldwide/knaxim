@@ -1,0 +1,75 @@
+// App Config
+// See /dev/styles for a visual style guide.
+$app-clr: #707070; // Dark Text Color
+$app-clr1: #3498ed; // File View Header Color
+$app-clr2: #aed2fd; // Hover Color
+$app-clr3: #e6edf6; // Light Txt Color
+
+$app-bg: #e5e5e5; // App BG
+$app-bg1: #fff; // Texts BG
+$app-bg2: #e5edf7; // Active
+$app-bg3: #c2c2c2; // History
+$app-bg4: #a4c9f9; // Hover
+
+$app-hl: #c9dee9;
+$app-hl1: #d6d7c0;
+
+// TODO: Tried to use and override Bootstrap/boostrap-vue, useing this as a work around.
+//  Not sure this is the best way to override .nav-link.disabled.
+%nav-disable {
+  color: gray !important;
+  background-color: lightgray !important;
+}
+
+$app-chart-a: #f9bb2d;
+$app-chart-a1: #4688f1;
+$app-chart-a2: #e7453c;
+
+%app-shadow-sm {
+  -webkit-box-shadow: 0 0.265rem 0.15rem rgba(0, 0, 0, 0.075) !important;
+  box-shadow: 0 0.265rem 0.15rem rgba(0, 0, 0, 0.075) !important;
+}
+
+%nav-right-round {
+  border-radius: 0 40px 40px 0;
+}
+%nav-round {
+  border-radius: 40px 40px 40px 40px;
+}
+
+// Application Navigation
+@mixin app-nav-kit {
+  :hover {
+    background-color: $app-bg4;
+  }
+  .active {
+    background-color: $app-bg2;
+  }
+  .active:hover {
+    background-color: $app-bg4;
+  }
+}
+%app-nav-color {
+  background-color: $app-bg1;
+  color: $app-clr;
+}
+
+// put these inside a 'button' rule
+// TODO: change bootstrap variants to our app colors?
+%pill-buttons {
+  background-color: white;
+  color: rgb(46, 46, 46);
+  border-radius: 20px;
+  border: 0px;
+
+  &:hover {
+    background-color: $app-bg4;
+    color: rgb(46, 46, 46)
+  }
+}
+
+// curved modal corners
+%modal-corners {
+  border-radius: 20px;
+}
+
