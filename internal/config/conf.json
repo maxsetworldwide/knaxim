@@ -1,0 +1,46 @@
+{
+	"address": "localhost:8000",
+	"static": "../knaximclient/web",
+	"server":{
+		"Addr": "0.0.0.0:8000",
+		"ReadHeaderTimeout": 2000000000
+	},
+	"#cert": {
+		"cert": "./domain.crt",
+		"key": "./domain.key",
+		"http_port": ":8001"
+	},
+	"close_time":        150000000000,
+	"basic_timeout":       5000000000,
+	"file_timeout_rate":   1000000000,
+	"max_file_timeout": 1800000000000,
+	"min_file_timeout":   10000000000,
+	"db_type": "mongo",
+	"db":{
+		"uri": "mongodb://localhost:27017",
+		"db": "Knaxim"
+	},
+	"db_clear": true,
+	"tika": {
+		"type": "external",
+		"path": "localhost",
+		"port": "",
+		"restart_time": 2400000000000
+	},
+	"smtp": {
+		"active": true,
+		"identity": "",
+		"username": "ai@maxset.org",
+		"password": "eDmxqgWb",
+		"host": "sub5.mail.dreamhost.com",
+		"path": "sub5.mail.dreamhost.com:587",
+		"from": "ai@maxset.org"
+	},
+	"total_free_space": 52428800,
+	"AdminKey": "b9!5v789DEp$5Yqw@9h",
+	"GuestUser": {
+		"Name": "Guest",
+		"Pass": "guestpass",
+		"Email": "info@maxset.org"
+	}
+}
