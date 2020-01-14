@@ -42,5 +42,6 @@
 		"Name": "Guest",
 		"Pass": "guestpass",
 		"Email": "info@maxset.org"
-	}
+	},
+	"SetupTimeout": 60000000000
 }

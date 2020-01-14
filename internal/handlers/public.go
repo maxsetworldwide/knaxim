@@ -1,18 +1,18 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupPublic(r *mux.Router) {
+func AttachPublic(r *mux.Router) {
 	r.Use(cookieMiddleware)
 	r.HandleFunc("/search", searchPublic).Methods("GET")
 }

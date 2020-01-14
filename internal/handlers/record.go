@@ -1,13 +1,13 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
 
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 	"github.com/gorilla/mux"
 )
 

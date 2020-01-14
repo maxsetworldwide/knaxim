@@ -1,20 +1,20 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
 
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupDir(r *mux.Router) {
+func AttachDir(r *mux.Router) {
 	r.Use(cookieMiddleware)
 	r.Use(groupMiddleware)
 	//r.HandleFunc("/dynamic", createDynDir).Methods("PUT")

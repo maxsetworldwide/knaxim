@@ -1,7 +1,8 @@
-package main
+package handlers
 
 import (
 	"regexp"
+
 	"github.com/badoux/checkmail"
 )
 

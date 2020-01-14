@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"git.maxset.io/server/knaxim/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestFile(t *testing.T) {

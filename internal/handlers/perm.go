@@ -1,19 +1,20 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupPerm(r *mux.Router) {
-	r.Use(cookieMiddleware)
+func AttachPerm(r *mux.Router) {
+	// TODO: Move neccessary middleware use commands here and each attach??
+	r.Use(UserCookie)
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(true)).Methods("POST")
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(false)).Methods("DELETE")
 	r.HandleFunc("/{type}/{id}", getPermissions).Methods("GET")

@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -6,17 +6,17 @@ import (
 	"net/http"
 	"time"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
-	"git.maxset.io/server/knaxim/passentropy"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/pkg/passentropy"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
 // '/user/...'
-func setupUser(r *mux.Router) {
+func AttachUser(r *mux.Router) {
 	r.HandleFunc("", createUser).Methods("PUT")
 	r.HandleFunc("/admin", createAdmin).Methods("PUT")
 	r.Handle("", cookieMiddleware(http.HandlerFunc(userInfo))).Methods("GET")

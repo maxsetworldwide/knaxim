@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -10,15 +10,15 @@ import (
 	"strconv"
 	"time"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupFile(r *mux.Router) {
+func AttachFile(r *mux.Router) {
 	r.Use(cookieMiddleware)
 	r.Use(groupMiddleware)
 	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")

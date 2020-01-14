@@ -2,89 +2,23 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/mongo"
-
-	"math"
-
-	"github.com/google/go-tika/tika"
+	"git.maxset.io/web/knaxim/internal/config"
+	"git.maxset.io/web/knaxim/internal/database"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-type SslCert struct {
-	CertFile string `json:"cert"`
-	KeyFile  string `json:"key"`
-	HTTPport string `json:"http_port"`
-}
+var conf_path = flag.String("config", "", "specify configuration file, default is Enviroment Variable KNAXIM_SERVER_CONFIG or if Enviroment Variable is missing or empty, looks for /etc/knaxim/conf.json")
 
-type configuration struct {
-	Address         string
-	StaticPath      string          `json:"static"`
-	Server          *http.Server    `json:"server"`
-	Cert            *SslCert        `json:"cert"`
-	GracefulTimeout time.Duration   `json:"close_time"`
-	BasicTimeout    time.Duration   `json:"basic_timeout"`
-	FileTimeoutRate int64           `json:"file_timeout_rate"` //nanoseconds per 1 KB
-	MaxFileTimeout  time.Duration   `json:"max_file_timeout"`
-	MinFileTimeout  time.Duration   `json:"min_file_timeout"`
-	DatabaseType    string          `json:"db_type"`
-	Database        json.RawMessage `json:"db"`
-	DatabaseReset   bool            `json:"db_clear"`
-	Tika            tikaconf        `json:"tika"`
-	FileLimit       int64           `json:"filelimit"`
-	Smtp            struct {
-		Active   bool
-		Identity string
-		Username string
-		Password string
-		Host     string
-		Path     string
-		From     string
-	}
-	// Templates struct {
-	//   Files []string
-	//   ConfirmEmail string
-	// }
-	FreeSpace int `json:"total_free_space"`
-	AdminKey  string
-	GuestUser *guestconf
-}
+var conf_path_short = flag.String("c", "", "see config")
 
-type guestconf struct {
-	Name  string
-	Pass  string
-	Email string
-}
-
-type tikaconf struct {
-	Type        string `json:"type"`
-	Path        string `json:"path"`
-	Port        string `json:"port"`
-	MaxFiles    int    `json:"child_max_files"`
-	TaskPulse   int    `json:"child_task_pulse"`
-	TaskTimeout int    `json:"child_task_timeout"`
-	PingPulse   int    `json:"child_ping_pulse"`
-	PingTimeout int    `json:"child_ping_timeout"`
-}
-
-var tikapath string
-var tserver *tika.Server
-
-var conf configuration
-var conf_path = flag.String("c", "", "specify configuration file, default is Enviroment Variable KX_SERVER_CONF or if Enviroment Variable is missing or empty, looks for $CWD/conf.json")
-
-var db database.Database
-
-var standardtimeout time.Duration
+// var standardtimeout time.Duration
 
 func redirect(w http.ResponseWriter, req *http.Request) {
 	target := "https://" + req.Host + req.URL.Path
@@ -95,80 +29,32 @@ func redirect(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
 }
 
-func main() {
+func setup() {
 	flag.Parse()
+	if len(*conf_path_short) > 0 && len(*conf_path) == 0 {
+		conf_path = conf_path_short
+	}
 	if len(*conf_path) == 0 {
-		econfp := os.Getenv("KX_SERVER_CONF")
+		econfp := os.Getenv("KNAXIM_SERVER_CONFIG")
 		if len(econfp) == 0 {
-			*conf_path = "conf.json"
+			*conf_path = "/etc/knaxim/conf.json"
 		} else {
 			*conf_path = econfp
 		}
 	}
-	fp, err := os.Open(*conf_path)
-	if err != nil {
-		log.Fatalf("Unable to open configuration file: %v\n", err)
-	}
-	dec := json.NewDecoder(fp)
-	if err = dec.Decode(&conf); err != nil {
-		log.Fatalf("Unable to decode configuration file: %v\n", err)
+	if err := config.ParseConfig(*conf_path); err != nil {
+		log.Fatalln("unable to parse config:", err)
 	}
 	//log.Printf("Configuration: %v", conf);
-	fp.Close()
-	if conf.FileLimit == 0 {
-		conf.FileLimit = 50 * 1024 * 1024 //Defualt 50MB file limit size
-	} else if conf.FileLimit < 0 {
-		conf.FileLimit = math.MaxInt64 //-1  = no limit
-	}
-	switch conf.DatabaseType {
-	case "mongo":
-		db = new(mongo.Database)
-	default:
-		log.Fatalln("Unrecognized database type")
-	}
-	if err := json.Unmarshal(conf.Database, db); err != nil {
-		log.Fatalf("Unable to decode Database configuration: %v\n", err)
-	}
-	//log.Printf("Configuration: %v", conf);
-	setupctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	setupctx, cancel := context.WithTimeout(context.Background(), config.V.SetupTimeout)
 	defer cancel()
-	if err := db.Init(setupctx, conf.DatabaseReset); err != nil {
+	if err := config.DB.Init(setupctx, config.V.DatabaseReset); err != nil {
 		log.Fatalf("database init error: %v\n", err)
 	}
-	if conf.Tika.Type == "local" {
-		var err error
-		tserver, err = tika.NewServer(conf.Tika.Path, conf.Tika.Port)
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-		tserver.ChildMode(&tika.ChildOptions{
-			MaxFiles:          conf.Tika.MaxFiles,
-			TaskPulseMillis:   conf.Tika.TaskPulse,
-			TaskTimeoutMillis: conf.Tika.TaskTimeout,
-			PingPulseMillis:   conf.Tika.PingPulse,
-			PingTimeoutMillis: conf.Tika.PingTimeout,
-		})
-		startctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := tserver.Start(startctx); err != nil {
-			log.Fatalf("tika start error: %s", err.Error())
-		}
-		tikapath = tserver.URL()
-	} else if conf.Tika.Type == "external" {
-		if conf.Tika.Port == "" {
-			conf.Tika.Port = "9998"
-		}
-		tikapath = conf.Tika.Path + ":" + conf.Tika.Port
-	} else {
-		log.Fatalf("unrecognized Tika Type")
-	}
-
-	if conf.GuestUser != nil {
-		guestUser := database.NewUser(conf.GuestUser.Name, conf.GuestUser.Pass, conf.GuestUser.Email)
+	if config.V.GuestUser != nil {
+		guestUser := database.NewUser(config.V.GuestUser.Name, config.V.GuestUser.Pass, config.V.GuestUser.Email)
 		guestUser.SetRole("Guest", true)
-		setupContext, close := context.WithTimeout(context.Background(), time.Second*10)
-		defer close()
-		userbase := db.Owner(setupContext)
+		userbase := db.Owner(setupctx)
 		if preexisting, err := userbase.FindUserName(conf.GuestUser.Name); preexisting != nil {
 			log.Printf("Guest User Already Exists")
 		} else if err == database.ErrNotFound {
@@ -183,8 +69,14 @@ func main() {
 		}
 		userbase.Close(setupContext)
 	}
-	if tserver != nil {
-		defer tserver.Shutdown(context.Background())
+}
+
+func main() {
+	if config.T.Server != nil {
+		if err := config.T.Server.Start(context.Background()); err != nil {
+			log.Fatalln("Unable to start tika server: ", err)
+		}
+		defer config.T.Server.Shutdown(context.Background())
 	}
 	mainR := mux.NewRouter()
 
