@@ -1,0 +1,101 @@
+<!--
+upload-modal: window for uploading files
+
+events:
+  'upload': emitted upon successful upload
+  'close:': emitted upon any closure of the modal
+
+global events:
+  'file-upload': emitted along with 'upload'
+-->
+<template>
+  <b-modal
+  :id="id"
+  @hidden="onClose"
+  centered
+  hide-footer
+  hide-header
+  :no-close-on-backdrop="loading"
+  :no-close-on-esc="loading"
+  content-class="modal-style">
+    <b-form-file
+      v-model="files"
+      multiple
+    >
+      <template #file-name="{ names }">
+        <b-badge>{{ names[0] }}</b-badge>
+        <b-badge v-if="names.length > 1" class="ml-1">
+          + {{ names.length - 1 }} More files
+        </b-badge>
+      </template>
+    </b-form-file>
+
+    <div v-if="loading">
+      <b-spinner class="m-4"/>
+    </div>
+    <div v-else>
+      <b-button @click="upload" :disabled="files.length === 0" class="shadow-sm">
+        Upload
+      </b-button>
+    </div>
+  </b-modal>
+</template>
+
+<script>
+import { CREATE_FILE } from '@/store/actions.type'
+import { EventBus } from '@/main'
+
+export default {
+  name: 'upload-modal',
+  props: {
+    id: {
+      type: String,
+      required: true
+    }
+  },
+  data () {
+    return {
+      files: [],
+      loading: false
+    }
+  },
+  methods: {
+    upload () {
+      this.loading = true
+      let proms = []
+      for (let i = 0; i < this.files.length; i++) {
+        proms.push(this.$store.dispatch(CREATE_FILE, { file: this.files[i] }))
+      }
+      Promise.all(proms).then(() => {
+        this.loading = false
+        this.$emit('upload')
+        EventBus.$emit('file-upload')
+        this.$bvModal.hide(this.id)
+      }).catch(() => {
+        this.loading = false
+        // console.error(res)
+      })
+    },
+    onClose () {
+      this.$emit('close')
+    }
+  }
+}
+</script>
+
+<style scoped lang="scss">
+
+button {
+  @extend %pill-buttons;
+  width: flex;
+  margin-right: 5px;
+  margin-left: 5px;
+  margin-top: 10px;
+}
+
+::v-deep .modal-style {
+  @extend %modal-corners;
+  text-align: center;
+}
+
+</style>

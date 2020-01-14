@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+*.swp
+local
+
+dist/
+build/
+
+sub_modules
+
+.editorconfig
