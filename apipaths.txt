@@ -1,0 +1,83 @@
+TODO: Update
+
+* current implementation has all of these paths prefixed with /api to avoid name conflicts with standard client files. when using the front end knaxim javascript library use 'new Knaxim("/api")' to build the back end handler.
+
+/user - no cookie middleware,
+PUT: FormVals:
+    name
+    pass
+
+/user/pass
+POST  FormVals:
+    oldpass
+    newpass
+
+/user/login
+POST  FormVals:
+    name
+    pass
+
+/perm/{type}/{id}
+GET: {owner: string, fields(optional if owner):map[string][]string}
+POST, DELETE:
+  FormVals
+    key
+    id
+
+/record
+/record/{pkey}
+GET: ?gid=optional
+  get all records owned by user or for which user has pkey value on record
+  {folder:[]recordlines, files:[]recordlines}
+
+/group
+PUT: form: newname=id, maker=id
+
+/group/{id}
+GET: ?id=abcde, {name: string, members: []string}
+
+/group/add
+/group/remove
+POST: id
+
+/group/{id}
+DELETE
+record inheritance? groupowner?
+
+/dir
+PUT: id
+
+/dir/{id}
+GET: {name:string, files:[]recordlines}
+
+/dir/{id}/search
+GET searchstring returns searchid
+
+
+/dir/add
+/dir/remove
+POST: id
+
+/dir/{id}
+DELETE
+
+/file
+PUT: HTTP FileData
+
+/file/copy
+PUT: originalID
+
+/file/{id}/slice/{start}/{end}
+GET: []TaggedSent
+
+/file/{id}/search
+GET: searchstring
+
+/file/{id}
+GET: download file
+
+/file/{id}
+POST: FileData
+
+/file/{id}
+DELETE

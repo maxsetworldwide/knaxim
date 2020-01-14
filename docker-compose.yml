@@ -1,0 +1,32 @@
+version: '3'
+services:
+  server:
+    build: .
+    restart: "unless-stopped"
+    ports:
+      - "8005:80"
+    volumes:
+    # These are static files located on the host machine.
+      - /public:/public:ro
+    depends_on:
+      - mongo
+      - tika
+    networks:
+      - app-plane
+  mongo:
+    image: mongo:latest
+    # Warning !!! port is mapped to host for Testing only!
+    ports:
+      - "27017:27017"
+    networks:
+      - app-plane
+  tika:
+    image: lexpredict/tika-server:latest
+    # Warning !!! port is mapped to host for Testing only!
+    ports:
+      - "9998:9998"
+    networks:
+      - app-plane
+
+networks:
+  app-plane:
