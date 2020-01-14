@@ -10,10 +10,16 @@
         </b-list-group-item>
         <b-list-group-item v-for="mem in members" :key="mem.id">
           {{ mem.name }}
-          <button @click="removeMember(mem.id)">remove</button>
+          <b-button
+           @click="removeMember(mem.id)"
+           pill
+           variant="outline-danger"
+           size="sm"
+          >remove</b-button>
         </b-list-group-item>
         <b-list-group-item>
-          <button v-b-modal.add-modal>Add</button>
+          <b-button v-b-modal.add-modal
+          variant="primary" size="sm">Add</b-button>
         </b-list-group-item>
       </b-list-group>
       <b-modal id="add-modal" title="Add Member" @ok="addMember(name)">

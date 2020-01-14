@@ -30,7 +30,7 @@
       <span v-else>Favorite</span>
     </b-dropdown-item>
 
-    <batch-delete :files="checkedFiles" #default="{ inputEvents }"
+    <batch-delete v-if="!singleFile" :files="checkedFiles" #default="{ inputEvents }"
         v-on:delete-files="$emit('delete-files')">
       <b-dropdown-item href="#" v-on="inputEvents" :disabled="!fileSelected">
         <svg>
@@ -61,7 +61,8 @@ export default {
   props: {
     fileSelected: Boolean,
     removeFavorite: Boolean,
-    checkedFiles: Array
+    checkedFiles: Array,
+    singleFile: Boolean
   },
   methods: {
     newFolder () {

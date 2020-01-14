@@ -185,14 +185,14 @@ export default {
     },
     files () {
       if (this.src === 'recents') {
-        return this.recents
+        return (this.recents || [])
       } else if (this.src === 'favorites') {
-        return (this.folders['_favorites_'] || []).map(
+        return (this.favoriteFolder.map(
           function (id) {
             return this[id]
           },
           { ...this.fileSet.owned, ...this.fileSet.shared }
-        )
+        ) || [])
       } else if (this.src === 'shared') {
         return Object.values(this.fileSet.shared)
       } else if (this.src === 'owned') {
@@ -211,6 +211,9 @@ export default {
     },
     fileRows () {
       return this.filterFiles.map((file) => {
+        if (!file) {
+          return { filterRemove: true }
+        }
         let splitname = [file.name, '']
         if (file.name.split && !file.url) {
           let splits = file.name.split('.')
@@ -229,11 +232,11 @@ export default {
           size: file.size && humanReadableSize(file.size),
           sizeInt: file.size,
           date: file.date && humanReadableTime(file.date.upload),
-          dateInt: Date.parse(file.date.upload),
+          dateInt: file.date ? Date.parse(file.date.upload) : 0,
           preview: file.preview,
           _showDetails: (file._showDetails || false)
         }
-      })
+      }).filter(f => !f.filterRemove)
     },
     folders () {
       if (!this.gid) {
@@ -241,6 +244,9 @@ export default {
       } else {
         return this.$store.state.folder.group[this.gid]
       }
+    },
+    favoriteFolder () {
+      return (this.$store.state.folder.user['_favorites_'] || [])
     },
     folderRows () {
       var rows = []
@@ -300,6 +306,7 @@ export default {
   methods: {
     refresh () {
       this.loading = true
+      this.recents = []
       Promise.all([
         // Recent Files (:possibly from different groups)
         ...this.$store.state.recents.files.map((fid, indx) => {
@@ -422,14 +429,8 @@ export default {
     },
     expandAll () {
       const expand = !this.anyRowExpanded
-      for (const id in this.fileSet.owned) {
-        Vue.set(this.fileSet.owned[id], '_showDetails', expand)
-      }
-      for (const id in this.fileSet.shared) {
-        Vue.set(this.fileSet.shared[id], '_showDetails', expand)
-      }
-      this.recents.forEach((file, i, arr) => {
-        Vue.set(arr[i], '_showDetails', expand)
+      this.fileRows.forEach((file) => {
+        file._showDetails = expand
       })
     },
     async populateOwnerName (id, overwrite) {

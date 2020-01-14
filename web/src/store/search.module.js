@@ -29,9 +29,6 @@ const actions = {
     if (params.acr) {
       params.find = `"${params.find}" ${params.acr}`
     }
-    if (params.find === state.state.selected) {
-      return
-    }
     state.commit(UPDATE_SEARCH_HISTORY, params)
     state.commit(FILES_SEARCH_START)
 
@@ -39,17 +36,32 @@ const actions = {
       state.commit('cancelSearch', () => {
         reject(new Error('search canceled'))
       })
-      SearchService.userFiles(params).then(({ data }) => {
-        if (data.matched && data.matched.length > 0) {
-          return data.matched.map(item => {
-            return {
-              ...item.file,
-              count: item.count
-            }
-          })
-        }
-        return []
-      }).then(r => resolve(r)).catch(e => reject(e))
+      let ag = state.getters.activeGroup
+      if (ag) {
+        SearchService.groupFiles({ gid: ag.id, find: params.find }).then(({ data }) => {
+          if (data.matched && data.matched.length > 0) {
+            return data.matched.map(item => {
+              return {
+                ...item.file,
+                count: item.count
+              }
+            })
+          }
+          return []
+        }).then(r => resolve(r)).catch(e => reject(e))
+      } else {
+        SearchService.userFiles(params).then(({ data }) => {
+          if (data.matched && data.matched.length > 0) {
+            return data.matched.map(item => {
+              return {
+                ...item.file,
+                count: item.count
+              }
+            })
+          }
+          return []
+        }).then(r => resolve(r)).catch(e => reject(e))
+      }
     })
     state.commit(GET_SLICES)
     fileList.forEach((file) => {

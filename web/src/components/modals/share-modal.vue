@@ -19,10 +19,10 @@ events:
   size="lg"
   content-class="modal-style">
     <b-container>
-      <b-row align-h="center">
+      <b-row align-h="center" v-if="!hideList">
         <h4>Files to share:</h4>
       </b-row>
-      <b-row align-h="center">
+      <b-row align-h="center" v-if="!hideList">
         <ul class="file-list">
           <li v-for="file in files" :key="file.id">{{ file.name }}</li>
         </ul>
@@ -49,7 +49,13 @@ events:
         <h4>Current Viewers:</h4>
       </b-row>
       <b-row class="w-75 mx-auto viewer-list" align-h="center">
-        <div v-if="objIsEmpty(viewers)">There are currently no viewers for these files.</div>
+        <div v-if="objIsEmpty(viewers)">
+          <span v-if="!loadingViewers">There are currently no viewers for these files.</span>
+          <div v-else>
+            <b-spinner class="align-middle"></b-spinner>
+            <strong>Loading...</strong>
+          </div>
+        </div>
         <!-- Relying on b-col's behavior of wrapping when #cols exceeds 12 -->
         <b-col cols="3" v-for="(name, uid) in viewers" :key="uid">
           <share-viewer :uid="uid" :name="name" :fids="fileIDs" @stop-share="getViewers"/>
@@ -79,7 +85,8 @@ export default {
     files: {
       type: Array,
       required: true
-    }
+    },
+    hideList: Boolean
   },
   data () {
     return {
@@ -87,10 +94,12 @@ export default {
       inputName: '',
       nameID: '',
       validName: null,
-      viewers: {
-        'id': 'name'
-      }
+      viewers: {},
+      loadingViewers: false
     }
+  },
+  created () {
+    this.getViewers()
   },
   watch: {
     files () {
@@ -126,7 +135,7 @@ export default {
         if (!data.id) {
           throw new Error('name is not user')
         }
-
+        this.validName = !!data.id && this.inputName === currName
         if (this.validName) {
           this.nameID = data.id
         } else {
@@ -148,6 +157,7 @@ export default {
         this.viewers = {}
         return
       }
+      this.loadingViewers = true
       let intersectNames = []
       Promise.all(this.fileIDs.map(id => {
         return PermissionService.permissions({ id })
@@ -165,16 +175,35 @@ export default {
           })
         })
         this.viewers = {}
+        if (intersectNames.length === 0) {
+          this.loadingViewers = false
+          return
+        }
+        let counter = Promise.resolve(intersectNames.length)
         intersectNames.forEach(id => {
           UserService.info({ id }).then(({ data }) => {
             if (data.name) {
               Vue.set(this.viewers, id, data.name)
             }
+            counter.then(count => {
+              count -= 1
+              if (count === 0) {
+                this.loadingViewers = false
+              }
+              return count
+            })
           })
           GroupService.info({ gid: id }).then(({ data }) => {
             if (data.name) {
               Vue.set(this.viewers, id, data.name)
             }
+            counter.then(count => {
+              count -= 1
+              if (count === 0) {
+                this.loadingViewers = false
+              }
+              return count
+            })
           })
         })
       })

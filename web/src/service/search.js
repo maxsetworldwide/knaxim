@@ -10,7 +10,7 @@ const SearchService = {
 
   groupFiles ({ gid, find }) {
     return ApiService.query(`group/${gid}/search`, { find }).catch(error => {
-      throw new Error(`GroupService ${error}`)
+      throw new Error(`SearchService ${error}`)
     })
   },
 
