@@ -10,7 +10,8 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
-	"github.com/gorilla/handlers"
+	"git.maxset.io/web/knaxim/internal/handlers"
+	muxhandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -80,42 +81,42 @@ func main() {
 	}
 	mainR := mux.NewRouter()
 
-	mainR.Use(loggingMiddleware)
-	mainR.Use(RecoveryMiddleWare)
+	mainR.Use(handlers.Logging)
+	mainR.Use(handlers.Recovery)
 	//mainR.Use(handlers.CompressHandler)
-	mainR.Use(timeoutMiddleware)
+	mainR.Use(handlers.Timeout)
 	//mainR.Use(databaseMiddleware)
 
 	{
 		apirouter := mainR.PathPrefix("/api").Subrouter()
 		apirouter.Use(databaseMiddleware)
 		apirouter.Use(parseMiddleware)
-		setupUser(apirouter.PathPrefix("/user").Subrouter())
-		setupPerm(apirouter.PathPrefix("/perm").Subrouter())
-		setupRecord(apirouter.PathPrefix("/record").Subrouter())
-		setupGroup(apirouter.PathPrefix("/group").Subrouter())
-		setupDir(apirouter.PathPrefix("/dir").Subrouter())
-		setupFile(apirouter.PathPrefix("/file").Subrouter())
-		setupPublic(apirouter.PathPrefix("/public").Subrouter())
-		setupAcronym(apirouter.PathPrefix("/acronym").Subrouter())
+		handlers.AttachUser(apirouter.PathPrefix("/user").Subrouter())
+		handlers.AttachPerm(apirouter.PathPrefix("/perm").Subrouter())
+		handlers.AttachRecord(apirouter.PathPrefix("/record").Subrouter())
+		handlers.AttachGroup(apirouter.PathPrefix("/group").Subrouter())
+		handlers.AttachDir(apirouter.PathPrefix("/dir").Subrouter())
+		handlers.AttachFile(apirouter.PathPrefix("/file").Subrouter())
+		handlers.AttachPublic(apirouter.PathPrefix("/public").Subrouter())
+		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
 		//setupSearch(apirouter.PathPrefix("/s").Subrouter())
 	}
 	if len(conf.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()
-		staticrouter.Use(handlers.CompressHandler)
+		staticrouter.Use(muxhandlers.CompressHandler)
 		staticrouter.NewRoute().Handler(http.FileServer(http.Dir(conf.StaticPath)))
 	}
 	//change to safe close with server with time out values
-	conf.Server.Handler = mainR
+	config.V.Server.Handler = mainR
 	log.Println("Starting server")
 	go func() {
-		if conf.Cert == nil {
-			if err := conf.Server.ListenAndServe(); err != nil {
+		if config.V.Cert == nil {
+			if err := config.V.Server.ListenAndServe(); err != nil {
 				log.Println(err)
 			}
 		} else {
-			go http.ListenAndServe(conf.Cert.HTTPport, http.HandlerFunc(redirect))
-			if err := conf.Server.ListenAndServeTLS(conf.Cert.CertFile, conf.Cert.KeyFile); err != nil {
+			go http.ListenAndServe(config.V.Cert.HTTPport, http.HandlerFunc(redirect))
+			if err := config.V.Server.ListenAndServeTLS(config.V.Cert.CertFile, config.V.Cert.KeyFile); err != nil {
 				log.Println(err)
 			}
 		}
@@ -123,8 +124,8 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
-	ctx, cancel := context.WithTimeout(context.Background(), conf.GracefulTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.V.GracefulTimeout)
 	defer cancel()
-	conf.Server.Shutdown(ctx)
+	config.V.Server.Shutdown(ctx)
 	log.Println("Shutting down")
 }
