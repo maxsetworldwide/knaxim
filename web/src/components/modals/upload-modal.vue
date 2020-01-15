@@ -34,7 +34,7 @@ global events:
       <b-spinner class="m-4"/>
     </div>
     <div v-else>
-      <b-button @click="upload" :disabled="files.length === 0" class="shadow-sm">
+      <b-button @click="upload" v-if="files.length > 0" :disabled="files.length === 0" class="shadow-sm" variant="primary">
         Upload
       </b-button>
     </div>
@@ -77,6 +77,7 @@ export default {
       })
     },
     onClose () {
+      this.files = []
       this.$emit('close')
     }
   }

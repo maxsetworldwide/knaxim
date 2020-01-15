@@ -1,8 +1,8 @@
 <template>
-  <div>
-    <b-container>
-      <b-row align-h="center">
-        <b-col cols="1">
+  <div class="h-100">
+    <b-container class="h-100" fluid>
+      <b-row>
+        <b-col offset-md="5" cols="1">
           <b-button @click="increaseScale">
             <svg>
               <use href="@/assets/app.svg#zoom-in"></use>
@@ -27,30 +27,40 @@
           <span> / {{ pages.length }}</span>
         </b-col>
 
-        <b-col>
-          <file-list-batch fileSelected="Uh-huh" :checkedFiles="mockFileArray"
+        <b-col offset-md="2" cols="1">
+          <file-list-batch fileSelected singleFile
+            :checkedFiles="mockFileArray"
+            :removeFavorite="isFavorite"
             @favorite="adjustFavorite"
             @add-folder="showFolderModal"
             @share-file="showShareModal"
           />
         </b-col>
       </b-row>
+      <b-row class="h-100 pdf-row" align-h="start">
+        <b-col cols="2">
+          <PDFResultList class="h-100 result-list" :matchList="matchList" @select="onMatchSelect"/>
+        </b-col>
+        <b-col>
+          <div class="pdf-doc" :ref="'pdfdoc'">
+            <PDFPage
+              v-for="page in pages"
+              v-bind="{ page, scale, scrollTop, clientHeight }"
+              :key="page.pageNumber"
+              ref="pages"
+              @matches="handleMatches"
+            />
+          </div>
+        </b-col>
+      </b-row>
     </b-container>
-    <div class="pdf-doc" :ref="'pdfdoc'">
-      <PDFPage
-        v-for="page in pages"
-        v-bind="{ page, scale, scrollTop, clientHeight }"
-        :key="page.pageNumber"
-        ref="pages"
-      />
-    </div>
-
     <folder-modal
       ref="folderModal"
       id="newFolderModal"
       @new-folder="createFolder"
     />
     <share-modal
+      hideList
       ref="shareModal"
       id="file-list-share-modal"
       :files="mockFileArray"
@@ -66,6 +76,7 @@ import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 
 import PDFPage from '@/components/pdf-page.vue'
+import PDFResultList from './pdf-result-list'
 import FileListBatch from '@/components/file-list-batch'
 import FolderModal from '@/components/modals/folder-modal'
 import ShareModal from '@/components/modals/share-modal'
@@ -74,6 +85,7 @@ export default {
   name: 'pdf-doc',
   components: {
     PDFPage,
+    PDFResultList,
     FileListBatch,
     ShareModal,
     FolderModal
@@ -86,14 +98,32 @@ export default {
     return {
       pdf: null,
       pages: [],
-      scale: 3,
+      scale: 1.25,
       scrollTop: 0,
-      clientHeight: 0
+      clientHeight: 0,
+      matchContexts: {}
     }
   },
   computed: {
+    isFavorite () {
+      let favorite = (this.$store.state.folder.user['_favorites_'] || [])
+      return favorite.reduce((acc, id) => {
+        return acc || id === this.fileID
+      }, false)
+    },
     url () {
       return `/api/file/${this.fileID}/download`
+    },
+    matchList () {
+      let result = []
+      for (let page in this.matchContexts) {
+        let matchList = this.matchContexts[page]
+        matchList.forEach(match => {
+          match.page = page
+          result.push(match)
+        })
+      }
+      return result
     },
     // TODO: File-List-Batch should be a File-List-Actions (my bad)
     // TODO: Get the actual file information for File-List-Batch.  I'd like to
@@ -111,29 +141,34 @@ export default {
   methods: {
     increaseScale () {
       this.scale += 0.3
-      // console.log('pdf-doc: scale: ', this.scale)
     },
     decreaseScale () {
       this.scale = Math.max(this.scale - 0.3, 0.1)
-      // console.log('pdf-doc: scale: ', this.scale)
     },
     updateScrollBounds () {
       const { scrollTop, clientHeight } = this.$refs['pdfdoc']
       this.scrollTop = scrollTop
       this.clientHeight = clientHeight
-      // console.log('pdf-doc: updated scroll bounds:', this.scrollTop, this.clientHeight)
     },
     pageInput (event) {
       const pageNumber = parseInt(event.target.value, 10) - 1
       if (isNaN(pageNumber) || pageNumber > this.pages.length || pageNumber < 0) return
       const pageOffset = this.$refs.pages[pageNumber].elementTop
+      // console.log('page ref:', this.$refs.pages[pageNumber])
       this.$refs['pdfdoc'].scrollTop = pageOffset
     },
-
+    onMatchSelect (match) {
+      const offset = match.span.offsetTop + this.$refs.pages[match.page].elementTop
+      this.$refs['pdfdoc'].scrollTop = offset - 20
+    },
+    handleMatches (payload) {
+      this.$set(this.matchContexts, payload.pageNum, payload.matches)
+      // console.log('matchContexts: ', this.matchContexts)
+    },
     // file actions
     adjustFavorite (add) {
       return this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER,
-        { fid: this.fileID, name: '_favorites_', group: (this.gid || undefined) })
+        { fid: this.fileID, name: '_favorites_' })
     },
     showShareModal () {
       this.$refs['shareModal'].show()
@@ -195,10 +230,19 @@ export default {
   position: absolute;
   overflow: auto;
   width: 100%;
-  top: 35px;
+  top: 0;
   bottom: 0;
   right: 0;
   left: 0;
+}
+
+.pdf-row {
+  margin-top: 25px;
+}
+
+.result-list {
+  overflow: auto;
+  position: absolute;
 }
 
 button {

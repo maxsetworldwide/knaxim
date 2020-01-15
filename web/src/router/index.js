@@ -62,31 +62,37 @@ const routes = [
   }, {
     path: '/list/:src',
     name: 'filteredFiles',
-    component: FileList,
-    props: true
-  }, {
-    path: '/team/:gid',
-    name: 'teamHome',
     components: {
       default: FileList,
       sideview: MemberList
     },
     props: {
-      default: true,
-      sideview: true
-    }
-  }, {
-    path: '/team/:gid/:src',
-    name: 'teamFiltered',
-    components: {
-      default: FileList,
-      sideview: MemberList
-    },
-    props: {
-      default: true,
-      sideview: true
+      default: true
     }
   }
+  // {
+  //   path: '/team/:gid',
+  //   name: 'teamHome',
+  //   components: {
+  //     default: FileList,
+  //     sideview: MemberList
+  //   },
+  //   props: {
+  //     default: true,
+  //     sideview: true
+  //   }
+  // }, {
+  //   path: '/team/:gid/:src',
+  //   name: 'teamFiltered',
+  //   components: {
+  //     default: FileList,
+  //     sideview: MemberList
+  //   },
+  //   props: {
+  //     default: true,
+  //     sideview: true
+  //   }
+  // }
 ]
 
 const router = new VueRouter({

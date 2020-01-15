@@ -12,7 +12,8 @@
       </b-nav-item>
 
       <b-nav-item class="mb-1"
-          to="/list/owned">
+          to="/list/owned"
+          v-if="!groupMode">
         <svg>
           <use href="../assets/app.svg#files" />
         </svg>
@@ -20,7 +21,8 @@
       </b-nav-item>
 
       <b-nav-item class="mb-1"
-          to="/list/shared">
+          to="/list/shared"
+          v-if="!groupMode">
         <svg>
           <use href="../assets/app.svg#transfer" />
         </svg>
@@ -36,7 +38,8 @@
       </b-nav-item>
 
       <b-nav-item class="mb-1"
-          to="/list/favorites">
+          to="/list/favorites"
+          v-if="!groupMode">
         <svg>
           <use href="../assets/app.svg#star" />
         </svg>
@@ -73,6 +76,9 @@ export default {
       } else {
         return 'My'
       }
+    },
+    groupMode () {
+      return !!this.activeGroup
     },
     ...mapGetters(['activeGroup'])
   }

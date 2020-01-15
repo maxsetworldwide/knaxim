@@ -1,9 +1,7 @@
 <template>
-  <div v-if="fileType === 'pdf'">
-    <pdf-doc :fileID="id" :acr="acr"/>
-  </div>
-  <div v-else>
-    <text-viewer :fileName="name" :finalPage="sentenceCount" :acr="acr"/>
+  <div class="h-100">
+    <pdf-doc v-if="fileType === 'pdf'" :fileID="id" :acr="acr"/>
+    <text-viewer v-else :fileName="name" :finalPage="sentenceCount" :acr="acr"/>
   </div>
 </template>
 

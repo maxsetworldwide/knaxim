@@ -32,6 +32,9 @@ export default {
       textLayerDimStyle: {},
       textSpans: [],
       textContentItemsStr: [],
+      joinedContent: '',
+      matches: [],
+      sentenceBounds: [],
       staleTextLayer: true
     }
   },
@@ -101,11 +104,196 @@ export default {
         width: width + 'px'
       }
     },
+    findMatches () {
+      if (this.currentSearch.length === 0) return []
+      const search = compileSearchTerms(this.currentSearch)
+      this.textContentItemsStr = this.textContentItemsStr.map(str => {
+        if (/\S/.test(str)) {
+          return str
+        } else {
+          return ''
+        }
+      })
+      this.joinedContent = this.textContentItemsStr.join('').toLowerCase()
+      const { textSpans, joinedContent } = this
+      this.sentenceBounds = findSentences()
+      const sentenceBounds = this.sentenceBounds
+
+      // take search query string and turn it into an array of terms, combining
+      // terms with quotes.
+      function compileSearchTerms (searchQuery) {
+        const regex = /[^\s"]+|"([^"]*)"/g
+        let result = []
+        let match = regex.exec(searchQuery)
+        while (match !== null) {
+          result.push(match[1] ? match[1] : match[0])
+          match = regex.exec(searchQuery)
+        }
+        result = result.filter(term => term.length > 0) // just in case
+        return result
+      }
+
+      function getSpanFromJump (globalDelta, globalStart, spanStart, localStart) {
+        const globalEnd = globalStart + globalDelta
+        while (globalDelta > 0 && spanStart < textSpans.length) {
+          let toNextSpan = textSpans[spanStart].innerText.length - localStart
+          if (toNextSpan < globalDelta) {
+            spanStart++
+            localStart = 0
+            globalDelta -= toNextSpan
+          } else {
+            localStart += globalDelta
+            globalDelta = 0
+          }
+        }
+        if (spanStart >= textSpans.length) {
+          spanStart = textSpans.length - 1
+        }
+        return {
+          span: spanStart,
+          offset: localStart,
+          global: globalEnd
+        }
+      }
+
+      function findSentences () {
+        const punct = ['.', '!', '?']
+        let result = []
+        let localOffset = 0
+        let globalOffset = 0
+        let span = 0
+        let minOffset = -1
+        do {
+          minOffset = -1
+          punct.forEach(p => {
+            const candidate = joinedContent.indexOf(p, globalOffset)
+            if (candidate !== -1 && (candidate <= minOffset || minOffset === -1)) {
+              minOffset = candidate
+            }
+          })
+          if (minOffset > -1) {
+            const next = getSpanFromJump(minOffset - globalOffset, globalOffset, span, localOffset)
+            result.push({
+              start: {
+                span: span,
+                offset: localOffset,
+                global: globalOffset
+              },
+              end: {
+                span: next.span,
+                offset: next.offset,
+                global: next.global
+              }
+            })
+            const nextStart = getSpanFromJump(1, next.global, next.span, next.offset)
+            globalOffset = nextStart.global
+            localOffset = nextStart.offset
+            span = nextStart.span
+          }
+        } while (minOffset > 0)
+        const offsetToEnd = joinedContent.length - globalOffset
+        if (offsetToEnd > 0) {
+          const final = getSpanFromJump(joinedContent.length - globalOffset, globalOffset, span, localOffset)
+          result.push({
+            start: {
+              span: span,
+              offset: localOffset,
+              global: globalOffset
+            },
+            end: {
+              span: final.span,
+              offset: final.offset,
+              global: final.global
+            }
+          })
+        }
+        return result
+      }
+
+      function getNextMatch (globalIdx, localIdx, spanIdx) {
+        // using the current offsets, get the next search term offset
+        // try to keep this precedural without side effects
+        let minOffset = -1
+        let nextTermLength = -1
+        search.forEach(currTerm => {
+          if (currTerm.length === 0) return
+          let candidateOffset = joinedContent.indexOf(currTerm, globalIdx)
+
+          if ((candidateOffset <= minOffset && candidateOffset !== -1) || (minOffset === -1 && candidateOffset !== -1)) {
+            // be sure to favor larger word e.g. for searching 'to' and 'tomorrow'
+            if (candidateOffset === minOffset && nextTermLength > currTerm.length) {
+              return
+            }
+            minOffset = candidateOffset // global offset
+            nextTermLength = currTerm.length // keyword offset
+          }
+        })
+        if (minOffset === -1) {
+          // not found
+          return null
+        }
+        // find sentence bounds and span idx
+        // span idx
+        let start = getSpanFromJump(minOffset - globalIdx, globalIdx, spanIdx, localIdx)
+        // get end point
+        let end = getSpanFromJump(nextTermLength, start.global, start.span, start.offset)
+
+        // sentence bounds
+        let sentenceIdx = 0
+        let sentenceFound = false
+        for (; sentenceIdx < sentenceBounds.length && !sentenceFound; sentenceIdx++) {
+          const curr = sentenceBounds[sentenceIdx]
+          sentenceFound = curr.start.global <= start.global &&
+            curr.end.global >= end.global
+        }
+        if (!sentenceFound) {
+          // console.log('pdf-page: sentence not found: start:', start, 'end:', end)
+        }
+        return {
+          start,
+          end,
+          sentence: sentenceIdx - 1
+        }
+      }
+
+      let spanIdx = 0
+      let localIdx = 0
+      let globalIdx = 0
+      let matches = []
+      let match = getNextMatch(globalIdx, localIdx, spanIdx)
+      while (match) {
+        matches.push(match)
+        spanIdx = match.end.span
+        localIdx = match.end.offset
+        globalIdx = match.end.global
+        match = getNextMatch(globalIdx, localIdx, spanIdx)
+      }
+      return matches
+    },
+    sendMatches () {
+      let matchContexts = []
+      for (const matchIdx in this.matches) {
+        let match = this.matches[matchIdx]
+        let sentence = this.sentenceBounds[match.sentence]
+        let sentenceText = this.joinedContent.substring(sentence.start.global, sentence.end.global)
+        let span = this.textSpans[this.matches[matchIdx].start.span]
+        matchContexts.push({
+          sentenceText,
+          span
+        })
+      }
+      this.$emit('matches', {
+        pageNum: this.page.pageIndex,
+        matches: matchContexts
+      })
+    },
     renderText () {
       if (this.textContent) {
+        this.staleTextLayer = false
         this.setDimStyle()
         this.$refs[this.textLayerID].innerHTML = ''
         this.textSpans = []
+        this.textContentItemsStr = []
         pdfjs.renderTextLayerTask = pdfjs.renderTextLayer({
           textContent: this.textContent,
           viewport: this.page.getViewport({ scale: this.scale / this.pixelRatio }),
@@ -113,71 +301,166 @@ export default {
           textDivs: this.textSpans,
           textContentItemsStr: this.textContentItemsStr
         })
+        this.matches = this.findMatches()
         this.highlightMatches()
+        this.sendMatches()
       }
     },
     highlightMatches () {
-      const search = this.currentSearch.trim().toLowerCase()
-      const linkObj = {
-        'DD Form 460': 'dd0460.pdf',
-        'DD Form 0499': 'dd0499.pdf',
-        'DD Form 0294': 'dd0294.pdf',
-        'AF Form 4080': 'af4080.pdf',
-        'AF Form 2407': 'af2407.pdf',
-        'AF Form 538': 'af538.pdf',
-        'AF Form 228': 'af228.pdf',
-        'AF Form 35': 'af35.pdf'
-      }
-      const prefix = 'file://home/demo/Documents/'
-      let linkObjHasTerms = false
-      for (let key in linkObj) {
-        if (linkObj.hasOwnProperty(key)) {
-          linkObjHasTerms = true
-          break
-        }
-      }
-      if (search.length === 0 && !linkObjHasTerms) return
-      const { textSpans, textContentItemsStr: contentArr } = this
-      for (let i = 0; i < textSpans.length; i++) {
-        let span = textSpans[i]
-        let content = contentArr[i]
-        let currOffset = 0
-        let nextMatchOffset
-        do {
-          if (search.length > 0) {
-            nextMatchOffset = content.toLowerCase().indexOf(search, currOffset)
+      const sentSet = this.matches.reduce((acc, curr) => {
+        return acc.add(curr.sentence)
+      }, new Set())
+
+      // create sentence segments
+      const sentences = [...sentSet].map(idx => {
+        return this.sentenceBounds[idx]
+      })
+      let segments = {}
+      sentences.forEach(s => {
+        let from = s.start.offset
+        let to
+        for (let spanIdx = s.start.span; spanIdx <= s.end.span; spanIdx++) {
+          if (spanIdx === s.end.span) {
+            to = s.end.offset
           } else {
-            nextMatchOffset = -1
+            to = this.textContentItemsStr[spanIdx].length
           }
-          let nextKey = search
-          let link = false
-          for (let key in linkObj) {
-            if (linkObj.hasOwnProperty(key)) {
-              let candidateOffset = content.indexOf(key, currOffset)
-              if (nextMatchOffset === -1 || (candidateOffset < nextMatchOffset && candidateOffset !== -1)) {
-                nextMatchOffset = candidateOffset
-                nextKey = key
-                link = true
-              }
-            }
+          if (!segments[spanIdx]) {
+            segments[spanIdx] = []
           }
-          if (nextMatchOffset > -1) {
-            if (currOffset === 0) {
-              span.textContent = ''
-            }
-            if (link) {
-              this.appendTextChild(i, currOffset, nextMatchOffset, '')
-              this.appendTextChild(i, nextMatchOffset, nextMatchOffset + nextKey.length, 'link', prefix + linkObj[nextKey])
-            } else {
-              this.appendTextChild(i, currOffset, nextMatchOffset, '')
-              this.appendTextChild(i, nextMatchOffset, nextMatchOffset + nextKey.length, 'match')
-            }
-            currOffset = nextMatchOffset + nextKey.length
-          }
-        } while (nextMatchOffset > -1)
-        if (currOffset > 0) {
-          this.appendTextChild(i, currOffset, content.length, '')
+          segments[spanIdx].push({
+            start: from,
+            end: to,
+            type: 'sentence'
+          })
+          from = 0
         }
+      })
+      // create keyword segments
+      this.matches.forEach(match => {
+        let segList = segments[match.start.span]
+        let newStartSegList = []
+        let i = 0
+        while (i < segList.length && match.start.offset > segList[i].end) {
+          newStartSegList.push(segList[i])
+          i++
+        }
+        if (i === segList.length) {
+          // console.log('keyword not found in segment')
+          return
+        }
+        // cut sentence segment
+        let from = segList[i].start
+        let to = match.start.offset
+        if (from < to) {
+          newStartSegList.push({
+            start: from,
+            end: to,
+            type: segList[i].type
+          })
+        }
+        // start keyword segment
+        from = match.start.offset
+        if (match.start.span === match.end.span) {
+          to = match.end.offset
+        } else {
+          to = this.textContentItemsStr[match.start.span].length
+        }
+        newStartSegList.push({
+          start: from,
+          end: to,
+          type: 'keyword'
+        })
+        // push segments until we reach the end of the match
+        for (let i = match.start.span + 1; i < match.end.span; i++) {
+          const interSeg = [{
+            start: 0,
+            end: this.textContentItemsStr[i].length,
+            type: 'keyword'
+          }]
+          segments[i] = interSeg
+        }
+        // push tail end of keyword if we crossed spans
+        let newTailSeg = []
+        if (match.start.span !== match.end.span) {
+          newTailSeg.push({
+            start: 0,
+            end: match.end.offset,
+            type: 'keyword'
+          })
+        }
+        // push tail end of sentence
+        // find segment in match.end with segment end > match end offset
+        segList = segments[match.end.span]
+        i = 0
+        while (i < segList.length && match.end.offset > segList[i].end) {
+          i++
+        }
+        if (i === segList.length) {
+          // console.log('match end not found in segment')
+          return
+        }
+        from = match.end.offset
+        to = segList[i].end
+        newTailSeg.push({
+          start: from,
+          end: to,
+          type: segList[i].type
+        })
+        // push rest of the last segment
+        i++
+        while (i < segList.length) {
+          newTailSeg.push(segList[i])
+          i++
+        }
+        // apply changes
+        if (match.start.span === match.end.span) {
+          newTailSeg.forEach(seg => {
+            newStartSegList.push(seg)
+          })
+          segments[match.start.span] = newStartSegList
+        } else {
+          segments[match.start.span] = newStartSegList
+          segments[match.end.span] = newTailSeg
+        }
+      })
+      // fill in segments that have no highlighting
+      for (let spanIdx in segments) {
+        let spanContent = this.textContentItemsStr[spanIdx]
+        let segmentList = segments[spanIdx]
+        let newList = []
+        let from = 0
+        let to
+        segmentList.forEach(seg => {
+          to = seg.start
+          if (from !== to) {
+            newList.push({
+              start: from,
+              end: to,
+              type: ''
+            })
+          }
+          newList.push(seg)
+          from = seg.end
+        })
+        const lastElementEnd = newList.slice(-1)[0].end
+        if (lastElementEnd !== spanContent.length) {
+          newList.push({
+            start: lastElementEnd,
+            end: spanContent.length,
+            type: ''
+          })
+        }
+        segments[spanIdx] = newList
+      }
+
+      // segments all documented. can now edit spans solely based on the object
+      for (let spanIdx in segments) {
+        let span = this.textSpans[spanIdx]
+        span.textContent = ''
+        segments[spanIdx].forEach(seg => {
+          this.appendTextChild(spanIdx, seg.start, seg.end, seg.type)
+        })
       }
     },
     appendTextChild (spanIdx, from, to, className, link) {
@@ -209,18 +492,10 @@ export default {
       const renderContext = { canvasContext, viewport }
 
       this.renderTask = this.page.render(renderContext)
-      this.renderTask.promise
-        .then(() => {
-          return this.page.getTextContent()
-        })
-        .then((content) => {
-          this.textContent = content
-          this.renderText()
-        })
-        .catch(() => {
-          // console.log('pdf-page: renderTask failed: ', err)
-          this.destroyRenderTask()
-        })
+      this.renderTask.promise.catch(() => {
+        // console.log('pdf-page: renderTask failed: ', err)
+        this.destroyRenderTask()
+      })
     },
     destroyPage (page) {
       if (!page) return
@@ -245,9 +520,7 @@ export default {
     },
     scale () {
       this.updateElementBounds()
-      if (this.isElementVisible) {
-        this.staleTextLayer = true
-      }
+      this.staleTextLayer = true
     },
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
@@ -259,7 +532,6 @@ export default {
     // text layer is rendered after component update due to requiring data
     // from non-reactive canvas element in $refs
     if (this.staleTextLayer) {
-      this.staleTextLayer = false
       this.renderText()
     }
   },
@@ -271,6 +543,10 @@ export default {
   },
   mounted () {
     this.updateElementBounds()
+    this.page.getTextContent().then(content => {
+      this.textContent = content
+      this.renderText()
+    })
   }
 }
 </script>
@@ -296,7 +572,7 @@ export default {
 
 </style>
 
-<style>
+<style lang='scss'>
 
 .text-layer > span {
   color: transparent;
@@ -314,8 +590,12 @@ export default {
   background: rgb(0, 0, 255);
 }
 
-.match {
-  background-color: #75ADCB;
+.keyword {
+  background-color: goldenrod;
+}
+
+.sentence {
+  background-color: $app-clr2;
 }
 
 .link {
