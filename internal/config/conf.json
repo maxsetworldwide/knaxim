@@ -1,8 +1,8 @@
 {
-	"address": "localhost:8000",
-	"static": "../knaximclient/web",
+	"address": "localhost:8005",
+	"static": ".",
 	"server":{
-		"Addr": "0.0.0.0:8000",
+		"Addr": "0.0.0.0:8005",
 		"ReadHeaderTimeout": 2000000000
 	},
 	"#cert": {
@@ -18,12 +18,12 @@
 	"db_type": "mongo",
 	"db":{
 		"uri": "mongodb://localhost:27017",
-		"db": "Knaxim"
+		"db": "KnaximTest"
 	},
 	"db_clear": true,
 	"tika": {
 		"type": "external",
-		"path": "localhost",
+		"path": "http://localhost",
 		"port": "",
 		"restart_time": 2400000000000
 	},

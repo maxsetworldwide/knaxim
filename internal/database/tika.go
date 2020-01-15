@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strings"
 
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/google/go-tika/tika"
 	"github.com/jdkato/prose/tokenize"

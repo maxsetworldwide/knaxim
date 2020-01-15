@@ -7,13 +7,14 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
 func AttachPublic(r *mux.Router) {
-	r.Use(cookieMiddleware)
+	r.Use(UserCookie)
 	r.HandleFunc("/search", searchPublic).Methods("GET")
 }
 
@@ -22,7 +23,7 @@ func searchPublic(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(400, "No Search Term"))
 	}
 	filters := make([]tag.Tag, 0, len(r.Form["find"]))
-	for _, f := range splitSearch(r.Form["find"]...) {
+	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		if len(f) > 0 {
 			filters = append(filters, tag.Tag{
 				Word: f,

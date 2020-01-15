@@ -8,6 +8,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
@@ -58,7 +59,7 @@ func groupidMiddleware(next http.Handler, checkmembership bool) http.Handler {
 
 // server sends: /api/group
 func AttachGroup(r *mux.Router) {
-	r.Use(cookieMiddleware)
+	r.Use(UserCookie)
 	r.Handle("", groupMiddleware(http.HandlerFunc(createGroup))).Methods("PUT")
 	r.HandleFunc("/options", getGroups).Methods("GET")
 	r.Handle("/options/{id}", groupidMiddleware(http.HandlerFunc(getGroupsGroups), true)).Methods("GET")
@@ -178,7 +179,7 @@ func searchGroupFiles(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filters := make([]tag.Tag, 0, len(r.Form["find"]))
-	for _, f := range splitSearch(r.Form["find"]...) {
+	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		if len(f) > 0 {
 			filters = append(filters, tag.Tag{
 				Word: f,

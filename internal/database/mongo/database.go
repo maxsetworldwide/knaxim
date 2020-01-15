@@ -4,13 +4,13 @@ import (
 	"context"
 	"sync"
 
-	"git.maxset.io/server/knaxim/database"
+	"git.maxset.io/web/knaxim/internal/database"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	//"log"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 type Database struct {

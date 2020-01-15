@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"git.maxset.io/server/knaxim/database/brand"
+	"git.maxset.io/web/knaxim/internal/database/brand"
 
 	"go.mongodb.org/mongo-driver/bson"
 )

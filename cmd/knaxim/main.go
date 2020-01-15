@@ -11,6 +11,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/handlers"
+	"git.maxset.io/web/knaxim/internal/util"
 	muxhandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -26,7 +27,7 @@ func redirect(w http.ResponseWriter, req *http.Request) {
 	if len(req.URL.RawQuery) > 0 {
 		target += "?" + req.URL.RawQuery
 	}
-	verboseRequest(req, "redirecting to https")
+	util.VerboseRequest(req, "redirecting to https")
 	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
 }
 
@@ -55,8 +56,8 @@ func setup() {
 	if config.V.GuestUser != nil {
 		guestUser := database.NewUser(config.V.GuestUser.Name, config.V.GuestUser.Pass, config.V.GuestUser.Email)
 		guestUser.SetRole("Guest", true)
-		userbase := db.Owner(setupctx)
-		if preexisting, err := userbase.FindUserName(conf.GuestUser.Name); preexisting != nil {
+		userbase := config.DB.Owner(setupctx)
+		if preexisting, err := userbase.FindUserName(config.V.GuestUser.Name); preexisting != nil {
 			log.Printf("Guest User Already Exists")
 		} else if err == database.ErrNotFound {
 			if guestUser.ID, err = userbase.Reserve(guestUser.ID, guestUser.Name); err != nil {
@@ -68,11 +69,12 @@ func setup() {
 		} else {
 			log.Fatalf("Error setting up guest user: %v", err)
 		}
-		userbase.Close(setupContext)
+		userbase.Close(setupctx)
 	}
 }
 
 func main() {
+	setup()
 	if config.T.Server != nil {
 		if err := config.T.Server.Start(context.Background()); err != nil {
 			log.Fatalln("Unable to start tika server: ", err)
@@ -89,8 +91,8 @@ func main() {
 
 	{
 		apirouter := mainR.PathPrefix("/api").Subrouter()
-		apirouter.Use(databaseMiddleware)
-		apirouter.Use(parseMiddleware)
+		apirouter.Use(handlers.ConnectDatabase)
+		apirouter.Use(handlers.ParseBody)
 		handlers.AttachUser(apirouter.PathPrefix("/user").Subrouter())
 		handlers.AttachPerm(apirouter.PathPrefix("/perm").Subrouter())
 		handlers.AttachRecord(apirouter.PathPrefix("/record").Subrouter())
@@ -101,10 +103,10 @@ func main() {
 		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
 		//setupSearch(apirouter.PathPrefix("/s").Subrouter())
 	}
-	if len(conf.StaticPath) > 0 {
+	if len(config.V.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()
 		staticrouter.Use(muxhandlers.CompressHandler)
-		staticrouter.NewRoute().Handler(http.FileServer(http.Dir(conf.StaticPath)))
+		staticrouter.NewRoute().Handler(http.FileServer(http.Dir(config.V.StaticPath)))
 	}
 	//change to safe close with server with time out values
 	config.V.Server.Handler = mainR

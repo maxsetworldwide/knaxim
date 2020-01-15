@@ -6,9 +6,11 @@ import (
 	"net/http"
 	"time"
 
+	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/passentropy"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
@@ -19,14 +21,14 @@ import (
 func AttachUser(r *mux.Router) {
 	r.HandleFunc("", createUser).Methods("PUT")
 	r.HandleFunc("/admin", createAdmin).Methods("PUT")
-	r.Handle("", cookieMiddleware(http.HandlerFunc(userInfo))).Methods("GET")
-	r.Handle("/name/{name}", cookieMiddleware(http.HandlerFunc(lookupUser))).Methods("GET")
-	r.Handle("", cookieMiddleware(http.HandlerFunc(signoutUser))).Methods("DELETE")
-	r.Handle("/complete", cookieMiddleware(http.HandlerFunc(completeUserInfo))).Methods("GET")
-	r.Handle("/search", cookieMiddleware(http.HandlerFunc(searchAllUserFiles))).Methods("GET")
+	r.Handle("", UserCookie(http.HandlerFunc(userInfo))).Methods("GET")
+	r.Handle("/name/{name}", UserCookie(http.HandlerFunc(lookupUser))).Methods("GET")
+	r.Handle("", UserCookie(http.HandlerFunc(signoutUser))).Methods("DELETE")
+	r.Handle("/complete", UserCookie(http.HandlerFunc(completeUserInfo))).Methods("GET")
+	r.Handle("/search", UserCookie(http.HandlerFunc(searchAllUserFiles))).Methods("GET")
 	r.HandleFunc("/login", loginUser).Methods("POST")
-	r.Handle("/pass", cookieMiddleware(http.HandlerFunc(updateCredentials))).Methods("POST")
-	r.Handle("/data", cookieMiddleware(http.HandlerFunc(getUserData))).Methods("GET")
+	r.Handle("/pass", UserCookie(http.HandlerFunc(updateCredentials))).Methods("POST")
+	r.Handle("/data", UserCookie(http.HandlerFunc(getUserData))).Methods("GET")
 }
 
 func lookupUser(w http.ResponseWriter, r *http.Request) {
@@ -84,8 +86,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func createAdmin(w http.ResponseWriter, r *http.Request) {
-	if r.FormValue("adminkey") != conf.AdminKey {
-		panic(srverror.Basic(400, "Bad Request", "incorrect admin key", r.FormValue("adminkey"), conf.AdminKey))
+	if r.FormValue("adminkey") != config.V.AdminKey {
+		panic(srverror.Basic(400, "Bad Request", "incorrect admin key", r.FormValue("adminkey"), config.V.AdminKey))
 	}
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	if !validUserName(r.FormValue("name")) || passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 || !validEmail(r.FormValue("email")) {
@@ -136,7 +138,7 @@ func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(404, "Not Found", "no search term"))
 	}
 	filters := make([]tag.Tag, 0, len(r.Form["find"]))
-	for _, f := range splitSearch(r.Form["find"]...) {
+	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		filters = append(filters, tag.Tag{
 			Word: f,
 			Type: tag.CONTENT,

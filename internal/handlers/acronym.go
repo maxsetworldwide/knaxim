@@ -10,7 +10,7 @@ import (
 )
 
 func AttachAcronym(r *mux.Router) {
-	r.Use(cookieMiddleware)
+	r.Use(UserCookie)
 
 	r.HandleFunc("/{acronym}", getAcronym).Methods("GET")
 }

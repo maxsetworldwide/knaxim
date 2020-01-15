@@ -8,7 +8,7 @@ import (
 
 func TestAcronym(t *testing.T) {
 	cookies := testlogin(t, 0)
-	LogBuffer(t)
+	// LogBuffer(t)
 	t.Run("Get=ab", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", server.URL+"/api/acronym/ab", nil)
 		for _, c := range cookies {

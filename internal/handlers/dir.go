@@ -8,6 +8,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func AttachDir(r *mux.Router) {
-	r.Use(cookieMiddleware)
+	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	//r.HandleFunc("/dynamic", createDynDir).Methods("PUT")
 	r.HandleFunc("", createDir).Methods("PUT")
@@ -74,7 +75,7 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 		for _, fidstr := range r.Form["content"] {
 			fid, err := filehash.DecodeFileID(fidstr)
 			if err != nil {
-				verboseRequest(r, "unable to decode: %s, because: %v", fidstr, err)
+				util.VerboseRequest(r, "unable to decode: %s, because: %v", fidstr, err)
 				continue
 			}
 			file, err := filebase.Get(fid) //TODO make a GetAll to use here

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 type UserI interface {

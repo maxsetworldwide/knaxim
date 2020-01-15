@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func setupRecord(r *mux.Router) {
-	r.Use(cookieMiddleware)
+func AttachRecord(r *mux.Router) {
+	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	r.HandleFunc("", getOwnedRecords).Methods("GET")
 	r.HandleFunc("/view", getPermissionRecords("view")).Methods("GET")

@@ -7,6 +7,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
@@ -61,7 +62,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) database.PermissionI {
 		}
 		g, err := userbase.Get(id)
 		if err != nil {
-			verboseRequest(r, "error getting group for pull permission")
+			util.VerboseRequest(r, "error getting group for pull permission")
 			panic(err)
 		}
 		var ok bool
@@ -77,7 +78,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) database.PermissionI {
 		}
 		rec, err := filebase.Get(id)
 		if err != nil {
-			verboseRequest(r, "error getting file for pull permission")
+			util.VerboseRequest(r, "error getting file for pull permission")
 			panic(err)
 		}
 		return rec.(database.PermissionI)
@@ -114,7 +115,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 			}
 			target, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(id)
 			if err != nil {
-				verboseRequest(r, "Failed to get owner from id to change permission for")
+				util.VerboseRequest(r, "Failed to get owner from id to change permission for")
 				panic(err)
 			}
 			permobj.SetPerm(target, "view", permval)
@@ -129,7 +130,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 			err = errInvalidPerm
 		}
 		if err != nil {
-			verboseRequest(r, "unable to update permissions")
+			util.VerboseRequest(r, "unable to update permissions")
 			panic(err)
 		}
 		w.Write([]byte("Permission Updated"))

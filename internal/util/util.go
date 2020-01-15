@@ -1,8 +1,8 @@
-package main
+package util
 
 import "strings"
 
-func splitSearch(search ...string) []string {
+func SplitSearch(search ...string) []string {
 	out := make([]string, 0, len(search))
 	for _, find := range search {
 		find = strings.ReplaceAll(find, "\"", " ")
@@ -17,7 +17,7 @@ func splitSearch(search ...string) []string {
 	return out
 }
 
-func buildSearchRegex(search ...string) string {
+func BuildSearchRegex(search ...string) string {
 	splits := make([]string, 0, len(search))
 	for _, find := range search {
 		for paren, phrase := range strings.Split(find, "\"") {
