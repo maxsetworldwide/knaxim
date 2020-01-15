@@ -38,6 +38,7 @@ const actions = {
    * @return {Promise}
    */
   [LOGIN] (context, credentials) {
+    context.commit(PURGE_AUTH)
     return new Promise((resolve, reject) => {
       UserService.login({
         name: credentials.login,

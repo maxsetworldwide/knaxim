@@ -50,6 +50,9 @@ export default {
         .catch(() => {
           // console.log(`Error: ${message}`)
         })
+    },
+    activeGroup () {
+      this.$store.dispatch(FILES_SEARCH, { find: this.find, acr: this.acr })
     }
   },
   beforeMount () {
@@ -75,7 +78,7 @@ export default {
         return row
       })
     },
-    ...mapGetters(['searchMatches'])
+    ...mapGetters(['searchMatches', 'activeGroup'])
   },
   methods: {
     highlight (summary) {
