@@ -13,6 +13,8 @@ services:
       - tika
     networks:
       - app-plane
+    environment:
+      - KNAXIMINIT
   mongo:
     image: mongo:latest
     # Warning !!! port is mapped to host for Testing only!
