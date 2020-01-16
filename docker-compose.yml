@@ -7,7 +7,7 @@ services:
       - "8005:80"
     volumes:
     # These are static files located on the host machine.
-      - /public:/public:ro
+      - web:/public
     depends_on:
       - mongo
       - tika
@@ -30,5 +30,7 @@ services:
     networks:
       - app-plane
 
+volumes:
+  web:
 networks:
   app-plane:
