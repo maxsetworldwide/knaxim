@@ -3,7 +3,6 @@ module git.maxset.io/web/knaxim
 go 1.12
 
 require (
-	git.maxset.io/maxsetdev/srverror v0.0.0-20191125234455-6f47ddbab605
 	github.com/DataDog/zstd v1.4.4 // indirect
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/go-stack/stack v1.8.0 // indirect
