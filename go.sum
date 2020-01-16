@@ -1,3 +1,5 @@
+git.maxset.io/maxsetdev/srverror v0.0.0-20191125234455-6f47ddbab605 h1:MLOU/T2vqFvZlgbgo6D7R2tjneJsV/u/I7QVFSpzzKE=
+git.maxset.io/maxsetdev/srverror v0.0.0-20191125234455-6f47ddbab605/go.mod h1:44Uj7DsKRmJ73IFNL/EQBRcZYTV+agRZp8dI1++ZYMw=
 github.com/DataDog/zstd v1.4.4 h1:+IawcoXhCBylN7ccwdwf8LOH2jKq7NavGpEPanrlTzE=
 github.com/DataDog/zstd v1.4.4/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
 github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad h1:kXfVkP8xPSJXzicomzjECcw6tv1Wl9h1lNenWBfNKdg=
