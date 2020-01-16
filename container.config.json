@@ -1,14 +1,14 @@
 {
-	"address": "localhost:8000",
-	"static": "../knaximclient/web",
+	"address": "localhost:80",
+	"static": "/public",
 	"server":{
-		"Addr": "0.0.0.0:7999",
+		"Addr": "0.0.0.0:80",
 		"ReadHeaderTimeout": 2000000000
 	},
 	"#cert": {
 		"cert": "./domain.crt",
 		"key": "./domain.key",
-		"http_port": ":8001"
+		"http_port": ":443"
 	},
 	"close_time":        150000000000,
 	"basic_timeout":       5000000000,
@@ -17,14 +17,14 @@
 	"min_file_timeout":   10000000000,
 	"db_type": "mongo",
 	"db":{
-		"uri": "mongodb://localhost:27017",
-		"db": "TylerTest"
+		"uri": "mongodb://mongo:27017",
+		"db": "Knaxim"
 	},
-	"db_clear": true,
+	"db_clear": false,
 	"tika": {
 		"type": "external",
-		"path": "http://localhost",
-		"port": "",
+		"path": "http://tika",
+		"start": 2000000000,
 		"restart_time": 2400000000000
 	},
 	"smtp": {
@@ -42,5 +42,6 @@
 		"Name": "Guest",
 		"Pass": "guestpass",
 		"Email": "info@maxset.org"
-	}
+	},
+	"SetupTimeout": 60000000000
 }

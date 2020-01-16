@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"git.maxset.io/server/knaxim/database/mongo"
+	"git.maxset.io/web/knaxim/internal/database/mongo"
 )
 
 var databaseURI = flag.String("db", "mongodb://localhost:27017", "specify address of mongodb containing acronyms")

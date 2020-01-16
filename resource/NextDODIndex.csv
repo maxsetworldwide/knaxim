@@ -1,70 +1,69 @@
-,
 AA,Aircraft Availability 
-ABIDES,Automated Budget Interactive Data Environment System 
-AFCAIG,Air Force Cost Analysis Improvement Group 
-AFCAA,Air Force Cost Analysis Agency 
-AFCS,Air Force Corporate Structure 
-AFGSC,Air Force Global Strike Command 
-AFMC,Air Force Materiel Command 
-AFNIC,Air Force Network Integration Center 
-AFNWC,Air Force Nuclear Weapons Center 
-AFRC,Air Force Reserve Command 
-AFLCMC,Air Force Life Cycle Management Center 
-AFSC,Air Force Sustainment Center 
-AFSPC,Air Force Space Command 
-APPG,Annual Planning and Programming Guidance 
-CAM,Centralized Asset Management 
-CPFH,Cost Per Flying Hour 
-CSAG,Consolidated Sustainment Activity Group 
-CSAG-Supply,previously called Materiel Support Division 
+ABIDES,Automated Budget Interactive Data Environment System
+AFCAIG,Air Force Cost Analysis Improvement Group
+AFCAA,Air Force Cost Analysis Agency
+AFCS,Air Force Corporate Structure
+AFGSC,Air Force Global Strike Command
+AFMC,Air Force Materiel Command
+AFNIC,Air Force Network Integration Center
+AFNWC,Air Force Nuclear Weapons Center
+AFRC,Air Force Reserve Command
+AFLCMC,Air Force Life Cycle Management Center
+AFSC,Air Force Sustainment Center
+AFSPC,Air Force Space Command
+APPG,Annual Planning and Programming Guidance
+CAM,Centralized Asset Management
+CPFH,Cost Per Flying Hour
+CSAG,Consolidated Sustainment Activity Group
+CSAG-Supply,previously called Materiel Support Division
 DLR,Depot Level Reparable
-ES,Equipment Specialist 
-FHP,Flying Hour Program 
-FM,Financial Management 
-FYDP,Future Years Defense Program 
-IM,Item Manager 
-MSDIS,Material Support Division Information System 
-MVT,MAJCOM Validation Tool 
-NIIN,National Item Identification Number 
-NRTS,Not Repairable This Station 
-OPR,Office of Primary Responsibility 
-OUSD-C,Office of the Undersecretary of Defense Comptroller 
-POM,Program Objective Memorandum 
-PPI,POM Planning Instructions 
-RDS,Records Disposition Schedule 
-RMS,Requirements Management System 
-SCMW,Supply Chain Management Wing 
-SCOW,Supply Chain Operations Wing 
-SGM-NSN,Sub-Group Master-National Stock Number
-SIRS,Secondary Item Requirements System 
-SRRB,Spares Requirements Review Board 
-TWCF,Transportation Working Capital Fund 
-VTC,Video Teleconference 
-WCF,Working Capital Fund 
-WS,Weapon System
-AFIMSC,Air Force Installation and Mission Support Center 
-AFPC,Air Force Personnel Center 
-AFPD,Air Force Policy Directive 
-AFQTP,Air Force Qualification Training Package 
-EDT,Enlisted Development Teams
-GMV,Government Motor Vehicle 
-GTOC,Ground Transportation Operations Center 
-ITA,Invitational Travel Allowance 
-JLLIS,Joint Lessons Learned Information System 
-"LIMS-EV, VV",Logistics Installation Mission Support Enterprise View – Vehicle View 
-OLVIMS,Online Vehicle Interactive Management System 
-O&M,Operations and Maintenance 
+ES,Equipment Specialist
+FHP,Flying Hour Program
+FM,Financial Management
+FYDP,Future Years Defense Program
+IM,Item Manager
+MSDIS,Material Support Division Information System
+MVT,MAJCOM Validation Tool
+NIIN,National Item Identification Number
+NRTS,Not Repairable This Station
 OPR,Office of Primary Responsibility
-OR&L,Operator Records and Licensing 
-POD,Permissible Operating Distance 
-RA,Resource Advisor 
-RDS,Records Disposition Schedule 
-RHINO,Readiness Honed In Operations 
+OUSD-C,Office of the Undersecretary of Defense Comptroller
+POM,Program Objective Memorandum
+PPI,POM Planning Instructions
+RDS,Records Disposition Schedule
+RMS,Requirements Management System
+SCMW,Supply Chain Management Wing
+SCOW,Supply Chain Operations Wing
+SGM-NSN,Sub-Group Master-National Stock Number
+SIRS,Secondary Item Requirements System
+SRRB,Spares Requirements Review Board
+TWCF,Transportation Working Capital Fund
+VTC,Video Teleconference
+WCF,Working Capital Fund
+WS,Weapon System
+AFIMSC,Air Force Installation and Mission Support Center
+AFPC,Air Force Personnel Center
+AFPD,Air Force Policy Directive
+AFQTP,Air Force Qualification Training Package
+EDT,Enlisted Development Teams
+GMV,Government Motor Vehicle
+GTOC,Ground Transportation Operations Center
+ITA,Invitational Travel Allowance
+JLLIS,Joint Lessons Learned Information System
+"LIMS-EV, VV",Logistics Installation Mission Support Enterprise View – Vehicle View
+OLVIMS,Online Vehicle Interactive Management System
+O&M,Operations and Maintenance
+OPR,Office of Primary Responsibility
+OR&L,Operator Records and Licensing
+POD,Permissible Operating Distance
+RA,Resource Advisor
+RDS,Records Disposition Schedule
+RHINO,Readiness Honed In Operations
 SES,Senior Executive Service
 TVO,"Training, Validation, and Operations "
-TRiPS,Travel Risk Planning System 
-UMD,Unit Manpower Document 
-UPMR,Unit Personnel Management Roster 
+TRiPS,Travel Risk Planning System
+UMD,Unit Manpower Document
+UPMR,Unit Personnel Management Roster
 AA,Administrative Assistant 
 AER,Annual Execution Review 
 AFFARS,AF Federal Acquisition Regulation Supplement 
@@ -439,11 +438,11 @@ WRM WG,War Reserve Materiel Working Group 
 A1C,Airman First Class
 AB,Airman Basic
 ABCD ,"Assess, Balance, Communicate, and Decide "
-ABU ,Airman battle uniform 
-ACA ,Airman Comprehensive Assessment 
+ABU ,Airman battle uniform
+ACA ,Airman Comprehensive Assessment
 ACE,"Ask, Care, and Escort"
 ADL,Airman Dorm Leader
-AFAUX ,Air Force Auxiliary 
+AFAUX ,Air Force Auxiliary
 AFIT,Air Force Institute of Technology
 AFJROTC,Air Force Junior Reserve Officer Training Corps
 AFRH,Armed Forces Retirement Home
@@ -452,7 +451,7 @@ ALS,Airman Leadership School
 Amn,Airman
 AMT,Academy Military Training
 APEX,Adaptive Planning and Execution
-AU-ABC ,Air University Associate-to-Baccalaureate Cooperative Program 
+AU-ABC ,Air University Associate-to-Baccalaureate Cooperative Program
 B-SMART ,"balanced, specific, measurable, attainable, results-focused, and time-bound "
 CAA,Career Assistance Advisor
 CCM,Command Chief Master Sergeant
@@ -477,27 +476,27 @@ ILE,Intermediate Leadership Experience
 IMT,Information Management Tool
 JP,Joint Publication
 MFR,Memo for Record
-MKTS ,Military Knowledge and Testing System 
-MOPP ,Mission-Oriented Protective Posture 
+MKTS ,Military Knowledge and Testing System
+MOPP ,Mission-Oriented Protective Posture
 MSgt,Master Sergeant
-MTI ,Military Training Instructor 
-MTL ,Military Training Leader 
-OES ,Officer Evaluation System 
-OPR ,Officer Performance Report 
-PACE ,Profession of Arms Center of Excellence 
-PL ,Protection Level 
+MTI ,Military Training Instructor
+MTL ,Military Training Leader
+OES ,Officer Evaluation System
+OPR ,Officer Performance Report
+PACE ,Profession of Arms Center of Excellence
+PL ,Protection Level
 PME,Professional Military Education
 PTSD,Posttraumatic Stress Disorde
 RAP,Recruiter Assistance Program
 SITW,State Income Taw Withholding
 SMART ,"Specific, Measurable, Attainable, Results-focused, and Time-bound "
-SMSgt ,Senior Master Sergeant 
-SOAR ,Scholarships for Outstanding Airmen to ROTC 
+SMSgt ,Senior Master Sergeant
+SOAR ,Scholarships for Outstanding Airmen to ROTC
 SrA,Senior Airman
 SSgt,Staff Sergeant
-TA ,Transactional Analysis 
-TSgt ,Technical Sergeant 
-UDM ,Unit Deployed Manager 
-UIF ,Unfavorable Information File 
+TA ,Transactional Analysis
+TSgt ,Technical Sergeant
+UDM ,Unit Deployed Manager
+UIF ,Unfavorable Information File
 USS,United States Ship
-WEAR ,We Are All Recruiters 
+WEAR ,We Are All Recruiters
