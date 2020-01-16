@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	. "git.maxset.io/server/knaxim/database"
-	mongodb "git.maxset.io/server/knaxim/database/mongo"
+	. "git.maxset.io/web/knaxim/internal/database"
+	mongodb "git.maxset.io/web/knaxim/internal/database/mongo"
 )
 
 var db = &mongodb.Database{

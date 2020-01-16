@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"git.maxset.io/server/knaxim/database/mongo"
+	"git.maxset.io/web/knaxim/internal/database/mongo"
 )
 
 func TestCli(t *testing.T) {

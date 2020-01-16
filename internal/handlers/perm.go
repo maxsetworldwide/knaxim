@@ -1,19 +1,21 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"errors"
 	"net/http"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/util"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupPerm(r *mux.Router) {
-	r.Use(cookieMiddleware)
+func AttachPerm(r *mux.Router) {
+	// TODO: Move neccessary middleware use commands here and each attach??
+	r.Use(UserCookie)
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(true)).Methods("POST")
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(false)).Methods("DELETE")
 	r.HandleFunc("/{type}/{id}", getPermissions).Methods("GET")
@@ -60,7 +62,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) database.PermissionI {
 		}
 		g, err := userbase.Get(id)
 		if err != nil {
-			verboseRequest(r, "error getting group for pull permission")
+			util.VerboseRequest(r, "error getting group for pull permission")
 			panic(err)
 		}
 		var ok bool
@@ -76,7 +78,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) database.PermissionI {
 		}
 		rec, err := filebase.Get(id)
 		if err != nil {
-			verboseRequest(r, "error getting file for pull permission")
+			util.VerboseRequest(r, "error getting file for pull permission")
 			panic(err)
 		}
 		return rec.(database.PermissionI)
@@ -113,7 +115,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 			}
 			target, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(id)
 			if err != nil {
-				verboseRequest(r, "Failed to get owner from id to change permission for")
+				util.VerboseRequest(r, "Failed to get owner from id to change permission for")
 				panic(err)
 			}
 			permobj.SetPerm(target, "view", permval)
@@ -128,7 +130,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 			err = errInvalidPerm
 		}
 		if err != nil {
-			verboseRequest(r, "unable to update permissions")
+			util.VerboseRequest(r, "unable to update permissions")
 			panic(err)
 		}
 		w.Write([]byte("Permission Updated"))

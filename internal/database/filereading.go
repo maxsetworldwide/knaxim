@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.Reader, db Database) (fs *FileStore, err error) {

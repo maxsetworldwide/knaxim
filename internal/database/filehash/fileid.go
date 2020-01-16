@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"git.maxset.io/server/knaxim/database/brand"
+	"git.maxset.io/web/knaxim/internal/database/brand"
 )
 
 type FileID struct {

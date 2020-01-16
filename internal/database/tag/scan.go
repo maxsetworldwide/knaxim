@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"io"
 
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 func isChar(b byte) bool {

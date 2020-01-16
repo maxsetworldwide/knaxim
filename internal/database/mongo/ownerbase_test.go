@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/server/knaxim/database"
+	"git.maxset.io/web/knaxim/internal/database"
 )
 
 func TestOwnerbase(t *testing.T) {

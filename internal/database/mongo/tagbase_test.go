@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
 )
 
 func TestTagbase(t *testing.T) {

@@ -1,7 +1,9 @@
-package main
+package handlers
 
 import (
 	"regexp"
+
+	"git.maxset.io/web/knaxim/internal/util"
 	"github.com/badoux/checkmail"
 )
 
@@ -16,7 +18,7 @@ var validDirName = regexp.MustCompile(`^[[:print:]]{1,100}$`).MatchString
 
 func validEmail(email string) bool {
 	if err := checkmail.ValidateFormat(email); err != nil {
-		verbose("invalid email form (%s): %s", email, err.Error())
+		util.Verbose("invalid email form (%s): %s", email, err.Error())
 		return false
 	}
 	// if err := checkmail.ValidateHost(email); err != nil {

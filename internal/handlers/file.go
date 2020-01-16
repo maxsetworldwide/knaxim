@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -10,16 +10,18 @@ import (
 	"strconv"
 	"time"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/database/filehash"
-	"git.maxset.io/server/knaxim/database/tag"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/config"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/gorilla/mux"
 )
 
-func setupFile(r *mux.Router) {
-	r.Use(cookieMiddleware)
+func AttachFile(r *mux.Router) {
+	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
 	r.HandleFunc("", createFile).Methods("PUT")
@@ -42,17 +44,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	var tikapath string
-	if conf.Tika.Type == "local" {
-		tikapath = tserver.URL()
-	} else {
-		tikapath = conf.Tika.Path + ":" + func() string {
-			if len(conf.Tika.Port) == 0 {
-				return "9998"
-			}
-			return conf.Tika.Port
-		}()
-	}
+	tikapath := config.T.Path
 	contentex := database.NewContentExtractor(nil, tikapath)
 	var contentlines []database.ContentLine
 	if csvextension.MatchString(file.GetName()) {
@@ -69,8 +61,8 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	for i := range contentlines {
 		contentlines[i].ID = fs.ID
 	}
-	// verbose("generated content: %v", contentlines)
-	err = db.Content(ctx).Insert(contentlines...)
+	// util.Verbose("generated content: %v", contentlines)
+	err = config.DB.Content(ctx).Insert(contentlines...)
 	if err != nil {
 		return err
 	}
@@ -82,7 +74,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	return db.Tag(ctx).UpsertStore(fs.ID, tags...)
+	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
 }
 
 func createFile(w http.ResponseWriter, r *http.Request) {
@@ -96,15 +88,15 @@ func createFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Error Uploading File"))
 	}
-	if fheader.Size > conf.FileLimit {
+	if fheader.Size > config.V.FileLimit {
 		panic(srverror.Basic(460, "File exceeds maximum file size"))
 	}
-	timescale := time.Duration((fheader.Size / 1024) * conf.FileTimeoutRate)
-	if timescale > conf.MaxFileTimeout {
-		timescale = conf.MaxFileTimeout
+	timescale := time.Duration((fheader.Size / 1024) * config.V.FileTimeoutRate)
+	if timescale > config.V.MaxFileTimeout {
+		timescale = config.V.MaxFileTimeout
 	}
-	if timescale < conf.MinFileTimeout {
-		timescale = conf.MinFileTimeout
+	if timescale < config.V.MinFileTimeout {
+		timescale = config.V.MinFileTimeout
 	}
 	fctx, cancel := context.WithTimeout(context.Background(), timescale)
 	defer cancel()
@@ -115,18 +107,18 @@ func createFile(w http.ResponseWriter, r *http.Request) {
 		Name: fheader.Filename,
 		Date: database.FileTime{Upload: time.Now()},
 	}
-	fs, err := database.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, db)
+	fs, err := database.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
 	if err != nil {
 		panic(err)
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
-			verboseRequest(r, "Processing Error: %s", err.Error())
+			util.VerboseRequest(r, "Processing Error: %s", err.Error())
 		}
 	}()
 	if len(r.FormValue("dir")) > 0 {
-		err = db.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
+		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
 			Word: r.FormValue("dir"),
 			Type: tag.USER,
 			Data: tag.Data{
@@ -165,22 +157,22 @@ func webPageUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Unable to Get Address", r.FormValue("url"), URL.String()))
 	}
-	if res.ContentLength > -1 && res.ContentLength > conf.FileLimit {
+	if res.ContentLength > -1 && res.ContentLength > config.V.FileLimit {
 		panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
 	}
 
 	var timescale time.Duration
 	if res.ContentLength > -1 {
-		timescale = time.Duration((res.ContentLength / 1024) * conf.FileTimeoutRate)
-		if timescale > conf.MaxFileTimeout {
-			timescale = conf.MaxFileTimeout
+		timescale = time.Duration((res.ContentLength / 1024) * config.V.FileTimeoutRate)
+		if timescale > config.V.MaxFileTimeout {
+			timescale = config.V.MaxFileTimeout
 		}
-		if timescale < conf.MinFileTimeout {
-			timescale = conf.MinFileTimeout
+		if timescale < config.V.MinFileTimeout {
+			timescale = config.V.MinFileTimeout
 		}
 
 	} else {
-		timescale = conf.MaxFileTimeout
+		timescale = config.V.MaxFileTimeout
 	}
 	fctx, cancel := context.WithTimeout(context.Background(), timescale)
 	defer cancel()
@@ -194,14 +186,14 @@ func webPageUpload(w http.ResponseWriter, r *http.Request) {
 		},
 		URL: URL.String(),
 	}
-	fs, err := database.InjestFile(fctx, file, res.Header.Get("Content-Type"), res.Body, db)
+	fs, err := database.InjestFile(fctx, file, res.Header.Get("Content-Type"), res.Body, config.DB)
 	if err != nil {
 		panic(err)
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
 	go processContent(pctx, cncl, file, fs)
 	if len(r.FormValue("dir")) > 0 {
-		err = db.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
+		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
 			Word: r.FormValue("dir"),
 			Type: tag.USER,
 			Data: tag.Data{
@@ -309,7 +301,7 @@ func searchFile(w http.ResponseWriter, r *http.Request) {
 		owner = r.Context().Value(USER).(database.Owner)
 	}
 	vals := mux.Vars(r)
-	regex := buildSearchRegex(r.FormValue("find"))
+	regex := util.BuildSearchRegex(r.FormValue("find"))
 	start, err := strconv.Atoi(vals["start"])
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "searchFile start not a number"))

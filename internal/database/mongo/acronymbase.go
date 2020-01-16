@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

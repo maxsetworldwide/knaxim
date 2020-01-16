@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -10,8 +10,10 @@ import (
 	"net/url"
 	dbug "runtime/debug"
 
-	"git.maxset.io/server/knaxim/database"
-	"git.maxset.io/server/knaxim/srverror"
+	"git.maxset.io/web/knaxim/internal/config"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/util"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 type ResWrtrCapturer struct {
@@ -26,38 +28,38 @@ func (rwc *ResWrtrCapturer) WriteHeader(sc int) {
 	rwc.internal.WriteHeader(sc)
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
+func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nw := new(ResWrtrCapturer)
 		nw.StatusCode = 200
 		nw.internal = w
-		verboseRequest(r, "Recieved: %+v", r.Header)
+		util.VerboseRequest(r, "Recieved: %+v", r.Header)
 		next.ServeHTTP(nw, r)
-		verboseRequest(r, "Complete(%d): %+v", nw.StatusCode, nw.Header())
+		util.VerboseRequest(r, "Complete(%d): %+v", nw.StatusCode, nw.Header())
 	})
 }
 
 var debugflag = flag.Bool("debug", false, "write debug messages to response Writer")
 
-func RecoveryMiddleWare(next http.Handler) http.Handler {
+func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
 				if se, ok := err.(srverror.Error); ok {
 					se.ServeHTTP(w, r)
-					verboseRequest(r, se.Error())
+					util.VerboseRequest(r, se.Error())
 				} else {
-					verbose("Non-standard panic")
+					util.Verbose("Non-standard panic")
 					w.WriteHeader(500)
 					w.Write([]byte("{\"message\": \"Server Error\"}"))
 					w.Header().Set("Content-Type", "application/json")
 					switch v := err.(type) {
 					case string:
-						verboseRequest(r, "Panic: %s", v)
+						util.VerboseRequest(r, "Panic: %s", v)
 					case error:
-						verboseRequest(r, "Panic: %s", v.Error())
+						util.VerboseRequest(r, "Panic: %s", v.Error())
 					default:
-						verboseRequest(r, "Panic: %v", v)
+						util.VerboseRequest(r, "Panic: %v", v)
 					}
 					if *debugflag {
 						dbug.PrintStack()
@@ -70,7 +72,7 @@ func RecoveryMiddleWare(next http.Handler) http.Handler {
 }
 
 //Token verification MiddleWare
-func cookieMiddleware(next http.Handler) http.Handler {
+func UserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 		uid, err := database.GetCookieUid(r)
@@ -93,13 +95,13 @@ func cookieMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func databaseMiddleware(next http.Handler) http.Handler {
+func ConnectDatabase(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithCancel(r.Context())
 		defer cancel()
 		r = r.WithContext(ctx)
 
-		filebase := db.File(r.Context())
+		filebase := config.DB.File(r.Context())
 		defer filebase.Close(r.Context())
 		r = r.WithContext(context.WithValue(r.Context(), database.FILE, filebase))
 
@@ -127,10 +129,10 @@ func databaseMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func timeoutMiddleware(next http.Handler) http.Handler {
+func Timeout(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if conf.BasicTimeout > 0 {
-			c, cancel := context.WithTimeout(r.Context(), conf.BasicTimeout)
+		if config.V.BasicTimeout > 0 {
+			c, cancel := context.WithTimeout(r.Context(), config.V.BasicTimeout)
 			defer cancel()
 			r = r.WithContext(c)
 		}
@@ -179,7 +181,7 @@ func (jf jsonform) Values() url.Values {
 	return out
 }
 
-func parseMiddleware(next http.Handler) http.Handler {
+func ParseBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Type") == "application/json" {
 			var jf jsonform
@@ -187,8 +189,12 @@ func parseMiddleware(next http.Handler) http.Handler {
 				panic(srverror.New(err, 400, "Unable to decode json object"))
 			}
 			r.PostForm = jf.Values()
+			if err := r.ParseForm(); err != nil {
+				panic(srverror.New(err, 400, "Unable to parse form values"))
+			}
+		} else if r.Header.Get("Content-Type") == "multipart/form-data" {
 			if err := r.ParseMultipartForm(32 << 20); err != nil {
-				panic(srverror.New(err, 400, "Unable to parse url form values"))
+				panic(srverror.New(err, 400, "Unable to parse multipart form values"))
 			}
 		}
 		next.ServeHTTP(w, r)
