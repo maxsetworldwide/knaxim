@@ -1,7 +1,22 @@
+<!--
+pdf-page: an individual page for the pdf viewer
+
+props:
+  page: the page object given by pdfjs
+  scale: the zoom level of the document
+  scrollTop: the pdf viewer's current scrollTop
+  clientHeight: the pdf viewer's current height (paired with scrollTop
+                for determining visibility)
+
+events:
+  'visible', pageNum: emitted when this page becomes visible (1 indexed)
+  'matches', { pageNum, matches }: emitted upon finishing the search for matches
+
+-->
 <template>
   <div>
-    <canvas :ref="canvasID" v-bind="canvasAttrs"/>
-    <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID"/>
+    <canvas :ref="canvasID" v-bind="canvasAttrs" />
+    <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" />
   </div>
 </template>
 
@@ -43,6 +58,22 @@ export default {
       const { elementTop, elementBottom, scrollTop, scrollBottom } = this
       if (!elementBottom) return
       return elementTop < scrollBottom && elementBottom > scrollTop
+    },
+    isElementFocused () {
+      const {
+        elementTop,
+        elementBottom,
+        scrollTop,
+        scrollBottom,
+        clientHeight
+      } = this
+      if (!elementBottom) return
+      return (
+        (elementTop > scrollTop && elementTop < scrollTop + clientHeight / 2) ||
+        (elementBottom < scrollBottom &&
+          elementBottom > scrollBottom - clientHeight / 2) ||
+        (elementTop <= scrollTop && elementBottom >= scrollBottom)
+      )
     },
     elementBottom () {
       return this.elementTop + this.elementHeight
@@ -133,7 +164,12 @@ export default {
         return result
       }
 
-      function getSpanFromJump (globalDelta, globalStart, spanStart, localStart) {
+      function getSpanFromJump (
+        globalDelta,
+        globalStart,
+        spanStart,
+        localStart
+      ) {
         const globalEnd = globalStart + globalDelta
         while (globalDelta > 0 && spanStart < textSpans.length) {
           let toNextSpan = textSpans[spanStart].innerText.length - localStart
@@ -167,12 +203,20 @@ export default {
           minOffset = -1
           punct.forEach(p => {
             const candidate = joinedContent.indexOf(p, globalOffset)
-            if (candidate !== -1 && (candidate <= minOffset || minOffset === -1)) {
+            if (
+              candidate !== -1 &&
+              (candidate <= minOffset || minOffset === -1)
+            ) {
               minOffset = candidate
             }
           })
           if (minOffset > -1) {
-            const next = getSpanFromJump(minOffset - globalOffset, globalOffset, span, localOffset)
+            const next = getSpanFromJump(
+              minOffset - globalOffset,
+              globalOffset,
+              span,
+              localOffset
+            )
             result.push({
               start: {
                 span: span,
@@ -185,7 +229,12 @@ export default {
                 global: next.global
               }
             })
-            const nextStart = getSpanFromJump(1, next.global, next.span, next.offset)
+            const nextStart = getSpanFromJump(
+              1,
+              next.global,
+              next.span,
+              next.offset
+            )
             globalOffset = nextStart.global
             localOffset = nextStart.offset
             span = nextStart.span
@@ -193,7 +242,12 @@ export default {
         } while (minOffset > 0)
         const offsetToEnd = joinedContent.length - globalOffset
         if (offsetToEnd > 0) {
-          const final = getSpanFromJump(joinedContent.length - globalOffset, globalOffset, span, localOffset)
+          const final = getSpanFromJump(
+            joinedContent.length - globalOffset,
+            globalOffset,
+            span,
+            localOffset
+          )
           result.push({
             start: {
               span: span,
@@ -218,10 +272,15 @@ export default {
         search.forEach(currTerm => {
           if (currTerm.length === 0) return
           let candidateOffset = joinedContent.indexOf(currTerm, globalIdx)
-
-          if ((candidateOffset <= minOffset && candidateOffset !== -1) || (minOffset === -1 && candidateOffset !== -1)) {
+          if (
+            (candidateOffset <= minOffset && candidateOffset !== -1) ||
+            (minOffset === -1 && candidateOffset !== -1)
+          ) {
             // be sure to favor larger word e.g. for searching 'to' and 'tomorrow'
-            if (candidateOffset === minOffset && nextTermLength > currTerm.length) {
+            if (
+              candidateOffset === minOffset &&
+              nextTermLength > currTerm.length
+            ) {
               return
             }
             minOffset = candidateOffset // global offset
@@ -234,17 +293,31 @@ export default {
         }
         // find sentence bounds and span idx
         // span idx
-        let start = getSpanFromJump(minOffset - globalIdx, globalIdx, spanIdx, localIdx)
+        let start = getSpanFromJump(
+          minOffset - globalIdx,
+          globalIdx,
+          spanIdx,
+          localIdx
+        )
         // get end point
-        let end = getSpanFromJump(nextTermLength, start.global, start.span, start.offset)
+        let end = getSpanFromJump(
+          nextTermLength,
+          start.global,
+          start.span,
+          start.offset
+        )
 
         // sentence bounds
         let sentenceIdx = 0
         let sentenceFound = false
-        for (; sentenceIdx < sentenceBounds.length && !sentenceFound; sentenceIdx++) {
+        for (
+          ;
+          sentenceIdx < sentenceBounds.length && !sentenceFound;
+          sentenceIdx++
+        ) {
           const curr = sentenceBounds[sentenceIdx]
-          sentenceFound = curr.start.global <= start.global &&
-            curr.end.global >= end.global
+          sentenceFound =
+            curr.start.global <= start.global && curr.end.global >= end.global
         }
         if (!sentenceFound) {
           // console.log('pdf-page: sentence not found: start:', start, 'end:', end)
@@ -275,7 +348,10 @@ export default {
       for (const matchIdx in this.matches) {
         let match = this.matches[matchIdx]
         let sentence = this.sentenceBounds[match.sentence]
-        let sentenceText = this.joinedContent.substring(sentence.start.global, sentence.end.global)
+        let sentenceText = this.joinedContent.substring(
+          sentence.start.global,
+          sentence.end.global
+        )
         let span = this.textSpans[this.matches[matchIdx].start.span]
         matchContexts.push({
           sentenceText,
@@ -296,7 +372,9 @@ export default {
         this.textContentItemsStr = []
         pdfjs.renderTextLayerTask = pdfjs.renderTextLayer({
           textContent: this.textContent,
-          viewport: this.page.getViewport({ scale: this.scale / this.pixelRatio }),
+          viewport: this.page.getViewport({
+            scale: this.scale / this.pixelRatio
+          }),
           container: this.$refs[this.textLayerID],
           textDivs: this.textSpans,
           textContentItemsStr: this.textContentItemsStr
@@ -373,11 +451,13 @@ export default {
         })
         // push segments until we reach the end of the match
         for (let i = match.start.span + 1; i < match.end.span; i++) {
-          const interSeg = [{
-            start: 0,
-            end: this.textContentItemsStr[i].length,
-            type: 'keyword'
-          }]
+          const interSeg = [
+            {
+              start: 0,
+              end: this.textContentItemsStr[i].length,
+              type: 'keyword'
+            }
+          ]
           segments[i] = interSeg
         }
         // push tail end of keyword if we crossed spans
@@ -518,6 +598,11 @@ export default {
         this.drawPage()
       }
     },
+    isElementFocused (val) {
+      if (val) {
+        this.$emit('visible', this.page.pageIndex + 1)
+      }
+    },
     scale () {
       this.updateElementBounds()
       this.staleTextLayer = true
@@ -539,7 +624,9 @@ export default {
     this.destroyPage(this.page)
   },
   created () {
-    this.viewport = this.page.getViewport({ scale: this.scale / this.pixelRatio })
+    this.viewport = this.page.getViewport({
+      scale: this.scale / this.pixelRatio
+    })
   },
   mounted () {
     this.updateElementBounds()
@@ -552,28 +639,25 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .text-layer {
-   position: absolute;
-   display: inline-block;
-   left: 0;
-   top: 0;
-   right: 0;
-   bottom: 0;
-   overflow: hidden;
-   opacity: 0.5;
-   line-height: 1.0;
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0.5;
+  line-height: 1;
 }
 
 .pdf-page {
   display: block;
   margin: 0 auto;
 }
-
 </style>
 
-<style lang='scss'>
-
+<style lang="scss">
 .text-layer > span {
   color: transparent;
   position: absolute;
@@ -602,5 +686,4 @@ export default {
   background-color: green;
   cursor: pointer;
 }
-
 </style>
