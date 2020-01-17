@@ -62,7 +62,11 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		contentlines[i].ID = fs.ID
 	}
 	// util.Verbose("generated content: %v", contentlines)
-	err = config.DB.Content(ctx).Insert(contentlines...)
+	{
+		cnt := config.DB.Content(ctx)
+		defer cnt.Close(ctx)
+		err = cnt.Insert(contentlines...)
+	}
 	if err != nil {
 		return err
 	}
@@ -74,7 +78,9 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
+	tg := config.DB.Tag(ctx)
+	defer tg.Close(ctx)
+	return tg.UpsertStore(fs.ID, tags...)
 }
 
 func createFile(w http.ResponseWriter, r *http.Request) {
