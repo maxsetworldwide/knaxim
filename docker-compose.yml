@@ -22,6 +22,9 @@ services:
       - "27017:27017"
     networks:
       - app-plane
+    volumes:
+      - mongo:/data/db
+      - mongo-cfg:/data/configdb
   tika:
     image: lexpredict/tika-server:latest
     # Warning !!! port is mapped to host for Testing only!
@@ -29,6 +32,10 @@ services:
       - "9998:9998"
     networks:
       - app-plane
+
+volumes:
+  mongo:
+  mongo-cfg:
 
 networks:
   app-plane:
