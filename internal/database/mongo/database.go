@@ -291,13 +291,6 @@ func (d *Database) initclient(c context.Context) {
 			panic(err)
 		}
 		d.ctx = c
-		go func(client *mongo.Client, ctx context.Context) {
-			select {
-			case <-ctx.Done():
-				client.Disconnect(context.Background())
-				d.Close(context.Background())
-			}
-		}(d.client, d.ctx)
 	}
 }
 
