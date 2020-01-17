@@ -33,6 +33,7 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 
 	{
 		ownerbase := db.Owner(ctx)
+		defer ownerbase.Close(ctx)
 		currentspace, err := ownerbase.GetSpace(file.GetOwner().GetID())
 		if err != nil {
 			panic(err)
@@ -47,6 +48,7 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 	}
 	{
 		sb := db.Store(ctx)
+		defer sb.Close(ctx)
 		matches, err := sb.MatchHash(fs.ID.Hash)
 		if err != nil {
 			panic(err)
@@ -72,6 +74,7 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 	}
 	{
 		fb := db.File(ctx)
+		defer fb.Close(ctx)
 		tempID, err := fb.Reserve(filehash.NewFileID(fs.ID))
 		if err != nil {
 			panic(err)
