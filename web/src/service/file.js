@@ -39,7 +39,7 @@ const FileService = {
   },
 
   downloadURL ({ fid }) {
-    return Vue.axios.defaults.baseURL + `file/${fid}/download`
+    return Vue.axios.defaults.baseURL + `/file/${fid}/download`
   },
 
   erase ({ fid }) {

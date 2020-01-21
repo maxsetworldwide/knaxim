@@ -7,7 +7,7 @@
 
 <script>
 import TextViewer from '@/components/text-viewer'
-import PDFDoc from '@/components/pdf-doc'
+import PDFDoc from '@/components/pdf/pdf-doc'
 import { TOUCH } from '@/store/mutations.type'
 import FileService from '@/service/file'
 
