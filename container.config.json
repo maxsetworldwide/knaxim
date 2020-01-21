@@ -43,5 +43,9 @@
 		"Pass": "guestpass",
 		"Email": "info@maxset.org"
 	},
-	"SetupTimeout": 60000000000
+	"SetupTimeout": 60000000000,
+  "UserTimeouts": {
+    "Inactivity": 86400000000000,
+    "Total": 86400000000000
+  }
 }

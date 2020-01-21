@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	dbug "runtime/debug"
+	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
@@ -89,6 +90,11 @@ func UserCookie(next http.Handler) http.Handler {
 			panic(srverror.New(errors.New("Guest User cannot perform action"), 401, "login", "Invalid Guest Action", r.Method, r.URL.Path))
 		} else if !u.GetRole("Guest") && !u.CheckCookie(r) {
 			panic(srverror.New(errors.New("Cookie not valid"), 401, "login", "Cookie Invalid", uid.String()))
+		} else {
+			u.RefreshCookie(time.Now().Add(config.V.UserTimeouts.Inactivity))
+			if err := userbase.Update(u); err != nil {
+				panic(err)
+			}
 		}
 		r = r.WithContext(context.WithValue(r.Context(), USER, user))
 		next.ServeHTTP(w, r)
