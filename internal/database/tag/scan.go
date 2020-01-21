@@ -15,6 +15,9 @@ func isChar(b byte) bool {
 	if b >= 'A' && b <= 'Z' {
 		return true
 	}
+	if b >= '0' && b <= '9' {
+		return true
+	}
 	return false
 }
 
