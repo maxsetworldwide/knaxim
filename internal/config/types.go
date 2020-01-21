@@ -48,4 +48,8 @@ type Configuration struct {
 	AdminKey        string
 	GuestUser       *Guest
 	SetupTimeout    time.Duration
+	UserTimeouts    struct {
+		Inactivity time.Duration
+		Total      time.Duration
+	}
 }

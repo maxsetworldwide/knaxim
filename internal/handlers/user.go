@@ -176,7 +176,10 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if user.GetLock().Valid(map[string]interface{}{"pass": r.PostFormValue("pass")}) {
-		cs := user.NewCookies(time.Now().Add(30*time.Minute), time.Now().Add(24*time.Hour))
+		cs := user.NewCookies(
+			time.Now().Add(config.V.UserTimeouts.Inactivity),
+			time.Now().Add(config.V.UserTimeouts.Total),
+		)
 		if err = userbase.Update(user); err != nil {
 			panic(err)
 		}
