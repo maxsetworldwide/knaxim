@@ -136,7 +136,10 @@ func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 func groupinfo(w http.ResponseWriter, r *http.Request) {
-	group := r.Context().Value(GROUP).(database.GroupI)
+	group, ok := r.Context().Value(GROUP).(database.GroupI)
+	if !ok {
+		panic(srverror.Basic(404, "Not Found", "id was an owner but not a group"))
+	}
 	user := r.Context().Value(USER).(database.UserI)
 	var result GroupInformation
 	if group.Match(user) {
