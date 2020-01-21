@@ -290,7 +290,6 @@ func (d *Database) initclient(c context.Context) {
 		if err != nil {
 			panic(err)
 		}
-		d.ctx = c
 	}
 }
 

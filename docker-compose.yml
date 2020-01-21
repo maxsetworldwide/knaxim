@@ -7,7 +7,7 @@ services:
       - "8005:80"
     volumes:
     # These are static files located on the host machine.
-      - /public:/public:ro
+      - web:/public
     depends_on:
       - mongo
       - tika
@@ -22,6 +22,9 @@ services:
       - "27017:27017"
     networks:
       - app-plane
+    volumes:
+      - mongo:/data/db
+      - mongo-cfg:/data/configdb
   tika:
     image: lexpredict/tika-server:latest
     # Warning !!! port is mapped to host for Testing only!
@@ -30,5 +33,9 @@ services:
     networks:
       - app-plane
 
+volumes:
+  web:
+  mongo:
+  mongo-cfg:
 networks:
   app-plane:
