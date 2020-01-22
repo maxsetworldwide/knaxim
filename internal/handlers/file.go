@@ -98,11 +98,11 @@ func createFile(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(460, "File exceeds maximum file size"))
 	}
 	timescale := time.Duration((fheader.Size / 1024) * config.V.FileTimeoutRate)
-	if timescale > config.V.MaxFileTimeout {
-		timescale = config.V.MaxFileTimeout
+	if timescale > config.V.MaxFileTimeout.Duration {
+		timescale = config.V.MaxFileTimeout.Duration
 	}
-	if timescale < config.V.MinFileTimeout {
-		timescale = config.V.MinFileTimeout
+	if timescale < config.V.MinFileTimeout.Duration {
+		timescale = config.V.MinFileTimeout.Duration
 	}
 	fctx, cancel := context.WithTimeout(context.Background(), timescale)
 	defer cancel()
@@ -170,15 +170,15 @@ func webPageUpload(w http.ResponseWriter, r *http.Request) {
 	var timescale time.Duration
 	if res.ContentLength > -1 {
 		timescale = time.Duration((res.ContentLength / 1024) * config.V.FileTimeoutRate)
-		if timescale > config.V.MaxFileTimeout {
-			timescale = config.V.MaxFileTimeout
+		if timescale > config.V.MaxFileTimeout.Duration {
+			timescale = config.V.MaxFileTimeout.Duration
 		}
-		if timescale < config.V.MinFileTimeout {
-			timescale = config.V.MinFileTimeout
+		if timescale < config.V.MinFileTimeout.Duration {
+			timescale = config.V.MinFileTimeout.Duration
 		}
 
 	} else {
-		timescale = config.V.MaxFileTimeout
+		timescale = config.V.MaxFileTimeout.Duration
 	}
 	fctx, cancel := context.WithTimeout(context.Background(), timescale)
 	defer cancel()

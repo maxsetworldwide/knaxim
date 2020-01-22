@@ -47,8 +47,8 @@ func setup() {
 	if err := config.ParseConfig(*conf_path); err != nil {
 		log.Fatalln("unable to parse config:", err)
 	}
-	//log.Printf("Configuration: %v", conf);
-	setupctx, cancel := context.WithTimeout(context.Background(), config.V.SetupTimeout)
+	log.Printf("Configuration: %+v", config.V)
+	setupctx, cancel := context.WithTimeout(context.Background(), config.V.SetupTimeout.Duration)
 	defer cancel()
 	if err := config.DB.Init(setupctx, config.V.DatabaseReset); err != nil {
 		log.Fatalf("database init error: %v\n", err)
@@ -126,7 +126,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
-	ctx, cancel := context.WithTimeout(context.Background(), config.V.GracefulTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.V.GracefulTimeout.Duration)
 	defer cancel()
 	config.V.Server.Shutdown(ctx)
 	log.Println("Shutting down")
