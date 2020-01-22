@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 )
@@ -29,16 +30,32 @@ type Tika struct {
 	PingTimeout int    `json:"child_ping_timeout"`
 }
 
+type Duration struct {
+	time.Duration
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 {
+		return errors.New("no data when parsing data")
+	}
+	var durstr string
+	if err := json.Unmarshal(b, &durstr); err == nil {
+		d.Duration, err = time.ParseDuration(durstr)
+		return err
+	}
+	return json.Unmarshal(b, &(d.Duration))
+}
+
 type Configuration struct {
 	Address         string
 	StaticPath      string          `json:"static"`
 	Server          *http.Server    `json:"server"`
 	Cert            *Ssl            `json:"cert"`
-	GracefulTimeout time.Duration   `json:"close_time"`
-	BasicTimeout    time.Duration   `json:"basic_timeout"`
+	GracefulTimeout Duration        `json:"close_time"`
+	BasicTimeout    Duration        `json:"basic_timeout"`
 	FileTimeoutRate int64           `json:"file_timeout_rate"` //nanoseconds per 1 KB
-	MaxFileTimeout  time.Duration   `json:"max_file_timeout"`
-	MinFileTimeout  time.Duration   `json:"min_file_timeout"`
+	MaxFileTimeout  Duration        `json:"max_file_timeout"`
+	MinFileTimeout  Duration        `json:"min_file_timeout"`
 	DatabaseType    string          `json:"db_type"`
 	Database        json.RawMessage `json:"db"`
 	DatabaseReset   bool            `json:"db_clear"`
@@ -47,9 +64,9 @@ type Configuration struct {
 	FreeSpace       int             `json:"total_free_space"`
 	AdminKey        string
 	GuestUser       *Guest
-	SetupTimeout    time.Duration
+	SetupTimeout    Duration
 	UserTimeouts    struct {
-		Inactivity time.Duration
-		Total      time.Duration
+		Inactivity Duration
+		Total      Duration
 	}
 }
