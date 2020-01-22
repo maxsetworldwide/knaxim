@@ -13,6 +13,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/passentropy"
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -31,7 +32,8 @@ func AttachUser(r *mux.Router) {
 	r.Handle("/data", UserCookie(http.HandlerFunc(getUserData))).Methods("GET")
 }
 
-func lookupUser(w http.ResponseWriter, r *http.Request) {
+func lookupUser(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	vals := mux.Vars(r)
 	userName := vals["name"]
 	if len(userName) == 0 {
@@ -41,9 +43,7 @@ func lookupUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildUserInfo(r, user)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "Unable to encode lookupUser"))
-	}
+	w.Set("user", BuildUserInfo(r, user))
 }
 
 type dataUsage struct {
@@ -105,7 +105,8 @@ func createAdmin(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(nuser.ID.String()))
 }
 
-func userInfo(w http.ResponseWriter, r *http.Request) {
+func userInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(database.UserI)
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	if r.FormValue("id") != "" {
@@ -122,10 +123,11 @@ func userInfo(w http.ResponseWriter, r *http.Request) {
 			panic(srverror.Basic(404, "ID Not Found"))
 		}
 	}
-	if err := json.NewEncoder(w).Encode(BuildUserInfo(r, user)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "userInfo encode Error"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	resp := BuildUserInfo(r, user)
+	w.Set("id", resp.ID)
+	w.Set("name", resp.Name)
+	w.Set("data", resp.Data)
 }
 
 func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {

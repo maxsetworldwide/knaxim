@@ -11,6 +11,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -93,7 +94,8 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Group Created"))
 }
 
-func getGroups(w http.ResponseWriter, r *http.Request) {
+func getGroups(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(database.UserI)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -108,10 +110,13 @@ func getGroups(w http.ResponseWriter, r *http.Request) {
 	for _, gr := range mgroups {
 		result["member"] = append(result["member"], BuildGroupInfo(gr))
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "getGroups encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("own", result["own"])
+	w.Set("member", result["member"])
+	//if err := json.NewEncoder(w).Encode(result); err != nil {
+	//	panic(srverror.New(err, 500, "Server Error", "getGroups encode json"))
+	//}
+	//w.Header().Add("Content-Type", "application/json")
 }
 
 func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +140,8 @@ func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func groupinfo(w http.ResponseWriter, r *http.Request) {
+func groupinfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	group, ok := r.Context().Value(GROUP).(database.GroupI)
 	if !ok {
 		panic(srverror.Basic(404, "Not Found", "id was an owner but not a group"))
@@ -150,10 +156,9 @@ func groupinfo(w http.ResponseWriter, r *http.Request) {
 			Name: group.GetName(),
 		}
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "groupinfo encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", result.ID)
+	w.Set("name", result.Name)
 }
 
 func searchGroupFiles(w http.ResponseWriter, r *http.Request) {

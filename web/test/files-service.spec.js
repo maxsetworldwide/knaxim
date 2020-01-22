@@ -18,7 +18,9 @@ describe('FilesService', function () {
     it('e2e: returns [matched] property', (done) => {
       SearchService.userFiles({ find })
         .then(({ data }) => {
-          expect(Object.keys(data)).toEqual([ 'matched' ])
+          expect(Object.keys(data)).toContain(jasmine.arrayContaining([
+            'matched'
+          ]))
           done()
         })
         .catch(error => {

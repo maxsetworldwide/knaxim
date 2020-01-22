@@ -16,6 +16,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -83,7 +84,9 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	return tg.UpsertStore(fs.ID, tags...)
 }
 
-func createFile(w http.ResponseWriter, r *http.Request) {
+func createFile(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -137,13 +140,16 @@ func createFile(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":   file.GetID(),
-		"name": file.GetName(),
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "create file unable to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", file.GetID())
+	w.Set("name", file.GetName())
+	// if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	// 	"id":   file.GetID(),
+	// 	"name": file.GetName(),
+	// }); err != nil {
+	// 	panic(srverror.New(err, 500, "Server Error", "create file unable to encode json"))
+	// }
+	// w.Header().Add("Content-Type", "application/json")
 }
 
 var getter http.Client
@@ -221,7 +227,9 @@ func webPageUpload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func fileInfo(w http.ResponseWriter, r *http.Request) {
+func fileInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -248,14 +256,15 @@ func fileInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
 	finfo := FileInfo{frec, count, store.FileSize}
-	if err = json.NewEncoder(w).Encode(finfo); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "fileInfo encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("file", finfo.File)
+	w.Set("count", finfo.Count)
+	w.Set("size", finfo.Size)
 }
 
-func fileContent(w http.ResponseWriter, r *http.Request) {
+func fileContent(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -290,13 +299,16 @@ func fileContent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	var result FileContent
-	result.Length = len(lines)
-	result.Vals = lines
-	if err = json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "fileContent encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	// var result FileContent
+	// result.Length = len(lines)
+	// result.Vals = lines
+
+	w.Set("size", len(lines))
+	w.Set("lines", lines)
+	// if err = json.NewEncoder(w).Encode(result); err != nil {
+	// 	panic(srverror.New(err, 500, "Server Error", "fileContent encode json"))
+	// }
+	// w.Header().Add("Content-Type", "application/json")
 }
 
 func searchFile(w http.ResponseWriter, r *http.Request) {

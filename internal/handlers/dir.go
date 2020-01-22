@@ -11,6 +11,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -33,7 +34,8 @@ var missingContextErr = srverror.Basic(500, "Unable to access search context")
 
 var dirflag = "d"
 
-func getDirs(w http.ResponseWriter, r *http.Request) {
+func getDirs(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if gr := r.Context().Value(GROUP); gr != nil {
 		owner = gr.(database.Owner)
@@ -50,12 +52,13 @@ func getDirs(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"folders": dirs,
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "Failed to encode json"))
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Set("folders", dirs)
+	//if err := json.NewEncoder(w).Encode(map[string]interface{}{
+	//	"folders": dirs,
+	//}); err != nil {
+	//	panic(srverror.New(err, 500, "Server Error", "Failed to encode json"))
+	//}
+	//w.Header().Set("Content-Type", "application/json")
 }
 
 func createDir(w http.ResponseWriter, r *http.Request) {

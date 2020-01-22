@@ -30,6 +30,7 @@ func (rw *ResponseWriter) Header() http.Header {
 
 func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 	rw.init()
+
 	switch v := rw.data["message"].(type) {
 	case io.Writer:
 		return v.Write(data)
@@ -43,6 +44,7 @@ func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 		rw.data["message"] = string(data)
 		return len(data), nil
 	}
+
 }
 
 func (rw *ResponseWriter) WriteHeader(sc int) {
@@ -55,6 +57,7 @@ func (rw *ResponseWriter) Set(key string, val interface{}) {
 		delete(rw.data, key)
 		return
 	}
+
 	rw.data[key] = val
 }
 

@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 	"github.com/gorilla/mux"
 )
 
@@ -46,7 +46,8 @@ func changeRecordName(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendMatchedRecords(w http.ResponseWriter, r *http.Request, matches []database.FileI) {
+func sendMatchedRecords(out http.ResponseWriter, r *http.Request, matches []database.FileI) {
+	w := out.(*srvjson.ResponseWriter)
 	output := make(map[string]FileInfo)
 	for _, match := range matches {
 		count, err := r.Context().Value(database.CONTENT).(database.Contentbase).Len(match.GetID().StoreID)
@@ -59,12 +60,7 @@ func sendMatchedRecords(w http.ResponseWriter, r *http.Request, matches []databa
 		}
 		output[match.GetID().String()] = FileInfo{match, count, store.FileSize}
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"files": output,
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "sendMatchedRecords encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("files", output)
 }
 
 func getOwnedRecords(w http.ResponseWriter, r *http.Request) {
