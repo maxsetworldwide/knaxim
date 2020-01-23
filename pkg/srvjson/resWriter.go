@@ -8,13 +8,13 @@ import (
 )
 
 type ResponseWriter struct {
-	internal http.ResponseWriter
+	Internal http.ResponseWriter
 	data     map[string]interface{}
 }
 
 func NewRW(in http.ResponseWriter) *ResponseWriter {
 	return &ResponseWriter{
-		internal: in,
+		Internal: in,
 	}
 }
 
@@ -25,12 +25,11 @@ func (rw *ResponseWriter) init() {
 }
 
 func (rw *ResponseWriter) Header() http.Header {
-	return rw.internal.Header()
+	return rw.Internal.Header()
 }
 
 func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 	rw.init()
-
 	switch v := rw.data["message"].(type) {
 	case io.Writer:
 		return v.Write(data)
@@ -44,11 +43,10 @@ func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 		rw.data["message"] = string(data)
 		return len(data), nil
 	}
-
 }
 
 func (rw *ResponseWriter) WriteHeader(sc int) {
-	rw.internal.WriteHeader(sc)
+	rw.Internal.WriteHeader(sc)
 }
 
 func (rw *ResponseWriter) Set(key string, val interface{}) {
@@ -57,10 +55,9 @@ func (rw *ResponseWriter) Set(key string, val interface{}) {
 		delete(rw.data, key)
 		return
 	}
-
 	rw.data[key] = val
 }
 
 func (rw *ResponseWriter) Flush() error {
-	return json.NewEncoder(rw.internal).Encode(rw.data)
+	return json.NewEncoder(rw.Internal).Encode(rw.data)
 }

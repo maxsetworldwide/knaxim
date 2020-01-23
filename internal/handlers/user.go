@@ -11,6 +11,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
+
 	"git.maxset.io/web/knaxim/pkg/passentropy"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
@@ -34,6 +35,7 @@ func AttachUser(r *mux.Router) {
 
 func lookupUser(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
+
 	vals := mux.Vars(r)
 	userName := vals["name"]
 	if len(userName) == 0 {
@@ -43,6 +45,7 @@ func lookupUser(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
 	w.Set("user", BuildUserInfo(r, user))
 }
 
@@ -130,7 +133,9 @@ func userInfo(out http.ResponseWriter, r *http.Request) {
 	w.Set("data", resp.Data)
 }
 
-func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {
+func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	user := r.Context().Value(USER).(database.Owner)
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	if err := r.ParseForm(); err != nil {
@@ -165,10 +170,8 @@ func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, fids)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "searchAllUserFiles encode json"))
-	}
-	w.Header().Set("Content-Type", "application/json")
+
+	w.Set("matched", BuildSearchResponse(r, fids).Files)
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {

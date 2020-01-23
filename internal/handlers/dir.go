@@ -53,12 +53,6 @@ func getDirs(out http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Set("folders", dirs)
-	//if err := json.NewEncoder(w).Encode(map[string]interface{}{
-	//	"folders": dirs,
-	//}); err != nil {
-	//	panic(srverror.New(err, 500, "Server Error", "Failed to encode json"))
-	//}
-	//w.Header().Set("Content-Type", "application/json")
 }
 
 func createDir(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +116,9 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func dirInfo(w http.ResponseWriter, r *http.Request) {
+func dirInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	vals := mux.Vars(r)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
@@ -144,18 +140,15 @@ func dirInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
 	}
-	result := DirInformation{
-		Name:  strings.ToLower(tagfilter.Word),
-		Files: filematches,
-	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "dirInfo unable to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("name", strings.ToLower(tagfilter.Word))
+	w.Set("files", filematches)
 }
 
 func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(out http.ResponseWriter, r *http.Request) {
+		w := out.(*srvjson.ResponseWriter)
+
 		tagbase := r.Context().Value(database.TAG).(database.Tagbase)
 		var owner database.Owner
 		if group := r.Context().Value(GROUP); group != nil {
@@ -200,7 +193,8 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 				panic(err)
 			}
 		}
-		w.Write([]byte("Complete"))
+
+		w.Set("message", "Complete")
 	}
 }
 
@@ -253,7 +247,9 @@ func searchDir(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func deleteDir(w http.ResponseWriter, r *http.Request) {
+func deleteDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -287,5 +283,5 @@ func deleteDir(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-	w.Write([]byte("Complete"))
+	w.Set("message", "Complete")
 }

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -63,11 +62,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		contentlines[i].ID = fs.ID
 	}
 	// util.Verbose("generated content: %v", contentlines)
-	{
-		cnt := config.DB.Content(ctx)
-		defer cnt.Close(ctx)
-		err = cnt.Insert(contentlines...)
-	}
+	err = config.DB.Content(ctx).Insert(contentlines...)
 	if err != nil {
 		return err
 	}
@@ -79,9 +74,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	tg := config.DB.Tag(ctx)
-	defer tg.Close(ctx)
-	return tg.UpsertStore(fs.ID, tags...)
+	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
 }
 
 func createFile(out http.ResponseWriter, r *http.Request) {
@@ -143,18 +136,12 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 
 	w.Set("id", file.GetID())
 	w.Set("name", file.GetName())
-	// if err := json.NewEncoder(w).Encode(map[string]interface{}{
-	// 	"id":   file.GetID(),
-	// 	"name": file.GetName(),
-	// }); err != nil {
-	// 	panic(srverror.New(err, 500, "Server Error", "create file unable to encode json"))
-	// }
-	// w.Header().Add("Content-Type", "application/json")
 }
 
 var getter http.Client
 
-func webPageUpload(w http.ResponseWriter, r *http.Request) {
+func webPageUpload(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -218,13 +205,9 @@ func webPageUpload(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":   file.GetID(),
-		"name": file.GetName(),
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "create file unable to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", file.GetID())
+	w.Set("name", file.GetName())
 }
 
 func fileInfo(out http.ResponseWriter, r *http.Request) {
@@ -299,19 +282,14 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	// var result FileContent
-	// result.Length = len(lines)
-	// result.Vals = lines
 
 	w.Set("size", len(lines))
 	w.Set("lines", lines)
-	// if err = json.NewEncoder(w).Encode(result); err != nil {
-	// 	panic(srverror.New(err, 500, "Server Error", "fileContent encode json"))
-	// }
-	// w.Header().Add("Content-Type", "application/json")
 }
 
-func searchFile(w http.ResponseWriter, r *http.Request) {
+func searchFile(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -345,17 +323,13 @@ func searchFile(w http.ResponseWriter, r *http.Request) {
 	if matched, err := r.Context().Value(database.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end); err != nil {
 		panic(err)
 	} else {
-		var out FileContent
-		out.Length = len(matched)
-		out.Vals = matched
-		if err := json.NewEncoder(w).Encode(out); err != nil {
-			panic(srverror.New(err, 500, "Server Error", "searchFile encode json"))
-		}
-		w.Header().Add("Content-Type", "application/json")
+		w.Set("size", len(matched))
+		w.Set("lines", matched)
 	}
 }
 
-func deleteRecord(w http.ResponseWriter, r *http.Request) {
+func deleteRecord(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -377,10 +351,14 @@ func deleteRecord(w http.ResponseWriter, r *http.Request) {
 	if err = r.Context().Value(database.FILE).(database.Filebase).Remove(fid); err != nil {
 		panic(err)
 	}
-	w.Write([]byte("File Removed"))
+	w.Set("message", "File Removed")
+	// w.Write([]byte("File Removed"))
 }
 
 func sendFile(w http.ResponseWriter, r *http.Request) {
+	if jsw, ok := w.(*srvjson.ResponseWriter); ok {
+		w = jsw.Internal
+	}
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)

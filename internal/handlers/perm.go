@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/util"
+
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -88,13 +89,15 @@ func pullPerm(w http.ResponseWriter, r *http.Request) database.PermissionI {
 	return permobj
 }
 
-func getPermissions(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(USER).(database.UserI)
-	permobj := pullPerm(w, r)
-	if err := json.NewEncoder(w).Encode(buildPermissionReport(permobj, user)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "getPermission encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+func getPermissions(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+	// user := r.Context().Value(USER).(database.UserI)
+	// permobj := pullPerm(w, r)
+	bpr := buildPermissionReport(pullPerm(w, r),
+		r.Context().Value(USER).(database.UserI))
+	w.Set("owner", bpr.Owner)
+	w.Set("isOwned", bpr.IsOwner)
+	w.Set("permission", bpr.Permissions)
 }
 
 func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
