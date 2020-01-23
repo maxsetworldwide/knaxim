@@ -1,5 +1,3 @@
-image: node:latest
-
 cache:
   paths:
     - node_modules/
@@ -9,5 +7,6 @@ stages:
 
 build:
   stage: build
+  tags: testing
   script:
     - echo "this is the build stage"
