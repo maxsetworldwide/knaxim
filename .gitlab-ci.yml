@@ -10,7 +10,7 @@ build:
   tags:
     - testing
   script:
-    - npm install
-    - ls
     - cd web/
+    - ls
+    - npm install
     - npm run build
