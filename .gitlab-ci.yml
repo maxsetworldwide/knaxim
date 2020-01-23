@@ -10,4 +10,5 @@ build:
   tags:
     - testing
   script:
-    - echo "this is the build stage"
+    - npm install
+    - npm run build
