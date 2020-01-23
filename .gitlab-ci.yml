@@ -7,6 +7,7 @@ stages:
 
 build:
   stage: build
-  tags: testing
+  tags:
+    - testing
   script:
     - echo "this is the build stage"
