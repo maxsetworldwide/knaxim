@@ -1,0 +1,13 @@
+image: node:latest
+
+cache:
+  paths:
+    - node_modules/
+
+stages:
+  - build
+
+build:
+  stage: build
+  script:
+    - echo "this is the build stage"
