@@ -11,4 +11,6 @@ build:
     - testing
   script:
     - npm install
+    - ls
+    - cd web/
     - npm run build
