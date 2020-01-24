@@ -81,19 +81,7 @@ func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 	if ob.Owners.ID[id.String()] == nil {
 		return nil, database.ErrNotFound
 	}
-	switch o := ob.Owners.ID[id.String()].(type) {
-	case *database.User:
-		newu := new(database.User)
-		*newu = *o
-		return newu, nil
-	case *database.Group:
-		newg := new(database.Group)
-		*newg = *o
-		newg.Permission = *(o.CopyPerm(nil).(*database.Permission))
-		return newg, nil
-	default:
-		return nil, srverror.Basic(500, "Server Error", "Unrecognized Owner Type")
-	}
+	return ob.Owners.ID[id.String()].Copy(), nil
 }
 
 func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
@@ -102,13 +90,7 @@ func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
 	if ob.Owners.UserName[name] == nil {
 		return nil, database.ErrNotFound
 	}
-	u, ok := ob.Owners.UserName[name].(*database.User)
-	if !ok {
-		return nil, srverror.Basic(500, "Server Error", "Unrecognized user type")
-	}
-	newu := new(database.User)
-	*newu = *u
-	return newu, nil
+	return ob.Owners.UserName[name].Copy().(database.UserI), nil
 }
 
 func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
@@ -117,13 +99,7 @@ func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 	if ob.Owners.GroupName[name] == nil {
 		return nil, database.ErrNotFound
 	}
-	g, ok := ob.Owners.GroupName[name].(*database.Group)
-	if !ok {
-		return nil, srverror.Basic(500, "Server Error", "Unrecongized group type")
-	}
-	newg := new(database.Group)
-
-	return ob.Owners.GroupName[name], nil
+	return ob.Owners.GroupName[name].Copy().(database.GroupI), nil
 }
 
 func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, member []database.GroupI, err error) {
@@ -132,12 +108,12 @@ func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, me
 LOOP:
 	for _, grp := range ob.Owners.GroupName {
 		if grp.GetOwner().GetID().Equal(id) {
-			owned = append(owned, grp)
+			owned = append(owned, grp.Copy().(database.GroupI))
 			continue
 		}
 		for _, mem := range grp.GetMembers() {
 			if mem.GetID().Equal(id) {
-				member = append(member, grp)
+				member = append(member, grp.Copy().(database.GroupI))
 				continue LOOP
 			}
 		}
@@ -145,6 +121,47 @@ LOOP:
 	return
 }
 
-// Update(u Owner) error
-// GetSpace(o OwnerID) (int64, error)
-// GetTotalSpace(o OwnerID) (int64, error)
+func (ob *Ownerbase) Update(o database.Owner) error {
+	ob.lock.Lock()
+	defer ob.lock.Unlock()
+	if ob.Owners.ID[o.GetID().String()] == nil {
+		return database.ErrNotFound
+	}
+	switch v := o.(type) {
+	case database.UserI:
+		ob.Owners.UserName[v.GetName()] = v
+	case database.GroupI:
+		ob.Owners.GroupName[v.GetName()] = v
+	default:
+		return srverror.Basic(500, "Server Error", "Unrecognized owner type")
+	}
+	ob.Owners.ID[o.GetID().String()] = o
+	return nil
+}
+
+func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
+	ob.lock.RLock()
+	defer ob.lock.RUnlock()
+	if ob.Owners.ID[o.String()] == nil {
+		return 0, database.ErrNotFound
+	}
+	var total int64
+	for _, file := range ob.Files {
+		if file.GetOwner().GetID().Equal(o) {
+			total += ob.Stores[file.GetID().StoreID.String()].FileSize
+		}
+	}
+	return total, nil
+}
+
+func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
+	ob.lock.RLock()
+	defer ob.lock.RUnlock()
+	if ob.Owners.ID[o.String()] == nil {
+		return 0, database.ErrNotFound
+	}
+	if o.Type == 'u' {
+		return 50 << 20, nil
+	}
+	return 0, nil
+}

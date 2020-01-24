@@ -9,7 +9,6 @@ import (
 type GroupI interface {
 	Owner
 	PermissionI
-	GetName() string
 	SetName(string)
 	GetMembers() []Owner
 	AddMember(o Owner)
@@ -69,6 +68,16 @@ func (g *Group) Equal(o Owner) bool {
 		return false
 	}
 	return g.ID.Equal(o.GetID())
+}
+
+func (g *Group) Copy() Owner {
+	if g == nil {
+		return nil
+	}
+	ng := new(Group)
+	*ng = *g
+	ng.Permission = *(g.CopyPerm(nil).(*Permission))
+	return ng
 }
 
 func (g *Group) GetMembers() []Owner {
@@ -138,42 +147,3 @@ func (g *Group) UnmarshalBSON(b []byte) error {
 	g.Name = form.Name
 	return nil
 }
-
-// type GroupReference struct {
-// 	PermissionReference
-// 	ID   OwnerID `bson:"id"`
-// 	Name string  `bson:"name"`
-// }
-//
-// func (g *Group) ToReference() *GroupReference {
-// 	out := new(GroupReference)
-// 	out.PermissionReference = *g.ToPermRef()
-// 	out.ID = g.ID
-// 	out.Name = g.Name
-// 	return out
-// }
-//
-// func (gr *GroupReference) Group() *Group {
-// 	g := new(Group)
-// 	g.ID = gr.ID
-// 	g.Name = gr.Name
-// 	return g
-// }
-//
-// func (gr *GroupReference) UnmarshalBSON(b []byte) error {
-// 	var data struct {
-// 		Own  OwnerID              `bson:"own"`
-// 		Perm map[string][]OwnerID `bson:"perm"`
-// 		ID   OwnerID              `bson:"id"`
-// 		Name string               `bson:"name"`
-// 	}
-// 	err := bson.Unmarshal(b, &data)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	gr.Own = data.Own
-// 	gr.Mta = data.Perm
-// 	gr.ID = data.ID
-// 	gr.Name = data.Name
-// 	return nil
-// }

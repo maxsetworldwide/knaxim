@@ -136,8 +136,10 @@ func (oid OwnerID) Equal(oth OwnerID) bool {
 
 type Owner interface {
 	GetID() OwnerID
+	GetName() string
 	Match(o Owner) bool
 	Equal(o Owner) bool
+	Copy() Owner
 }
 
 type publicowner struct {
@@ -155,6 +157,10 @@ func (p publicowner) GetID() OwnerID {
 	return p.ID
 }
 
+func (p publicowner) GetName() string {
+	return "Public"
+}
+
 func (p publicowner) Match(_ Owner) bool {
 	return true
 }
@@ -166,6 +172,10 @@ func (p publicowner) Equal(o Owner) bool {
 	default:
 		return false
 	}
+}
+
+func (p publicowner) Copy() Owner {
+	return p
 }
 
 func publicfromjson(_ OwnerID, _ map[string]interface{}) (Owner, error) {
