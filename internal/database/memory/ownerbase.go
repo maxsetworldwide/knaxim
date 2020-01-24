@@ -1,8 +1,8 @@
 package memory
 
 import (
-	"git.maxset.io/maxsetdev/srverror"
 	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 type Ownerbase struct {
