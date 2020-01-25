@@ -58,12 +58,25 @@ func (fs *FileStore) Reader() (io.Reader, error) {
 	return out, err
 }
 
+func (fs *FileStore) Copy() *FileStore {
+	c := make([]byte, len(fs.Content))
+	copy(c, fs.Content)
+	return &FileStore{
+		ID:          fs.ID,
+		ContentType: fs.ContentType,
+		FileSize:    fs.FileSize,
+		Content:     c,
+	}
+
+}
+
 type FileI interface {
 	PermissionI
 	GetID() filehash.FileID
 	setID(filehash.FileID)
 	GetName() string
 	SetName(n string)
+	Copy() FileI
 }
 
 type FileTime struct {
@@ -96,6 +109,20 @@ func (f *File) GetName() string {
 
 func (f *File) SetName(n string) {
 	f.Name = n
+}
+
+func (f *File) Copy() FileI {
+	nf := new(File)
+	*nf = *f
+	nf.Permission = *(f.CopyPerm(nil).(*Permission))
+	return nf
+}
+
+func (f *WebFile) Copy() FileI {
+	nf := new(WebFile)
+	*nf = *f
+	nf.Permission = *(f.CopyPerm(nil).(*Permission))
+	return nf
 }
 
 func (f *File) MarshalJSON() ([]byte, error) {

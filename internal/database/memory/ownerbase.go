@@ -135,7 +135,7 @@ func (ob *Ownerbase) Update(o database.Owner) error {
 	default:
 		return srverror.Basic(500, "Server Error", "Unrecognized owner type")
 	}
-	ob.Owners.ID[o.GetID().String()] = o
+	ob.Owners.ID[o.GetID().String()] = o.Copy()
 	return nil
 }
 

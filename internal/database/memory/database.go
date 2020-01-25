@@ -20,8 +20,8 @@ type Database struct {
 	Files     map[string]database.FileI         // key filehash.FileID.String()
 	Stores    map[string]*database.FileStore    // key filehash.StoreID.String()
 	Lines     map[string][]database.ContentLine // key filehash.StoreID.String()
-	FileTags  map[string]map[string]tag.Tag     // key filehash.FileID.String()
-	StoreTags map[string]map[string]tag.Tag     // key filehash.StoreID.String()
+	TagFiles  map[string]map[string]tag.Tag     // key filehash.FileID.String() => word string => tag
+	TagStores map[string]map[string]tag.Tag     // key filehash.StoreID.String() => word string => tag
 	Acronyms  map[string][]string
 }
 
