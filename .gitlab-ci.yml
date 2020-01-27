@@ -5,7 +5,7 @@ stages:
 build:
   stage: build
   tags:
-    - testing
+    - node
   script:
     - cd web/
     - npm install
