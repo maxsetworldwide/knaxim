@@ -114,6 +114,17 @@ func (d Data) Copy() Data {
 	return newd
 }
 
+func (d Data) Contains(oth Data) bool {
+	for typ, mapping := range oth {
+		for k, v := range mapping {
+			if d[typ] == nil || d[typ][k] != v {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (d Data) MarshalBSON() ([]byte, error) {
 	form := make(map[string]map[string]string)
 	for typ, fields := range d {

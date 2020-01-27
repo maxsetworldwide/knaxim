@@ -39,8 +39,8 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	db.Files = make(map[string]database.FileI)
 	db.Stores = make(map[string]*database.FileStore)
 	db.Lines = make(map[string][]database.ContentLine)
-	db.FileTags = make(map[string]map[string]tag.Tag)
-	db.StoreTags = make(map[string]map[string]tag.Tag)
+	db.TagFiles = make(map[string]map[string]tag.Tag)
+	db.TagStores = make(map[string]map[string]tag.Tag)
 	db.Acronyms = make(map[string][]string)
 	return nil
 }
@@ -95,6 +95,7 @@ func (db *Database) Acronym(c context.Context) database.Acronymbase {
 
 func (db *Database) Close(_ context.Context) error {
 	db.ctx = nil
+	return nil
 }
 
 func (db *Database) GetContext() context.Context {
