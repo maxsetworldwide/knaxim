@@ -6,7 +6,7 @@ build:
   tags:
     - testing
   script:
-    - false
+    - /bin/false
     - pwd
     - cd web/
     - ls
