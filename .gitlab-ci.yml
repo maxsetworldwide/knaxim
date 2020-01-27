@@ -1,14 +1,12 @@
 stages:
   - build
+  - test
 
 build:
   stage: build
   tags:
     - testing
   script:
-    - /bin/false
-    - pwd
     - cd web/
-    - ls
     - npm install
     - npm run build
