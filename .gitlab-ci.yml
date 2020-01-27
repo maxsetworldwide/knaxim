@@ -1,0 +1,12 @@
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  tags:
+    - node
+  script:
+    - cd web/
+    - npm install
+    - npm run build
