@@ -115,18 +115,10 @@ func (oid OwnerID) Equal(oth OwnerID) bool {
 	if oid.Type != oth.Type {
 		return false
 	}
-	if oid.UserDefined != oth.UserDefined {
+	if !bytes.Equal(oid.UserDefined[:], oth.UserDefined[:]) {
 		return false
 	}
-	if len(oid.Stamp) != len(oth.Stamp) {
-		return false
-	}
-	for i, s := range oid.Stamp {
-		if oth.Stamp[i] != s {
-			return false
-		}
-	}
-	return true
+	return bytes.Equal(oid.Stamp, oth.Stamp)
 }
 
 // TODO: in mongo add private type to handle loading owners from database

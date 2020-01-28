@@ -45,11 +45,27 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	return nil
 }
 
+var connectionCount int
+var countLock sync.Mutex
+
+func updateCount(delta int) {
+	countLock.Lock()
+	defer countLock.Unlock()
+	connectionCount += delta
+}
+
+func CurrentOpenConnections() int {
+	countLock.Lock()
+	defer countLock.Unlock()
+	return connectionCount
+}
+
 func (db *Database) Owner(c context.Context) database.Ownerbase {
 	out := &Ownerbase{
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
@@ -58,6 +74,7 @@ func (db *Database) File(c context.Context) database.Filebase {
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
@@ -66,6 +83,7 @@ func (db *Database) Store(c context.Context) database.Storebase {
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
@@ -74,6 +92,7 @@ func (db *Database) Content(c context.Context) database.Contentbase {
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
@@ -82,6 +101,7 @@ func (db *Database) Tag(c context.Context) database.Tagbase {
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
@@ -90,11 +110,13 @@ func (db *Database) Acronym(c context.Context) database.Acronymbase {
 		Database: *db,
 	}
 	out.ctx = c
+	updateCount(1)
 	return out
 }
 
 func (db *Database) Close(_ context.Context) error {
 	db.ctx = nil
+	updateCount(-1)
 	return nil
 }
 
