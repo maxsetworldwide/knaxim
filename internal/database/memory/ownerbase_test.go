@@ -36,6 +36,7 @@ func fillowners(db *Database) {
 
 func TestOwners(t *testing.T) {
 	t.Parallel()
+	defer testingComplete.Done()
 	ob := DB.Owner(nil)
 	defer ob.Close(nil)
 

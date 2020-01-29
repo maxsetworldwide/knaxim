@@ -8,6 +8,7 @@ import (
 
 func TestContent(t *testing.T) {
 	t.Parallel()
+	defer testingComplete.Done()
 	cb := DB.Content(nil)
 	defer cb.Close(nil)
 
