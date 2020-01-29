@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -55,7 +54,9 @@ func getDirs(out http.ResponseWriter, r *http.Request) {
 	w.Set("folders", dirs)
 }
 
-func createDir(w http.ResponseWriter, r *http.Request) {
+func createDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	nname := r.FormValue("newname")
 	if !validDirName(nname) {
@@ -82,13 +83,8 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(files) == 0 {
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
-			"id":            nname,
-			"affectedFiles": 0,
-		}); err != nil {
-			panic(srverror.New(err, 500, "Server Error", "createDir failed to encode json 1"))
-		}
-		w.Header().Add("Content-Type", "application/json")
+		w.Set("id", nname)
+		w.Set("affectedFiles", 0)
 		return
 	}
 	dirtag := tag.Tag{
@@ -107,13 +103,9 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 			panic(srverror.New(err, 500, "Server Error", "Unable to add user tag"))
 		}
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":            nname,
-		"affectedFiles": len(files),
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "createDir failed to encode json 2"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", nname)
+	w.Set("affectedFiles", len(files))
 }
 
 func dirInfo(out http.ResponseWriter, r *http.Request) {
@@ -198,7 +190,9 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func searchDir(w http.ResponseWriter, r *http.Request) {
+func searchDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var tagbase = r.Context().Value(database.TAG).(database.Tagbase)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
@@ -241,10 +235,7 @@ func searchDir(w http.ResponseWriter, r *http.Request) {
 			matches = append(matches, fid)
 		}
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, matches)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "searchDir failed to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("matches", matches)
 }
 
 func deleteDir(out http.ResponseWriter, r *http.Request) {

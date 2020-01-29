@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -54,7 +53,9 @@ type dataUsage struct {
 	Total   int64 `json:"total"`
 }
 
-func getUserData(w http.ResponseWriter, r *http.Request) {
+func getUserData(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	user := r.Context().Value(USER).(database.UserI)
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -66,10 +67,8 @@ func getUserData(w http.ResponseWriter, r *http.Request) {
 	if du.Total, err = userbase.GetTotalSpace(user.GetID()); err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(du); err != nil {
-		panic(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("user", du)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {

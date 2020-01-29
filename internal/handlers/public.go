@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
+
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -18,7 +19,9 @@ func AttachPublic(r *mux.Router) {
 	r.HandleFunc("/search", searchPublic).Methods("GET")
 }
 
-func searchPublic(w http.ResponseWriter, r *http.Request) {
+func searchPublic(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(400, "No Search Term"))
 	}
@@ -46,8 +49,5 @@ func searchPublic(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, fids)); err != nil {
-		panic(srverror.New(err, 500, "Failed to encode responce"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("matched", BuildSearchResponse(r, fids).Files)
 }

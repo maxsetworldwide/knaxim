@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
@@ -92,7 +91,8 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 	if err := ownerbase.Insert(ng); err != nil {
 		panic(err)
 	}
-	w.Set("message", "Group Created")
+
+	w.Set("message", "X31-CPO Group Created")
 	// w.Write([]byte("Group Created"))
 }
 
@@ -118,7 +118,9 @@ func getGroups(out http.ResponseWriter, r *http.Request) {
 	w.Set("member", member)
 }
 
-func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
+func getGroupsGroups(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	owner := r.Context().Value(GROUP).(database.GroupI)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -126,17 +128,17 @@ func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	result := make(map[string][]GroupInformation)
+
+	own := []GroupInformation{}
+	member := []GroupInformation{}
 	for _, gr := range ogroups {
-		result["own"] = append(result["own"], BuildGroupInfo(gr))
+		own = append(own, BuildGroupInfo(gr))
 	}
 	for _, gr := range mgroups {
-		result["member"] = append(result["member"], BuildGroupInfo(gr))
+		member = append(member, BuildGroupInfo(gr))
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "getGroups encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("own", own)
+	w.Set("member", member)
 }
 
 func groupinfo(out http.ResponseWriter, r *http.Request) {
@@ -161,7 +163,9 @@ func groupinfo(out http.ResponseWriter, r *http.Request) {
 	w.Set("members", result.Members)
 }
 
-func searchGroupFiles(w http.ResponseWriter, r *http.Request) {
+func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	if err := r.ParseForm(); err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
 	}
@@ -202,10 +206,7 @@ func searchGroupFiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, result)); err != nil {
-		panic(srverror.New(err, 500, "Failed to encode responce"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("matched", BuildSearchResponse(r, result).Files)
 }
 
 func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
