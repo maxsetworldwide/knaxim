@@ -10,3 +10,11 @@ build:
     - cd web/
     - npm install
     - npm run build
+
+memoryDatabase:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd internal/database/memory
+    - go test
