@@ -6,11 +6,9 @@ func SplitSearch(search ...string) []string {
 	out := make([]string, 0, len(search))
 	for _, find := range search {
 		find = strings.ReplaceAll(find, "\"", " ")
-		for _, nospace := range strings.Split(find, " ") {
-			for _, word := range strings.Split(nospace, "%20") {
-				if len(word) > 0 {
-					out = append(out, word)
-				}
+		for _, word := range strings.Split(find, " ") {
+			if len(word) > 0 {
+				out = append(out, word)
 			}
 		}
 	}
@@ -22,11 +20,9 @@ func BuildSearchRegex(search ...string) string {
 	for _, find := range search {
 		for paren, phrase := range strings.Split(find, "\"") {
 			if paren%2 == 0 {
-				for _, nospace := range strings.Split(phrase, " ") {
-					for _, word := range strings.Split(nospace, "%20") {
-						if len(word) > 0 {
-							splits = append(splits, word)
-						}
+				for _, word := range strings.Split(phrase, " ") {
+					if len(word) > 0 {
+						splits = append(splits, word)
 					}
 				}
 			} else {
