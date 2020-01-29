@@ -4,18 +4,12 @@ import (
 	"testing"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestContent(t *testing.T) {
 	t.Parallel()
 	cb := DB.Content(nil)
 	defer cb.Close(nil)
-
-	sid := filehash.StoreID{
-		Hash:  10,
-		Stamp: 10,
-	}
 
 	lines := []database.ContentLine{
 		database.ContentLine{
