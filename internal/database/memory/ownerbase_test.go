@@ -6,21 +6,23 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 )
 
+var test1 = database.NewUser("testuser1", "testuserpass1", "test1@test.test")
+var test2 = database.NewUser("testuser2", "testuserpass2", "test2@test.test")
+var group1 = database.NewGroup("group1", test1)
+var group2 = database.NewGroup("group2", group1)
+
 func fillowners(db *Database) {
 	//Users
-	test1 := database.NewUser("testuser1", "testuserpass1", "test1@test.test")
+
 	db.Owners.ID[test1.GetID().String()] = test1
 	db.Owners.UserName[test1.GetName()] = test1
 
-	test2 := database.NewUser("testuser2", "testuserpass2", "test2@test.test")
 	if test1.GetID().Equal(test2.GetID()) {
 		test2.ID = test2.ID.Mutate()
 	}
 	db.Owners.ID[test2.GetID().String()] = test2
 	db.Owners.UserName[test2.GetName()] = test2
 
-	group1 := database.NewGroup("group1", test1)
-	group2 := database.NewGroup("group2", group1)
 	group2.AddMember(test2)
 	db.Owners.ID[group1.GetID().String()] = group1
 	db.Owners.GroupName[group1.GetName()] = group1
