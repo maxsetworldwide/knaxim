@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/mongo"
 	"github.com/google/go-tika/tika"
 )
@@ -43,6 +44,8 @@ func ParseConfig(path string) error {
 	switch V.DatabaseType {
 	case "mongo":
 		DB = new(mongo.Database)
+	case "memory":
+		DB = new(memory.Database)
 	default:
 		return errors.New("Unrecognized config database type")
 	}
