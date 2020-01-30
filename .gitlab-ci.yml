@@ -2,7 +2,7 @@ stages:
   - build
   - test
 
-build:
+clientBuild:
   stage: build
   tags:
     - node
@@ -10,3 +10,19 @@ build:
     - cd web/
     - npm install
     - npm run build
+
+serverBuild:
+  stage: build
+  tags:
+    - golang
+  script:
+    - cd cmd/
+    - go build ./...
+
+memoryDatabase:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd internal/util/
+    - go test
