@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,8 +10,10 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
+
 	"git.maxset.io/web/knaxim/pkg/passentropy"
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -31,7 +32,9 @@ func AttachUser(r *mux.Router) {
 	r.Handle("/data", UserCookie(http.HandlerFunc(getUserData))).Methods("GET")
 }
 
-func lookupUser(w http.ResponseWriter, r *http.Request) {
+func lookupUser(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	vals := mux.Vars(r)
 	userName := vals["name"]
 	if len(userName) == 0 {
@@ -41,9 +44,8 @@ func lookupUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildUserInfo(r, user)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "Unable to encode lookupUser"))
-	}
+
+	w.Set("user", BuildUserInfo(r, user))
 }
 
 type dataUsage struct {
@@ -51,7 +53,9 @@ type dataUsage struct {
 	Total   int64 `json:"total"`
 }
 
-func getUserData(w http.ResponseWriter, r *http.Request) {
+func getUserData(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	user := r.Context().Value(USER).(database.UserI)
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -63,10 +67,8 @@ func getUserData(w http.ResponseWriter, r *http.Request) {
 	if du.Total, err = userbase.GetTotalSpace(user.GetID()); err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(du); err != nil {
-		panic(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("user", du)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +107,8 @@ func createAdmin(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(nuser.ID.String()))
 }
 
-func userInfo(w http.ResponseWriter, r *http.Request) {
+func userInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(database.UserI)
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	if r.FormValue("id") != "" {
@@ -122,13 +125,16 @@ func userInfo(w http.ResponseWriter, r *http.Request) {
 			panic(srverror.Basic(404, "ID Not Found"))
 		}
 	}
-	if err := json.NewEncoder(w).Encode(BuildUserInfo(r, user)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "userInfo encode Error"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	resp := BuildUserInfo(r, user)
+	w.Set("id", resp.ID)
+	w.Set("name", resp.Name)
+	w.Set("data", resp.Data)
 }
 
-func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {
+func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	user := r.Context().Value(USER).(database.Owner)
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	if err := r.ParseForm(); err != nil {
@@ -163,10 +169,8 @@ func searchAllUserFiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, fids)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "searchAllUserFiles encode json"))
-	}
-	w.Header().Set("Content-Type", "application/json")
+
+	w.Set("matched", BuildSearchResponse(r, fids).Files)
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
