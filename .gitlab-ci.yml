@@ -26,3 +26,11 @@ memoryDatabase:
   script:
     - cd internal/util/
     - go test
+
+pkgPassentropy:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd pkg/passentropy
+    - go test
