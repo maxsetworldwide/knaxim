@@ -26,3 +26,11 @@ memoryDatabase:
   script:
     - cd internal/database/memory
     - go test
+
+internalUtil:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd internal/util
+    - go test
