@@ -85,7 +85,7 @@ An API response should provide consistant behavior and simplfy client side devel
 
 
 # Container Resources
-Knaxim is built off of several containers: ticka, mongo, and a web/api golang server.
+Knaxim is built off of several containers: tika, mongo, and a web/api golang server.
 
 ## Volumes
 |Volume|Description|Container Use|
