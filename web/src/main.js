@@ -34,7 +34,8 @@ ApiService.init()
  */
 export const EventBus = new Vue()
 
-new Vue({
+// ApiService._vm: Allow emiting error events from root vue instance.
+ApiService._vm = new Vue({
   router,
   store,
   render: h => h(App)
