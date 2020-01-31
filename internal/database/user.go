@@ -12,7 +12,6 @@ import (
 
 type UserI interface {
 	Owner
-	GetName() string
 	GetLock() UserCredentialI
 	SetLock(UserCredentialI)
 	NewCookies(time.Time, time.Time) []*http.Cookie
@@ -175,6 +174,15 @@ func (u *User) Equal(o Owner) bool {
 	default:
 		return false
 	}
+}
+
+func (u *User) Copy() Owner {
+	if u == nil {
+		return nil
+	}
+	nu := new(User)
+	*nu = *u
+	return nu
 }
 
 func (u *User) GetRole(k string) bool {

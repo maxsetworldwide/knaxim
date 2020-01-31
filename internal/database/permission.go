@@ -115,18 +115,10 @@ func (oid OwnerID) Equal(oth OwnerID) bool {
 	if oid.Type != oth.Type {
 		return false
 	}
-	if oid.UserDefined != oth.UserDefined {
+	if !bytes.Equal(oid.UserDefined[:], oth.UserDefined[:]) {
 		return false
 	}
-	if len(oid.Stamp) != len(oth.Stamp) {
-		return false
-	}
-	for i, s := range oid.Stamp {
-		if oth.Stamp[i] != s {
-			return false
-		}
-	}
-	return true
+	return bytes.Equal(oid.Stamp, oth.Stamp)
 }
 
 // TODO: in mongo add private type to handle loading owners from database
@@ -136,8 +128,10 @@ func (oid OwnerID) Equal(oth OwnerID) bool {
 
 type Owner interface {
 	GetID() OwnerID
+	GetName() string
 	Match(o Owner) bool
 	Equal(o Owner) bool
+	Copy() Owner
 }
 
 type publicowner struct {
@@ -155,6 +149,10 @@ func (p publicowner) GetID() OwnerID {
 	return p.ID
 }
 
+func (p publicowner) GetName() string {
+	return "Public"
+}
+
 func (p publicowner) Match(_ Owner) bool {
 	return true
 }
@@ -166,6 +164,10 @@ func (p publicowner) Equal(o Owner) bool {
 	default:
 		return false
 	}
+}
+
+func (p publicowner) Copy() Owner {
+	return p
 }
 
 func publicfromjson(_ OwnerID, _ map[string]interface{}) (Owner, error) {
