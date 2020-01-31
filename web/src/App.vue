@@ -22,6 +22,10 @@
         <b-row class="">
           <b-col class="p-0">
             <div class="app-content">
+              <!-- TODO: A more descriptive error Object vs error String, would
+              be useful for designing better UI error segments. -->
+              <error-control global v-on:error="makeToast($event)">
+              </error-control>
               <router-view />
             </div>
           </b-col>
@@ -38,6 +42,7 @@
 import AppHeader from '@/components/app-header.vue'
 import AppSubnav from '@/components/app-subnav.vue'
 import AppSide from '@/components/app-side.vue'
+import ErrorControl from '@/components/error-control'
 
 export default {
   name: 'App',
@@ -47,14 +52,37 @@ export default {
     }
   },
   methods: {
+    makeToast (msg, append = false) {
+      this.$bvToast.toast(msg, {
+        title: 'Error',
+        autoHideDelay: 5000,
+        appendToast: append,
+        ...(msg === 'Please Login.' ? { to: '/login' } : '')
+      })
+    }
   },
   computed: {
   },
   components: {
     AppHeader,
     AppSubnav,
+    AppSide,
+    ErrorControl
+  },
+  mounted () {
+    // Capture all responses for login required.
+    let vm = this
+    this.axios.interceptors.response.use(function (config) {
+      if (config.data && config.data.message === 'login') {
+        vm.$root.$emit('app::set::error', 'Please Login.')
+        // TODO: Throwing an error here blindly prevents duplicate requests
+        // in some cases.  This may need to be handled better by the code
+        // making requests, or perhaps a different mechanisim is needed.
+        throw new Error('Login Required')
+      }
 
-    AppSide
+      return config
+    })
   }
 }
 </script>
