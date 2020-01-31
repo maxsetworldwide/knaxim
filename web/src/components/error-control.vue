@@ -1,4 +1,21 @@
 <script>
+/**
+ * ErrorController is intended to receive global and local errors and organize
+ * them to be presented to the user in various ways.  Or shoveled off into
+ * another service for analysis.
+ *
+ * It should not be directly coupled with the creation of errors.
+ *
+ * Inputs
+ *  vm.$refs.[ErrorController].setError(err)
+ *  vm.$root.$emit('app::set::error', err)
+ *  #default="{ setError }"  // Slot Prop
+ *
+ * Outputs:
+ *  vm.$refs.[ErrorController].lastError
+ *  vm.$on.error(err)
+ *  #default="{ lastError }"  // Slot Prop
+ */
 export default {
   name: 'error-control',
   props: {

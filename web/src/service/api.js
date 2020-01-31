@@ -3,6 +3,11 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 
 const ApiService = {
+  // TODO: Is there another/better way to access the root Vue instance?!
+  // Expose the root vue instance for...
+  //  - sending global error events from ApiService (app::set::error)
+  _vm: null,
+
   /**
    * init - Set default http client settings.
    */
@@ -27,6 +32,18 @@ const ApiService = {
       return response
     }, function (error) {
       return Promise.reject(error)
+    })
+
+    // Handle global API response error messages.
+    Vue.axios.interceptors.response.use(function (config) {
+      if (config.data && config.data.message === 'login') {
+        ApiService._vm.$root.$emit('app::set::error', 'Please Login.')
+        // TODO: Throwing an error here blindly prevents duplicate requests
+        // in some cases.  This may need to be handled better by the code
+        // making requests, or perhaps a different mechanisim is needed.
+        throw new Error('Login Required')
+      }
+      return config
     })
 
     // TODO: Remove this code when we are confident that objects are accepted

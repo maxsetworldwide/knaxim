@@ -68,21 +68,6 @@ export default {
     AppSubnav,
     AppSide,
     ErrorControl
-  },
-  mounted () {
-    // Capture all responses for login required.
-    let vm = this
-    this.axios.interceptors.response.use(function (config) {
-      if (config.data && config.data.message === 'login') {
-        vm.$root.$emit('app::set::error', 'Please Login.')
-        // TODO: Throwing an error here blindly prevents duplicate requests
-        // in some cases.  This may need to be handled better by the code
-        // making requests, or perhaps a different mechanisim is needed.
-        throw new Error('Login Required')
-      }
-
-      return config
-    })
   }
 }
 </script>
