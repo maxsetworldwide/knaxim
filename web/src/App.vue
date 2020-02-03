@@ -1,57 +1,108 @@
 <template>
   <b-container fluid class="">
+    <!-- Header -->
     <b-row>
       <b-col>
-        <app-header />
+        <b-navbar class="app-header"
+           toggleable="md">
+          <b-navbar-brand href="#" class="pr-5">
+            <b-img src="~@/assets/logo.png"
+               alt="Knaxim Logo" />
+            Knaxim.com
+          </b-navbar-brand>
+          <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+          <b-collapse id="nav-collapse" is-nav>
+
+           <!-- Search & History -->
+           <header-search />
+
+           <!-- Settings Nav -->
+           <header-settings />
+          </b-collapse>
+        </b-navbar>
       </b-col>
       <hr class="w-100 m-0"/>
     </b-row>
 
     <b-row>
-      <b-col class="pl-0 mr-2 min-max-150" cols="2">
-        <app-side />
+      <!-- Side Nav -->
+      <b-col class="app-side pl-0 mr-2 min-max-150" cols="2">
+        <b-row>
+          <b-col>
+            <nav-basic />
+            <hr />
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <storage-info />
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col>
+            <header-search-history />
+          </b-col>
+        </b-row>
       </b-col>
 
       <b-col class="overflow-auto">
+        <!-- Sub Header -->
         <b-row>
           <b-col>
-            <app-subnav context="My Cloud" />
+            <team-select v-if="isAuthenticated" class="teamselect"
+              @team-selected="gotoTeam"/>
           </b-col>
         </b-row>
 
         <b-row class="">
+          <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <!-- TODO: A more descriptive error Object vs error String, would
-              be useful for designing better UI error segments. -->
-              <error-control global v-on:error="makeToast($event)">
-              </error-control>
               <router-view />
             </div>
           </b-col>
+
+          <!-- Side View -->
           <router-view name="sideview" />
         </b-row>
       </b-col>
-
     </b-row>
+
+    <!-- TODO: A more descriptive error Object vs error String, would
+    be useful for designing better UI error segments. -->
+    <error-control global v-on:error="makeToast($event)">
+      <div></div>
+    </error-control>
   </b-container>
 
 </template>
 
 <script>
-import AppHeader from '@/components/app-header.vue'
-import AppSubnav from '@/components/app-subnav.vue'
-import AppSide from '@/components/app-side.vue'
+// Header
+import HeaderSearch from '@/components/header-search'
+import HeaderSettings from '@/components/header-settings'
+
+// Sub Header
+import TeamSelect from '@/components/team-select'
+import { mapGetters } from 'vuex'
+
+// Side Nav
+import NavBasic from '@/components/nav-basic'
+import StorageInfo from '@/components/storage-info'
+import HeaderSearchHistory from '@/components/header-search-history'
+
 import ErrorControl from '@/components/error-control'
 
 export default {
   name: 'App',
   data () {
     return {
-      appInfoDisplay: null
+      appInfoDisplay: null,
+      context: 'My Cloud'
     }
   },
   methods: {
+    // Used by ErrorControl to display specific errors: login, ...
     makeToast (msg, append = false) {
       this.$bvToast.toast(msg, {
         title: 'Error',
@@ -59,14 +110,34 @@ export default {
         appendToast: append,
         ...(msg === 'Please Login.' ? { to: '/login' } : '')
       })
+    },
+
+    gotoTeam (id) {
+      if (id === this.currentUser.id) {
+        this.$router.push({ name: 'home' })
+      } else {
+        this.$router.push(`/team/${id}`)
+      }
     }
   },
+
   computed: {
+    ...mapGetters(['isAuthenticated', 'currentUser'])
   },
+
   components: {
-    AppHeader,
-    AppSubnav,
-    AppSide,
+    // Header
+    HeaderSearch,
+    HeaderSettings,
+
+    // Sub Header
+    TeamSelect,
+
+    // Side Nav
+    NavBasic,
+    StorageInfo,
+    HeaderSearchHistory,
+
     ErrorControl
   }
 }
@@ -94,4 +165,19 @@ body {
   height: calc(100vh - 140px);
 }
 
+/* App Header */
+.app-header {
+  img {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Sub Nav */
+.app-subnav {
+  height: 55px;
+}
+.teamselect {
+  max-width: 18%;
+}
 </style>
