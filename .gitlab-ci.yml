@@ -9,10 +9,10 @@ clientBuild:
   cache:
     key: ${CI_BUILD_REF_NAME}
     paths:
-      - /web/node_modules
+      - web/node_modules
   artifacts:
     paths:
-     - /web/node_modules
+     - web/node_modules
   script:
     - cd web/
     - npm install
@@ -23,7 +23,7 @@ clientTest:
   tags:
     - node
   script:
-    - cd /web
+    - cd web/
     - npm run headless
 
 serverBuild:
