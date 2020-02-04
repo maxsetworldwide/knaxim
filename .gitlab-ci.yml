@@ -5,7 +5,7 @@ stages:
 clientBuild:
   stage: build
   tags:
-    - node
+    - puppeteer
   cache:
     key: ${CI_BUILD_REF_NAME}
     paths:
@@ -21,7 +21,7 @@ clientBuild:
 clientTest:
   stage: test
   tags:
-    - node
+    - puppeteer
   script:
     - cd web/
     - mkdir local
