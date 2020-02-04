@@ -9,10 +9,10 @@ clientBuild:
   cache:
     key: ${CI_BUILD_REF_NAME}
     paths:
-      - node_modules/
+      - /web/node_modules
   artifacts:
     paths:
-     - node_modules/
+     - /web/node_modules
   script:
     - cd web/
     - npm install
