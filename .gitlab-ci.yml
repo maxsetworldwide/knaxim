@@ -24,7 +24,13 @@ clientTest:
     - node
   script:
     - cd web/
+    - mkdir local
+    - cp example-karma-headless.conf.js local/karma.headless.conf.js
     - npm run headless
+  cache:
+    key: ${CI_BUILD_REF_NAME}_karma_config
+    paths:
+      - web/local
 
 serverBuild:
   stage: build
