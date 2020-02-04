@@ -73,7 +73,7 @@ module.exports = function(config) {
       '--disable-web-security',
       '--disable-gpu',
       '--no-sandbox'
-    ]
+    ],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
