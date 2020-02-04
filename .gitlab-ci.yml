@@ -6,10 +6,25 @@ clientBuild:
   stage: build
   tags:
     - node
+  cache:
+    key: ${CI_BUILD_REF_NAME}
+    paths:
+      - node_modules/
+  artifacts:
+    paths:
+     - node_modules/
   script:
     - cd web/
     - npm install
     - npm run build
+
+clientTest:
+  stage: test
+  tags:
+    - node
+  script:
+    - cd /web
+    - npm run headless
 
 serverBuild:
   stage: build
