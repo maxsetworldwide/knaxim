@@ -12,6 +12,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/process"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
@@ -45,7 +46,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		return err
 	}
 	tikapath := config.T.Path
-	contentex := database.NewContentExtractor(nil, tikapath)
+	contentex := process.NewContentExtractor(nil, tikapath)
 	var contentlines []database.ContentLine
 	if csvextension.MatchString(file.GetName()) {
 		contentlines, err = contentex.ExtractCSV(ctx, rcontent)
@@ -109,7 +110,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		Name: fheader.Filename,
 		Date: database.FileTime{Upload: time.Now()},
 	}
-	fs, err := database.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
+	fs, err := process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
 	if err != nil {
 		panic(err)
 	}
@@ -185,7 +186,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		},
 		URL: URL.String(),
 	}
-	fs, err := database.InjestFile(fctx, file, res.Header.Get("Content-Type"), res.Body, config.DB)
+	fs, err := process.InjestFile(fctx, file, res.Header.Get("Content-Type"), res.Body, config.DB)
 	if err != nil {
 		panic(err)
 	}

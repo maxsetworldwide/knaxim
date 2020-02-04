@@ -73,7 +73,7 @@ func (fs *FileStore) Copy() *FileStore {
 type FileI interface {
 	PermissionI
 	GetID() filehash.FileID
-	setID(filehash.FileID)
+	SetID(filehash.FileID)
 	GetName() string
 	SetName(n string)
 	Copy() FileI
@@ -99,7 +99,7 @@ func (f *File) GetID() filehash.FileID {
 	return f.ID
 }
 
-func (f *File) setID(id filehash.FileID) {
+func (f *File) SetID(id filehash.FileID) {
 	f.ID = id
 }
 

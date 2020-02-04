@@ -1,4 +1,4 @@
-package database
+package process
 
 import (
 	"bytes"
@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
-func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.Reader, db Database) (fs *FileStore, err error) {
+func InjestFile(ctx context.Context, file database.FileI, contenttype string, stream io.Reader, db database.Database) (fs *database.FileStore, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fs = nil
@@ -25,7 +25,7 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 			}
 		}
 	}()
-	fs, err = NewFileStore(stream)
+	fs, err = database.NewFileStore(stream)
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,7 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 		if err != nil {
 			panic(err)
 		}
-		file.setID(tempID)
+		file.SetID(tempID)
 		err = fb.Insert(file)
 		if err != nil {
 			panic(err)
@@ -88,17 +88,19 @@ func InjestFile(ctx context.Context, file FileI, contenttype string, stream io.R
 	return fs, nil
 }
 
-func generateContentTags(ctx context.Context, fs *FileStore, db Database) {
-	go func() {
-		rcontent, err := fs.Reader()
-		if err != nil {
-			return
-		}
-		tags, err := tag.ExtractContentTags(rcontent)
-		if err != nil {
-			return
-		}
-		tb := db.Tag(ctx)
-		tb.UpsertStore(fs.ID, tags...)
-	}()
-}
+//
+// func generateContentTags(ctx context.Context, fs *database.FileStore, db database.Database) {
+// 	go func() {
+// 		rcontent, err := fs.Reader()
+// 		if err != nil {
+// 			return
+// 		}
+// 		tags, err := tag.ExtractContentTags(rcontent)
+// 		if err != nil {
+// 			return
+// 		}
+// 		tb := db.Tag(ctx)
+// 		defer tb.Close(ctx)
+// 		tb.UpsertStore(fs.ID, tags...)
+// 	}()
+// }

@@ -29,7 +29,7 @@ func NewGroup(name string, o Owner) *Group {
 	var nid OwnerID
 	nid.Type = 'g'
 	nid.UserDefined = name2userdefined(name)
-	nid.Stamp = newstamp()
+	// nid.Stamp = newstamp()
 
 	ng.ID = nid
 

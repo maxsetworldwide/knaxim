@@ -1,3 +1,6 @@
+variables:
+  GOPATH: '$CI_PROJECT_DIR/.cache/go'
+
 stages:
   - build
   - test
@@ -16,8 +19,16 @@ serverBuild:
   tags:
     - golang
   script:
+    - mkdir -p .cache/go
     - cd cmd/
     - go build ./...
+  cache:
+    key: ${CI_BUILD_REF_NAME}
+    paths:
+      - .cache/go
+  artifacts:
+    paths:
+      - .cache/go
 
 memoryDatabase:
   stage: test
@@ -41,4 +52,25 @@ pkgPassentropy:
     - golang
   script:
     - cd pkg/passentropy
+    - go test
+
+databaseTypes:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd internal/database/
+    - go test
+
+fileProcessing:
+  stage: test
+  tags:
+    - golang
+  services:
+    - name: lexpredict/tika-server:latest
+      alias: tika
+  variables:
+    TIKA_PATH: http://tika:9998
+  script:
+    - cd internal/database/process
     - go test

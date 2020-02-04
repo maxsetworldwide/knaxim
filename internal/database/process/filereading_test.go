@@ -1,4 +1,4 @@
-package database_test
+package process_test
 
 import (
 	"context"
@@ -6,30 +6,26 @@ import (
 	"testing"
 	"time"
 
-	. "git.maxset.io/web/knaxim/internal/database"
-	mongodb "git.maxset.io/web/knaxim/internal/database/mongo"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/memory"
+	. "git.maxset.io/web/knaxim/internal/database/process"
 )
 
-var db = &mongodb.Database{
-	URI:    "mongodb://localhost:27017",
-	DBName: "TestInjest",
-}
-
-var content = `This is an example text.
-How do you know this is correct. Well you got this text back.
-Good Bye.`
-
-var testOwner = &User{
-	ID: OwnerID{
-		Type:        'u',
-		UserDefined: [3]byte{'a', 'b', 'c'},
-		Stamp:       []byte("test"),
-	},
-	Name: "testuser",
-}
-
 func TestInjustFile(t *testing.T) {
-	//t.Parallel()
+	var db = &memory.Database{}
+
+	var content = `This is an example text.
+  How do you know this is correct. Well you got this text back.
+  Good Bye.`
+
+	var testOwner = &database.User{
+		ID: database.OwnerID{
+			Type:        'u',
+			UserDefined: [3]byte{'a', 'b', 'c'},
+			Stamp:       []byte("test"),
+		},
+		Name: "testuser",
+	}
 	initctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
 	err := db.Init(initctx, true)
@@ -38,7 +34,7 @@ func TestInjustFile(t *testing.T) {
 	}
 	injestctx, cancel2 := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel2()
-	file := &File{
+	file := &database.File{
 		Name: "test.txt",
 	}
 	_, err = db.Owner(injestctx).Reserve(testOwner.GetID(), testOwner.GetName())
@@ -46,9 +42,14 @@ func TestInjustFile(t *testing.T) {
 		t.Fatal("unable to reserve testOwner:", err)
 	}
 	err = db.Owner(injestctx).Insert(testOwner)
+	if err != nil {
+		t.Fatalf("Failed to insert test Owner")
+	}
 	file.Own = testOwner
 	_, err = InjestFile(injestctx, file, "content/txt", strings.NewReader(content), db)
 	if err != nil {
 		t.Fatal("injest failed", err)
 	}
+
+	// generateContentTags(injestctx, fs, db)
 }
