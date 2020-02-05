@@ -18,6 +18,13 @@ type ProcessingError struct {
 	Message string `json:"msg" bson:"m"`
 }
 
+func (pe *ProcessingError) Equal(oth *ProcessingError) bool {
+	if pe.Status != oth.Status {
+		return false
+	}
+	return pe.Message == oth.Message
+}
+
 type FileStore struct {
 	ID          filehash.StoreID `json:"id" bson:"id"`
 	Content     []byte           `json:"content" bson:"-"`

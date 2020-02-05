@@ -36,6 +36,14 @@ func (cb *Contentbase) Len(id filehash.StoreID) (count int64, err error) {
 }
 
 func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+	fs, err := cb.Store(nil).Get(id)
+	if err != nil {
+		return nil, err
+	}
+	var perr error
+	if fs.Perr != nil {
+		perr = srverror.Basic(fs.Perr.Status, fs.Perr.Message)
+	}
 	cursor, err := cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).Find(cb.ctx,
 		bson.M{
 			"id": id,
@@ -47,6 +55,9 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error C3", "Failed to find lines")
@@ -54,14 +65,25 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 	var out []database.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error C3.1", "failed to decode lines")
 	}
-	return out, nil
+	return out, perr
 }
 
 func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+	fs, err := cb.Store(nil).Get(id)
+	if err != nil {
+		return nil, err
+	}
+	var perr error
+	if fs.Perr != nil {
+		perr = srverror.Basic(fs.Perr.Status, fs.Perr.Message)
+	}
 	cursor, err := cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).Find(cb.ctx, bson.M{
 		"id": id,
 		"position": bson.M{
@@ -72,6 +94,9 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error C4", "Failed to find lines")
@@ -79,9 +104,12 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 	var out []database.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error C4.1", "failed to decode lines")
 	}
-	return out, nil
+	return out, perr
 }

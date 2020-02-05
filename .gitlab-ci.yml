@@ -91,3 +91,14 @@ fileProcessing:
   script:
     - cd internal/database/process
     - go test -v
+
+mongoDatabaseConnector:
+  stage: test
+  tags:
+    - golang
+  services:
+    - name: mongo:latest
+      alias: mongo
+  script:
+    - cd internal/database/mongo
+    - go test -v -dbpath mongodb://mongo:27017

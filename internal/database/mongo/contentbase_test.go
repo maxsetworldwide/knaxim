@@ -35,6 +35,33 @@ func TestContenbase(t *testing.T) {
 			Stamp: 28720,
 		},
 	}
+	var fileStores = []*database.FileStore{
+		&database.FileStore{
+			ID:          fileids[0],
+			Content:     []byte("asdfasdf"),
+			ContentType: "test",
+			FileSize:    420,
+		},
+		&database.FileStore{
+			ID:          fileids[1],
+			Content:     []byte("fdafdsa"),
+			ContentType: "test",
+			FileSize:    240,
+		},
+	}
+	{
+		sb := cb.Store(nil)
+		for _, fs := range fileStores {
+			_, err := sb.Reserve(fs.ID)
+			if err != nil {
+				t.Fatalf("unable to Reserve file store id: %s", err)
+			}
+			err = sb.Insert(fs)
+			if err != nil {
+				t.Fatalf("unable to Insert file store: %s", err)
+			}
+		}
+	}
 	var data = []database.ContentLine{
 		database.ContentLine{
 			ID:       fileids[0],
