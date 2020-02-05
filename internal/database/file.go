@@ -19,11 +19,11 @@ type ProcessingError struct {
 }
 
 type FileStore struct {
-	ID            filehash.StoreID `json:"id" bson:"id"`
-	Content       []byte           `json:"content" bson:"-"`
-	ContentType   string           `json:"ctype" bson:"ctype"`
-	FileSize      int64            `json:"fsize" bson:"fsize"`
-	ProcessingErr string           `json:""`
+	ID          filehash.StoreID `json:"id" bson:"id"`
+	Content     []byte           `json:"content" bson:"-"`
+	ContentType string           `json:"ctype" bson:"ctype"`
+	FileSize    int64            `json:"fsize" bson:"fsize"`
+	Perr        ProcessingError  `json:""`
 }
 
 func NewFileStore(r io.Reader) (*FileStore, error) {
