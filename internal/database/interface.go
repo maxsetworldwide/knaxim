@@ -74,6 +74,7 @@ type Storebase interface {
 	Insert(fs *FileStore) error
 	Get(id filehash.StoreID) (*FileStore, error)
 	MatchHash(h uint32) ([]*FileStore, error)
+	UpdateMeta(fs *FileStore) error
 	//Get Total size
 }
 

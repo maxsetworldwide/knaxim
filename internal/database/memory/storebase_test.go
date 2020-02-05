@@ -57,4 +57,17 @@ func TestStore(t *testing.T) {
 	if len(matched) != 1 || !matched[0].ID.Equal(sid) {
 		t.Fatalf("incorrect matches: %v", matched)
 	}
+
+	t.Log("UpdateMeta")
+	fs.Perr = &database.ProcessingError{
+		Status:  420,
+		Message: "hello",
+	}
+	err = sb.UpdateMeta(fs)
+	if err != nil {
+		t.Fatalf("Failed to UpdateMeta: %s", err)
+	}
+	if fs2, _ := sb.Get(sid); fs2.Perr == nil || fs2.Perr.Status != 420 {
+		t.Fatalf("file store not updated: %+v", fs2)
+	}
 }

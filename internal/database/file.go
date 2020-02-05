@@ -23,7 +23,7 @@ type FileStore struct {
 	Content     []byte           `json:"content" bson:"-"`
 	ContentType string           `json:"ctype" bson:"ctype"`
 	FileSize    int64            `json:"fsize" bson:"fsize"`
-	Perr        ProcessingError  `json:""`
+	Perr        *ProcessingError `json:"err,omitempty" bson:"perr,omitempty"`
 }
 
 func NewFileStore(r io.Reader) (*FileStore, error) {
@@ -67,13 +67,20 @@ func (fs *FileStore) Reader() (io.Reader, error) {
 func (fs *FileStore) Copy() *FileStore {
 	c := make([]byte, len(fs.Content))
 	copy(c, fs.Content)
+	var perrcopy *ProcessingError
+	if fs.Perr != nil {
+		perrcopy = &ProcessingError{
+			Status:  fs.Perr.Status,
+			Message: fs.Perr.Message,
+		}
+	}
 	return &FileStore{
 		ID:          fs.ID,
 		ContentType: fs.ContentType,
 		FileSize:    fs.FileSize,
 		Content:     c,
+		Perr:        perrcopy,
 	}
-
 }
 
 type FileI interface {

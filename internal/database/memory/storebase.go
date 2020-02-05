@@ -50,3 +50,15 @@ func (sb *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) 
 	}
 	return
 }
+
+func (sb *Storebase) UpdateMeta(fs *database.FileStore) error {
+	sb.lock.Lock()
+	defer sb.lock.Unlock()
+	if sb.Stores[fs.ID.String()] == nil {
+		return database.ErrNotFound
+	}
+	sb.Stores[fs.ID.String()].ContentType = fs.ContentType
+	sb.Stores[fs.ID.String()].FileSize = fs.FileSize
+	sb.Stores[fs.ID.String()].Perr = fs.Perr
+	return nil
+}
