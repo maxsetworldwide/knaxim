@@ -7,10 +7,10 @@ import (
 )
 
 func TestTag(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	tb := DB.Tag(nil)
 	defer tb.Close(nil)
+	t.Parallel()
 
 	filetag := tag.Tag{
 		Word: "test",
@@ -22,6 +22,7 @@ func TestTag(t *testing.T) {
 		},
 	}
 
+	t.Log("Upsert File")
 	err := tb.UpsertFile(fid, filetag)
 	if err != nil {
 		t.Fatalf("failed to UpsertFile: %s", err)
@@ -37,11 +38,13 @@ func TestTag(t *testing.T) {
 		},
 	}
 
+	t.Log("Upsert Store")
 	err = tb.UpsertStore(sid, storetag)
 	if err != nil {
 		t.Fatalf("failed to upsert store tag: %s", err)
 	}
 
+	t.Log("FileTags")
 	matched, err := tb.FileTags(fid)
 	if err != nil {
 		t.Fatalf("failed to get File Tags: %s", err)
@@ -50,6 +53,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("incorrect matches: %v", matched)
 	}
 
+	t.Log("GetFiles")
 	fids, sids, err := tb.GetFiles([]tag.Tag{
 		tag.Tag{
 			Word: "test",
@@ -63,6 +67,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("incorrect return from GetFiles: %v, %v", fids, sids)
 	}
 
+	t.Log("Search Data")
 	matches, err := tb.SearchData(tag.USER, tag.Data{
 		tag.USER: map[string]string{
 			"hello": "world",

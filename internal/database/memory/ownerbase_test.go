@@ -13,7 +13,8 @@ var group2 = database.NewGroup("group2", group1)
 
 func fillowners(db *Database) {
 	//Users
-
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	db.Owners.ID[test1.GetID().String()] = test1
 	db.Owners.UserName[test1.GetName()] = test1
 
@@ -35,10 +36,10 @@ func fillowners(db *Database) {
 }
 
 func TestOwners(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	ob := DB.Owner(nil)
 	defer ob.Close(nil)
+	t.Parallel()
 
 	newUser := database.NewUser("testuser3", "testuserpass3", "test3@test.test")
 	newGroup := database.NewGroup("group3", newUser)
