@@ -13,11 +13,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type ProcessingError struct {
+	Status  int    `json:"status" bson:"s"`
+	Message string `json:"msg" bson:"m"`
+}
+
 type FileStore struct {
-	ID          filehash.StoreID `json:"id" bson:"id"`
-	Content     []byte           `json:"content" bson:"-"`
-	ContentType string           `json:"ctype" bson:"ctype"`
-	FileSize    int64            `json:"fsize" bson:"fsize"`
+	ID            filehash.StoreID `json:"id" bson:"id"`
+	Content       []byte           `json:"content" bson:"-"`
+	ContentType   string           `json:"ctype" bson:"ctype"`
+	FileSize      int64            `json:"fsize" bson:"fsize"`
+	ProcessingErr string           `json:""`
 }
 
 func NewFileStore(r io.Reader) (*FileStore, error) {
