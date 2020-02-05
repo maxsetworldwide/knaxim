@@ -8,11 +8,28 @@ stages:
 clientBuild:
   stage: build
   tags:
-    - node
+    - puppeteer
+  cache:
+    key: ${CI_BUILD_REF_NAME}
+    paths:
+      - web/node_modules
+  artifacts:
+    paths:
+     - web/node_modules
   script:
     - cd web/
     - npm install
     - npm run build
+
+clientTest:
+  stage: test
+  tags:
+    - puppeteer
+  script:
+    - cd web/
+    - mkdir local
+    - cp example-karma-headless.conf.js local/karma.headless.conf.js
+    - npm run headless
 
 serverBuild:
   stage: build

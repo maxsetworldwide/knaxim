@@ -6,6 +6,7 @@ knaxim 'knowledge maxim' is a file management using a nlp organizational paradig
 
 combination of server/knaxim and maxsetdev/knaxim-client
 
+- [Commands](#commands)
 - [API](#api)
     - [Status Codes](#status-codes)
     - [Response & Format](#response-and-format)
@@ -82,7 +83,24 @@ An API response should provide consistant behavior and simplfy client side devel
     }
 }
 ```
+# Commands
+The following commands are can be usd for testing, headless testing, running a developemnt server, and more.
 
+## Server
+|Command|Description|
+| ---     |---------|
+| docker-compose up | Start the application with all its required containers. |
+| docker-compose down | Stop all application containers. | 
+
+## Client
+|Command|Description|
+| ---     |---------|
+|npm run serve| Runs a locally hosted development server with hot reloading. |
+|npm run build| Builds a release version of the project. |
+|npm run lint| Test the code for common js errors, and style guidelines. |
+|npm run fix| Fix any linting errors that can be automatically corrected. |
+|npm run test| Run all tests (.spec.js). Requires, karma.conf.js in the local folder & .env.test. |
+|npm run headless| Run all tests using headless chrome. Requires, karma.headless.conf.js in the local folder & .env.headless. |
 
 # Container Resources
 Knaxim is built off of several containers: tika, mongo, and a web/api golang server.

@@ -13,6 +13,14 @@ export async function getDigestLast8 (message) {
     .join('').substr(-8)
 }
 
+function wait (time) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve()
+    }, time * 1000)
+  })
+}
+
 export default async function setDefaults (that) {
   // Create some default test values.
   Object.assign(that, {
@@ -48,7 +56,7 @@ export default async function setDefaults (that) {
     password: that.password
   }).catch((error) => {
     error.message.indexOf('409') > 0 ||
-    fail(`Test Suite Setup: ${error.message}`)
+    fail(`Setup: ${error.message}`)
   })
 
   // Login
@@ -56,7 +64,7 @@ export default async function setDefaults (that) {
     name: that.login,
     pass: that.password
   }).catch((error) => {
-    fail(`Test Suite Setup: userlogin ${error.message}`)
+    fail(`Setup userlogin: ${error.message}`)
   })
 
   // Create some files.
@@ -65,13 +73,18 @@ export default async function setDefaults (that) {
   await SearchService.userFiles({ find: that.find }).then(({ data }) => {
     that.fileId = data.matched[0].file.id
   }).catch(({ message }) => {
-    FileService.create({ file: that.file }).then(({ data }) => {
+    console.log(`Setup userFiles message: ${message}`)
+    FileService.create({ file: that.file }).then(async ({ data }) => {
+      await wait(0.5)
       that.fileId = data.id
-      FileService.create({ file: that.file }).catch(({ message }) => {
-        fail(message)
+      FileService.create({ file: that.file }).then(async ({ data }) => {
+        await wait(0.5)
+        return data
+      }).catch(({ message }) => {
+        fail(`Setup create: ${message}`)
       })
     }).catch(({ message }) => {
-      fail(message)
+      fail(`Setup create 1st: ${message}`)
     })
   })
 
