@@ -68,13 +68,20 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['ChromeHeadless'],
-    flags: [
-      '--disable-web-security',
-      '--disable-gpu',
-      '--no-sandbox'
-    ],
-
+    browsers: ['ChromeHeadlessNoSand'],
+    customLaunchers: {
+      'ChromeHeadlessNoSand': {
+        base: 'ChromeHeadless',
+        flags: [
+          '--disable-gpu',
+          '--no-sandbox',
+          '--disable-web-security',
+           // Without a remote debugging port, Google Chrome exits immediately.
+          '--remote-debugging-port=9222'
+        ]
+      }
+    },
+    
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true,
