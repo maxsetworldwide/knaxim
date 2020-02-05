@@ -7,10 +7,10 @@ import (
 )
 
 func TestTag(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	tb := DB.Tag(nil)
 	defer tb.Close(nil)
+	t.Parallel()
 
 	filetag := tag.Tag{
 		Word: "test",

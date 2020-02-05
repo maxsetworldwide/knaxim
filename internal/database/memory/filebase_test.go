@@ -13,10 +13,10 @@ var fid = filehash.FileID{
 }
 
 func TestFiles(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	fb := DB.File(nil)
 	defer fb.Close(nil)
+	t.Parallel()
 
 	storedid, err := fb.Reserve(fid)
 	if err != nil {

@@ -3,10 +3,10 @@ package memory
 import "testing"
 
 func TestAcronym(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	ab := DB.Acronym(nil)
 	defer ab.Close(nil)
+	t.Parallel()
 
 	t.Log("Acronym Put")
 	err := ab.Put("t", "test")

@@ -36,7 +36,7 @@ memoryDatabase:
     - golang
   script:
     - cd internal/database/memory
-    - go test -v
+    - go test -v -timeout 45s
 
 internalUtil:
   stage: test

@@ -33,6 +33,8 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 		return nil
 	}
 	db.lock = new(sync.RWMutex)
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	db.Owners.ID = make(map[string]database.Owner)
 	db.Owners.UserName = make(map[string]database.UserI)
 	db.Owners.GroupName = make(map[string]database.GroupI)

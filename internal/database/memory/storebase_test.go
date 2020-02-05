@@ -13,10 +13,10 @@ var sid = filehash.StoreID{
 }
 
 func TestStore(t *testing.T) {
-	t.Parallel()
 	defer testingComplete.Done()
 	sb := DB.Store(nil)
 	defer sb.Close(nil)
+	t.Parallel()
 
 	fs := &database.FileStore{
 		ID:          sid,
