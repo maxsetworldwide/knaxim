@@ -36,7 +36,7 @@ memoryDatabase:
     - golang
   script:
     - cd internal/database/memory
-    - go test
+    - go test -v
 
 internalUtil:
   stage: test
@@ -44,7 +44,7 @@ internalUtil:
     - golang
   script:
     - cd internal/util
-    - go test
+    - go test -v
 
 pkgPassentropy:
   stage: test
@@ -52,7 +52,7 @@ pkgPassentropy:
     - golang
   script:
     - cd pkg/passentropy
-    - go test
+    - go test -v
 
 databaseTypes:
   stage: test
@@ -60,7 +60,7 @@ databaseTypes:
     - golang
   script:
     - cd internal/database/
-    - go test
+    - go test -v
 
 fileProcessing:
   stage: test
@@ -73,4 +73,4 @@ fileProcessing:
     TIKA_PATH: http://tika:9998
   script:
     - cd internal/database/process
-    - go test
+    - go test -v

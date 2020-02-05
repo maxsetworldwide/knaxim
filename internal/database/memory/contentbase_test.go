@@ -25,10 +25,13 @@ func TestContent(t *testing.T) {
 		},
 	}
 
+	t.Log("Insert")
 	err := cb.Insert(lines...)
 	if err != nil {
 		t.Fatalf("Failed to insert lines: %s", err)
 	}
+
+	t.Log("Len")
 	l, err := cb.Len(sid)
 	if err != nil {
 		t.Fatalf("Failed to get length: %s", err)
@@ -36,6 +39,8 @@ func TestContent(t *testing.T) {
 	if l != 2 {
 		t.Fatalf("Incorrect length: %d", l)
 	}
+
+	t.Log("Slice")
 	slice, err := cb.Slice(sid, 1, 2)
 	if err != nil {
 		t.Fatalf("Failed to get slice: %s", err)
@@ -43,6 +48,8 @@ func TestContent(t *testing.T) {
 	if slice[0].Position != 1 {
 		t.Fatalf("Incorrect Position: %d", slice[0].Position)
 	}
+
+	t.Log("Regex")
 	result, err := cb.RegexSearchFile("line", sid, 0, 2)
 	if err != nil {
 		t.Fatalf("Failed search: %s", err)

@@ -34,11 +34,13 @@ func TestFiles(t *testing.T) {
 		Name: "TestFile",
 	}
 
+	t.Log("Insert")
 	err = fb.Insert(file)
 	if err != nil {
 		t.Fatalf("failed to insert file: %s", err)
 	}
 
+	t.Log("Get")
 	gotten, err := fb.Get(fid)
 	if err != nil {
 		t.Fatalf("failed to find file: %s", err)
@@ -47,6 +49,7 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect gotten file: %s", err)
 	}
 
+	t.Log("GetAll")
 	allgot, err := fb.GetAll(fid)
 	if err != nil {
 		t.Fatalf("failed to find files: %s", err)
@@ -55,12 +58,14 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect GetAll: %v", allgot)
 	}
 
+	t.Log("Update")
 	file.SetPerm(test2, "view", true)
 	err = fb.Update(file)
 	if err != nil {
 		t.Fatalf("failed to update file: %s", err)
 	}
 
+	t.Log("Get Owned")
 	owned, err := fb.GetOwned(test1.GetID())
 	if err != nil {
 		t.Fatalf("failed to GetOwned: %s", err)
@@ -69,6 +74,7 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect return from owned: %v", owned)
 	}
 
+	t.Log("Get PermKey")
 	shared, err := fb.GetPermKey(test2.GetID(), "view")
 	if err != nil {
 		t.Fatalf("failed to GetPermKey: %s", err)
@@ -77,6 +83,7 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect return from shared: %v", shared)
 	}
 
+	t.Log("MatchStore")
 	matched, err := fb.MatchStore(test1.GetID(), []filehash.StoreID{sid})
 	if err != nil {
 		t.Fatalf("unable to match sid: %s", err)
@@ -85,6 +92,7 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect returned matched: %v", matched)
 	}
 
+	t.Log("Remove")
 	err = fb.Remove(fid)
 	if err != nil {
 		t.Fatalf("failed to remove: %s", err)

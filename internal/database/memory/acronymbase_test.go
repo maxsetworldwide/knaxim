@@ -8,10 +8,13 @@ func TestAcronym(t *testing.T) {
 	ab := DB.Acronym(nil)
 	defer ab.Close(nil)
 
+	t.Log("Acronym Put")
 	err := ab.Put("t", "test")
 	if err != nil {
 		t.Fatalf("Unable to put acronym: %s", err)
 	}
+
+	t.Log("Acronym Get")
 	matches, err := ab.Get("t")
 	if err != nil {
 		t.Fatalf("Unable to get acronym: %s", err)

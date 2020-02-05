@@ -25,6 +25,7 @@ func TestStore(t *testing.T) {
 		FileSize:    1234,
 	}
 
+	t.Log("Reserve")
 	savedid, err := sb.Reserve(sid)
 	if err != nil {
 		t.Fatalf("Unable to reserve id: %s", err)
@@ -32,11 +33,14 @@ func TestStore(t *testing.T) {
 	if !savedid.Equal(sid) {
 		t.Fatalf("wrong id saved: %v", savedid)
 	}
+
+	t.Log("Insert")
 	err = sb.Insert(fs)
 	if err != nil {
 		t.Fatalf("unable to insert: %s", err)
 	}
 
+	t.Log("Get")
 	gotten, err := sb.Get(sid)
 	if err != nil {
 		t.Fatalf("unable to get filestore: %s", err)
@@ -45,6 +49,7 @@ func TestStore(t *testing.T) {
 		t.Fatalf("incorrect gotten filestore: %v", gotten)
 	}
 
+	t.Log("MatchHash")
 	matched, err := sb.MatchHash(10)
 	if err != nil {
 		t.Fatalf("unable to match hash: %s", err)
