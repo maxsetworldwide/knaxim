@@ -8,11 +8,28 @@ stages:
 clientBuild:
   stage: build
   tags:
-    - node
+    - puppeteer
+  cache:
+    key: ${CI_BUILD_REF_NAME}
+    paths:
+      - web/node_modules
+  artifacts:
+    paths:
+     - web/node_modules
   script:
     - cd web/
     - npm install
     - npm run build
+
+clientTest:
+  stage: test
+  tags:
+    - puppeteer
+  script:
+    - cd web/
+    - mkdir local
+    - cp example-karma-headless.conf.js local/karma.headless.conf.js
+    - npm run headless
 
 serverBuild:
   stage: build
@@ -36,7 +53,7 @@ memoryDatabase:
     - golang
   script:
     - cd internal/database/memory
-    - go test
+    - go test -v -timeout 45s
 
 internalUtil:
   stage: test
@@ -44,7 +61,7 @@ internalUtil:
     - golang
   script:
     - cd internal/util
-    - go test
+    - go test -v
 
 pkgPassentropy:
   stage: test
@@ -52,7 +69,7 @@ pkgPassentropy:
     - golang
   script:
     - cd pkg/passentropy
-    - go test
+    - go test -v
 
 databaseTypes:
   stage: test
@@ -60,7 +77,7 @@ databaseTypes:
     - golang
   script:
     - cd internal/database/
-    - go test
+    - go test -v
 
 fileProcessing:
   stage: test
@@ -73,4 +90,4 @@ fileProcessing:
     TIKA_PATH: http://tika:9998
   script:
     - cd internal/database/process
-    - go test
+    - go test -v

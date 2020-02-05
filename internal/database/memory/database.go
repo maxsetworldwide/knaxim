@@ -33,6 +33,8 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 		return nil
 	}
 	db.lock = new(sync.RWMutex)
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	db.Owners.ID = make(map[string]database.Owner)
 	db.Owners.UserName = make(map[string]database.UserI)
 	db.Owners.GroupName = make(map[string]database.GroupI)
@@ -61,6 +63,8 @@ func CurrentOpenConnections() int {
 }
 
 func (db *Database) Owner(c context.Context) database.Ownerbase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Ownerbase{
 		Database: *db,
 	}
@@ -70,6 +74,8 @@ func (db *Database) Owner(c context.Context) database.Ownerbase {
 }
 
 func (db *Database) File(c context.Context) database.Filebase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Filebase{
 		Database: *db,
 	}
@@ -79,6 +85,8 @@ func (db *Database) File(c context.Context) database.Filebase {
 }
 
 func (db *Database) Store(c context.Context) database.Storebase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Storebase{
 		Database: *db,
 	}
@@ -88,6 +96,8 @@ func (db *Database) Store(c context.Context) database.Storebase {
 }
 
 func (db *Database) Content(c context.Context) database.Contentbase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Contentbase{
 		Database: *db,
 	}
@@ -97,6 +107,8 @@ func (db *Database) Content(c context.Context) database.Contentbase {
 }
 
 func (db *Database) Tag(c context.Context) database.Tagbase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Tagbase{
 		Database: *db,
 	}
@@ -106,6 +118,8 @@ func (db *Database) Tag(c context.Context) database.Tagbase {
 }
 
 func (db *Database) Acronym(c context.Context) database.Acronymbase {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	out := &Acronymbase{
 		Database: *db,
 	}
@@ -115,11 +129,15 @@ func (db *Database) Acronym(c context.Context) database.Acronymbase {
 }
 
 func (db *Database) Close(_ context.Context) error {
+	db.lock.Lock()
+	defer db.lock.Unlock()
 	db.ctx = nil
 	updateCount(-1)
 	return nil
 }
 
 func (db *Database) GetContext() context.Context {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
 	return db.ctx
 }
