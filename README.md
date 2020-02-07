@@ -29,6 +29,8 @@ combination of server/knaxim and maxsetdev/knaxim-client
 
 205 Reset Content - Request succeeded, reset the view.
 
+242 Error Processing File - attempted to access data relating to file that failed to be properly processed
+
 ### 4xx
 >    The 4xx class of status code is intended for cases in which the client seems to have erred.
 
