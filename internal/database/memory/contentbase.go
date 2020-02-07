@@ -71,7 +71,6 @@ func (cb *Contentbase) slice(id filehash.StoreID, start int, end int) ([]databas
 }
 
 func (cb *Contentbase) RegexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
-=======
 	lock.RLock()
 	defer lock.RUnlock()
 	return cb.regexSearchFile(regex, file, start, end)
