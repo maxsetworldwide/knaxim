@@ -10,8 +10,8 @@ type Storebase struct {
 }
 
 func (sb *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
-	sb.lock.Lock()
-	defer sb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	for _, assigned := sb.Stores[id.String()]; assigned; _, assigned = sb.Stores[id.String()] {
 		id = id.Mutate()
 	}
@@ -20,8 +20,8 @@ func (sb *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
 }
 
 func (sb *Storebase) Insert(fs *database.FileStore) error {
-	sb.lock.Lock()
-	defer sb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if expectnil, assigned := sb.Stores[fs.ID.String()]; !assigned {
 		return database.ErrIDNotReserved
 	} else if expectnil != nil {
@@ -32,8 +32,12 @@ func (sb *Storebase) Insert(fs *database.FileStore) error {
 }
 
 func (sb *Storebase) Get(id filehash.StoreID) (*database.FileStore, error) {
-	sb.lock.RLock()
-	defer sb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
+	return sb.get(id)
+}
+
+func (sb *Storebase) get(id filehash.StoreID) (*database.FileStore, error) {
 	if sb.Stores[id.String()] == nil {
 		return nil, database.ErrNotFound
 	}
@@ -41,8 +45,8 @@ func (sb *Storebase) Get(id filehash.StoreID) (*database.FileStore, error) {
 }
 
 func (sb *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) {
-	sb.lock.RLock()
-	defer sb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	for _, store := range sb.Stores {
 		if store.ID.Hash == h {
 			out = append(out, store)
@@ -52,8 +56,8 @@ func (sb *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) 
 }
 
 func (sb *Storebase) UpdateMeta(fs *database.FileStore) error {
-	sb.lock.Lock()
-	defer sb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if sb.Stores[fs.ID.String()] == nil {
 		return database.ErrNotFound
 	}

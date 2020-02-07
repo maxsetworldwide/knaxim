@@ -13,8 +13,8 @@ var group2 = database.NewGroup("group2", group1)
 
 func fillowners(db *Database) {
 	//Users
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	db.Owners.ID[test1.GetID().String()] = test1
 	db.Owners.UserName[test1.GetName()] = test1
 
