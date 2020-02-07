@@ -118,7 +118,21 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
+			fs.Perr = &database.ProcessingError{
+				Status:  242,
+				Message: err.Error(),
+			}
+		} else {
+			fs.Perr = nil
 		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		sb := config.DB.Store(ctx)
+		err := sb.UpdateMeta(fs)
+		if err != nil {
+			util.VerboseRequest(r, "Unable to Update Processing Error: %s", err.Error())
+		}
+		sb.Close(ctx)
 	}()
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{

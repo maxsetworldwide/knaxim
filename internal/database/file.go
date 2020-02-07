@@ -35,6 +35,7 @@ type FileStore struct {
 
 func NewFileStore(r io.Reader) (*FileStore, error) {
 	n := new(FileStore)
+	n.Perr = FileLoadInProgress
 
 	pout, pin := io.Pipe()
 	ContentBuf := new(bytes.Buffer)
