@@ -42,8 +42,25 @@ func (cb *Contentbase) Len(id filehash.StoreID) (int64, error) {
 }
 
 func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
-	cb.lock.RLock()
-	defer cb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
+	return cb.slice(id, start, end)
+}
+
+func (cb *Contentbase) slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+	var perr error
+	{
+		sb := cb.store(nil).(*Storebase)
+		fs, err := sb.get(id)
+		if err != nil {
+			sb.close()
+			return nil, err
+		}
+		if fs.Perr != nil {
+			perr = fs.Perr
+		}
+		sb.close()
+	}
 	if len(cb.Lines[id.String()]) < end {
 		end = len(cb.Lines[id.String()])
 	}
@@ -54,8 +71,30 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 }
 
 func (cb *Contentbase) RegexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+<<<<<<< Updated upstream
 	cb.lock.RLock()
 	defer cb.lock.RUnlock()
+=======
+	lock.RLock()
+	defer lock.RUnlock()
+	return cb.regexSearchFile(regex, file, start, end)
+}
+
+func (cb *Contentbase) regexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+	var perr error
+	{
+		sb := cb.store(nil).(*Storebase)
+		fs, err := sb.get(file)
+		if err != nil {
+			sb.close()
+			return nil, err
+		}
+		if fs.Perr != nil {
+			perr = fs.Perr
+		}
+		sb.close()
+	}
+>>>>>>> Stashed changes
 	rgx, err := regexp.Compile(regex)
 	if err != nil {
 		return nil, srverror.New(err, 400, "Bad Search", "search string failed to compile to regex")

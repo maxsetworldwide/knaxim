@@ -294,7 +294,10 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 	}
 
 	lines, err := r.Context().Value(database.CONTENT).(database.Contentbase).Slice(rec.GetID().StoreID, startindx, endindx)
-	if err != nil {
+	if pe, ok := err.(*database.ProcessingError); ok {
+		w.WriteHeader(pe.Status)
+		w.Set("ProcessingError", pe.Message)
+	} else if err != nil && lines == nil {
 		panic(err)
 	}
 
@@ -335,12 +338,17 @@ func searchFile(out http.ResponseWriter, r *http.Request) {
 	if !file.GetOwner().Match(owner) && !file.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "user does not have view permission", owner.GetID().String(), file.GetName(), file.GetID().String()))
 	}
-	if matched, err := r.Context().Value(database.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end); err != nil {
-		panic(err)
-	} else {
-		w.Set("size", len(matched))
-		w.Set("lines", matched)
+	matched, err := r.Context().Value(database.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end)
+	if err != nil {
+		if pe, ok := err.(*database.ProcessingError); ok {
+			w.WriteHeader(pe.Status)
+			w.Set("ProcessingError", pe.Message)
+		} else if matched == nil {
+			panic(err)
+		}
 	}
+	w.Set("size", len(matched))
+	w.Set("lines", matched)
 }
 
 func deleteRecord(out http.ResponseWriter, r *http.Request) {

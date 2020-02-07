@@ -25,6 +25,10 @@ func (pe *ProcessingError) Equal(oth *ProcessingError) bool {
 	return pe.Message == oth.Message
 }
 
+func (pe *ProcessingError) Error() string {
+	return pe.Message
+}
+
 type FileStore struct {
 	ID          filehash.StoreID `json:"id" bson:"id"`
 	Content     []byte           `json:"content" bson:"-"`

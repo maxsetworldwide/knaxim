@@ -42,7 +42,7 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 	}
 	var perr error
 	if fs.Perr != nil {
-		perr = srverror.Basic(fs.Perr.Status, fs.Perr.Message)
+		perr = fs.Perr
 	}
 	cursor, err := cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).Find(cb.ctx,
 		bson.M{
@@ -82,7 +82,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 	}
 	var perr error
 	if fs.Perr != nil {
-		perr = srverror.Basic(fs.Perr.Status, fs.Perr.Message)
+		perr = fs.Perr
 	}
 	cursor, err := cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).Find(cb.ctx, bson.M{
 		"id": id,

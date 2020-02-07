@@ -171,6 +171,23 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 	for _, f := range files {
 		stores = append(stores, f.StoreID)
 	}
+<<<<<<< Updated upstream
+=======
+	var perr error
+	{
+		sb := tb.Store(nil)
+		for _, sid := range stores {
+			fs, err := sb.Get(sid)
+			if err != nil {
+				return nil, err
+			}
+			if fs.Perr != nil {
+				perr = fs.Perr
+				break
+			}
+		}
+	}
+>>>>>>> Stashed changes
 	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"]).Find(
 		tb.ctx,
 		bson.M{
