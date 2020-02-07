@@ -10,8 +10,8 @@ type Tagbase struct {
 }
 
 func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
-	tb.lock.Lock()
-	defer tb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if tb.TagFiles[fid.String()] == nil {
 		tb.TagFiles[fid.String()] = make(map[string]tag.Tag)
 	}
@@ -26,8 +26,8 @@ func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
 }
 
 func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
-	tb.lock.Lock()
-	defer tb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if tb.TagStores[sid.String()] == nil {
 		tb.TagStores[sid.String()] = make(map[string]tag.Tag)
 	}
@@ -42,14 +42,12 @@ func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
 }
 
 func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, error) {
-	tb.lock.RLock()
-	defer tb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	storeids := make([]filehash.StoreID, 0, len(fids))
 	for _, fid := range fids {
 		storeids = append(storeids, fid.StoreID)
 	}
-<<<<<<< Updated upstream
-=======
 	var perr error
 	{
 		sb := tb.store(nil).(*Storebase)
@@ -66,7 +64,6 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 		}
 		sb.close()
 	}
->>>>>>> Stashed changes
 	out := make(map[string][]tag.Tag)
 	for _, fid := range fids {
 		for w, tag := range tb.TagFiles[fid.String()] {
@@ -78,12 +75,12 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 			out[w] = append(out[w], tag)
 		}
 	}
-	return out, nil
+	return out, perr
 }
 
 func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) (fileids []filehash.FileID, storeids []filehash.StoreID, err error) {
-	tb.lock.RLock()
-	defer tb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	if len(context) == 0 {
 	STORES:
 		for sidstr, tags := range tb.TagStores {
@@ -139,8 +136,8 @@ FILES:
 }
 
 func (tb *Tagbase) SearchData(typ tag.Type, d tag.Data) (out []tag.Tag, err error) {
-	tb.lock.RLock()
-	defer tb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	for _, filetags := range tb.TagFiles {
 		for _, tag := range filetags {
 			if tag.Type == typ && tag.Data.Contains(d) {

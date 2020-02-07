@@ -8,8 +8,17 @@ import (
 )
 
 var sid = filehash.StoreID{
-	Hash:  10,
-	Stamp: 10,
+	Hash:  42,
+	Stamp: 42,
+}
+
+func fillstores(db *Database) {
+	db.Stores[sid.String()] = &database.FileStore{
+		ID:          sid,
+		Content:     []byte("placeholder"),
+		ContentType: "test",
+		FileSize:    42,
+	}
 }
 
 func TestStore(t *testing.T) {
@@ -17,6 +26,11 @@ func TestStore(t *testing.T) {
 	sb := DB.Store(nil)
 	defer sb.Close(nil)
 	t.Parallel()
+
+	var sid = filehash.StoreID{
+		Hash:  10,
+		Stamp: 10,
+	}
 
 	fs := &database.FileStore{
 		ID:          sid,

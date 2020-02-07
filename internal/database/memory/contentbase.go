@@ -13,8 +13,8 @@ type Contentbase struct {
 }
 
 func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
-	cb.lock.Lock()
-	defer cb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	for _, line := range lines {
 		if len(cb.Lines[line.ID.String()]) <= line.Position {
 			if cap(cb.Lines[line.ID.String()]) <= line.Position {
@@ -36,8 +36,8 @@ func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 }
 
 func (cb *Contentbase) Len(id filehash.StoreID) (int64, error) {
-	cb.lock.RLock()
-	defer cb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	return int64(len(cb.Lines[id.String()])), nil
 }
 
@@ -67,13 +67,10 @@ func (cb *Contentbase) slice(id filehash.StoreID, start int, end int) ([]databas
 	if start >= end {
 		return nil, nil
 	}
-	return cb.Lines[id.String()][start:end], nil
+	return cb.Lines[id.String()][start:end], perr
 }
 
 func (cb *Contentbase) RegexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
-<<<<<<< Updated upstream
-	cb.lock.RLock()
-	defer cb.lock.RUnlock()
 =======
 	lock.RLock()
 	defer lock.RUnlock()
@@ -94,12 +91,11 @@ func (cb *Contentbase) regexSearchFile(regex string, file filehash.StoreID, star
 		}
 		sb.close()
 	}
->>>>>>> Stashed changes
 	rgx, err := regexp.Compile(regex)
 	if err != nil {
 		return nil, srverror.New(err, 400, "Bad Search", "search string failed to compile to regex")
 	}
-	slice, _ := cb.Slice(file, start, end)
+	slice, _ := cb.slice(file, start, end)
 	var out []database.ContentLine
 	for _, line := range slice {
 		for _, content := range line.Content {
@@ -109,5 +105,5 @@ func (cb *Contentbase) regexSearchFile(regex string, file filehash.StoreID, star
 			}
 		}
 	}
-	return out, nil
+	return out, perr
 }

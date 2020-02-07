@@ -43,7 +43,7 @@ func TestContent(t *testing.T) {
 	t.Log("Slice")
 	slice, err := cb.Slice(sid, 1, 2)
 	if err != nil {
-		t.Fatalf("Failed to get slice: %s", err)
+		t.Fatalf("Failed to get slice: %s", err.Error())
 	}
 	if slice[0].Position != 1 {
 		t.Fatalf("Incorrect Position: %d", slice[0].Position)
