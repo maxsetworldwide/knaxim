@@ -51,10 +51,11 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 	}
 	var perr error
 	{
-		sb := tb.Store(nil)
+		sb := tb.store(nil).(*Storebase)
 		for _, sid := range storeids {
-			fs, err := sb.Get(sid)
+			fs, err := sb.get(sid)
 			if err != nil {
+				sb.close()
 				return nil, err
 			}
 			if fs.Perr != nil {
@@ -65,6 +66,7 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 				}
 			}
 		}
+		sb.close()
 	}
 	out := make(map[string][]tag.Tag)
 	for _, fid := range fids {
