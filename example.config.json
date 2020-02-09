@@ -10,11 +10,11 @@
 		"key": "./domain.key",
 		"http_port": ":8001"
 	},
-	"close_time":        150000000000,
-	"basic_timeout":       5000000000,
-	"file_timeout_rate":   1000000000,
-	"max_file_timeout": 1800000000000,
-	"min_file_timeout":   10000000000,
+	"close_time":        "2m30s",
+	"basic_timeout":     "5s",
+	"file_timeout_rate": 1000000000,
+	"max_file_timeout": "30m",
+	"min_file_timeout": "10s",
 	"db_type": "mongo",
 	"db":{
 		"uri": "mongodb://localhost:27017",
@@ -25,7 +25,7 @@
 		"type": "external",
 		"path": "http://localhost",
 		"port": "",
-		"restart_time": 2400000000000
+		"restart_time": "40m"
 	},
 	"smtp": {
 		"active": true,
@@ -43,9 +43,9 @@
 		"Pass": "guestpass",
 		"Email": "info@maxset.org"
 	},
-	"SetupTimeout": 60000000000,
+	"SetupTimeout": "1m",
   "UserTimeouts": {
-    "Inactivity": 86400000000000,
-    "Total": 86400000000000
+    "Inactivity": "24h",
+    "Total": "24h"
   }
 }

@@ -1,3 +1,0 @@
-implement a version of the database interface that operates all in local memory
-
-purpose: unit testing of systems dependent on database

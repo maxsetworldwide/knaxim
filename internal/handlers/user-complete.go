@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/tag"
-	"git.maxset.io/web/knaxim/pkg/srverror"
+
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 )
 
 type userProfile struct {
@@ -144,72 +144,72 @@ func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI) {
 	}
 }
 
-func completeUserInfo(w http.ResponseWriter, r *http.Request) {
+func completeUserInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(database.UserI)
 
-	var out CompletePackage
-	out.Groups = make(map[string]groupProfile)
-	out.Records = make(map[string]fileProfile)
+	var info CompletePackage
+	info.Groups = make(map[string]groupProfile)
+	info.Records = make(map[string]fileProfile)
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
 	var err error
-	out.User.ID = user.GetID().String()
-	out.User.Name = user.GetName()
-	out.User.Roles = user.GetRoles()
-	out.User.Data.Total, err = ownerbase.GetTotalSpace(user.GetID())
+	info.User.ID = user.GetID().String()
+	info.User.Name = user.GetName()
+	info.User.Roles = user.GetRoles()
+	info.User.Data.Total, err = ownerbase.GetTotalSpace(user.GetID())
 	if err != nil {
 		panic(err)
 	}
-	if out.User.Data.Current, err = ownerbase.GetSpace(user.GetID()); err != nil {
+	if info.User.Data.Current, err = ownerbase.GetSpace(user.GetID()); err != nil {
 		panic(err)
 	}
 	if owned, members, err := ownerbase.GetGroups(user.GetID()); err == nil {
 		for _, o := range owned {
-			if err = out.addGroup(o, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
 				panic(err)
 			}
-			out.User.Groups.Own = append(out.User.Groups.Own, o.GetID().String())
+			info.User.Groups.Own = append(info.User.Groups.Own, o.GetID().String())
 		}
 		for _, m := range members {
-			if err = out.addGroup(m, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
 				panic(err)
 			}
-			out.User.Groups.Member = append(out.User.Groups.Member, m.GetID().String())
+			info.User.Groups.Member = append(info.User.Groups.Member, m.GetID().String())
 		}
 	} else {
 		panic(err)
 	}
 	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]string{user.GetID().String(): dirflag}}); err == nil {
 		for _, t := range tags {
-			out.User.Dirs = append(out.User.Dirs, t.Word)
+			info.User.Dirs = append(info.User.Dirs, t.Word)
 		}
 	} else {
 		panic(err)
 	}
 	if owned, err := filebase.GetOwned(user.GetID()); err == nil {
 		for _, o := range owned {
-			out.addRecord(user, o)
-			out.User.Files.Own = append(out.User.Files.Own, o.GetID().String())
+			info.addRecord(user, o)
+			info.User.Files.Own = append(info.User.Files.Own, o.GetID().String())
 		}
 	} else {
 		panic(err)
 	}
 	if viewable, err := filebase.GetPermKey(user.GetID(), "view"); err == nil {
 		for _, v := range viewable {
-			out.addRecord(user, v)
-			out.User.Files.View = append(out.User.Files.View, v.GetID().String())
+			info.addRecord(user, v)
+			info.User.Files.View = append(info.User.Files.View, v.GetID().String())
 		}
 	} else {
 		panic(err)
 	}
 	if public, err := filebase.GetPermKey(database.Public.GetID(), "view"); err == nil {
 		for _, p := range public {
-			out.addRecord(user, p)
-			out.Public = append(out.Public, p.GetID().String())
+			info.addRecord(user, p)
+			info.Public = append(info.Public, p.GetID().String())
 		}
 	}
-	if err := json.NewEncoder(w).Encode(out); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "completeUserInfo encode json"))
-	}
+
+	w.Set("user", info)
 }

@@ -17,6 +17,10 @@ func initverbose() {
 	}
 }
 
+func SetLogger(l *log.Logger) {
+	vlog = l
+}
+
 func Verbose(a string, b ...interface{}) {
 	if *verboseflag {
 		initverbose()

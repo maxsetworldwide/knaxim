@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -33,7 +33,8 @@ var missingContextErr = srverror.Basic(500, "Unable to access search context")
 
 var dirflag = "d"
 
-func getDirs(w http.ResponseWriter, r *http.Request) {
+func getDirs(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if gr := r.Context().Value(GROUP); gr != nil {
 		owner = gr.(database.Owner)
@@ -50,15 +51,12 @@ func getDirs(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"folders": dirs,
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "Failed to encode json"))
-	}
-	w.Header().Set("Content-Type", "application/json")
+	w.Set("folders", dirs)
 }
 
-func createDir(w http.ResponseWriter, r *http.Request) {
+func createDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	nname := r.FormValue("newname")
 	if !validDirName(nname) {
@@ -85,13 +83,8 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(files) == 0 {
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
-			"id":            nname,
-			"affectedFiles": 0,
-		}); err != nil {
-			panic(srverror.New(err, 500, "Server Error", "createDir failed to encode json 1"))
-		}
-		w.Header().Add("Content-Type", "application/json")
+		w.Set("id", nname)
+		w.Set("affectedFiles", 0)
 		return
 	}
 	dirtag := tag.Tag{
@@ -110,16 +103,14 @@ func createDir(w http.ResponseWriter, r *http.Request) {
 			panic(srverror.New(err, 500, "Server Error", "Unable to add user tag"))
 		}
 	}
-	if err := json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":            nname,
-		"affectedFiles": len(files),
-	}); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "createDir failed to encode json 2"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", nname)
+	w.Set("affectedFiles", len(files))
 }
 
-func dirInfo(w http.ResponseWriter, r *http.Request) {
+func dirInfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	vals := mux.Vars(r)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
@@ -141,18 +132,15 @@ func dirInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
 	}
-	result := DirInformation{
-		Name:  strings.ToLower(tagfilter.Word),
-		Files: filematches,
-	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "dirInfo unable to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("name", strings.ToLower(tagfilter.Word))
+	w.Set("files", filematches)
 }
 
 func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(out http.ResponseWriter, r *http.Request) {
+		w := out.(*srvjson.ResponseWriter)
+
 		tagbase := r.Context().Value(database.TAG).(database.Tagbase)
 		var owner database.Owner
 		if group := r.Context().Value(GROUP); group != nil {
@@ -197,11 +185,14 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 				panic(err)
 			}
 		}
-		w.Write([]byte("Complete"))
+
+		w.Set("message", "Complete")
 	}
 }
 
-func searchDir(w http.ResponseWriter, r *http.Request) {
+func searchDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var tagbase = r.Context().Value(database.TAG).(database.Tagbase)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
@@ -244,13 +235,12 @@ func searchDir(w http.ResponseWriter, r *http.Request) {
 			matches = append(matches, fid)
 		}
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, matches)); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "searchDir failed to encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("matches", matches)
 }
 
-func deleteDir(w http.ResponseWriter, r *http.Request) {
+func deleteDir(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -284,5 +274,5 @@ func deleteDir(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-	w.Write([]byte("Complete"))
+	w.Set("message", "Complete")
 }

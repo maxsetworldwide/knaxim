@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
@@ -11,6 +10,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
+	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
 )
@@ -70,7 +70,8 @@ func AttachGroup(r *mux.Router) {
 	r.HandleFunc("/name/{name}", lookupGroup).Methods("GET")
 }
 
-func createGroup(w http.ResponseWriter, r *http.Request) {
+func createGroup(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	var owner database.Owner
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
@@ -90,10 +91,13 @@ func createGroup(w http.ResponseWriter, r *http.Request) {
 	if err := ownerbase.Insert(ng); err != nil {
 		panic(err)
 	}
-	w.Write([]byte("Group Created"))
+
+	w.Set("message", "X31-CPO Group Created")
+	// w.Write([]byte("Group Created"))
 }
 
-func getGroups(w http.ResponseWriter, r *http.Request) {
+func getGroups(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(database.UserI)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -101,20 +105,22 @@ func getGroups(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	result := make(map[string][]GroupInformation)
+
+	own := []GroupInformation{}
+	member := []GroupInformation{}
 	for _, gr := range ogroups {
-		result["own"] = append(result["own"], BuildGroupInfo(gr))
+		own = append(own, BuildGroupInfo(gr))
 	}
 	for _, gr := range mgroups {
-		result["member"] = append(result["member"], BuildGroupInfo(gr))
+		member = append(member, BuildGroupInfo(gr))
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "getGroups encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("own", own)
+	w.Set("member", member)
 }
 
-func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
+func getGroupsGroups(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	owner := r.Context().Value(GROUP).(database.GroupI)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 
@@ -122,20 +128,21 @@ func getGroupsGroups(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	result := make(map[string][]GroupInformation)
+
+	own := []GroupInformation{}
+	member := []GroupInformation{}
 	for _, gr := range ogroups {
-		result["own"] = append(result["own"], BuildGroupInfo(gr))
+		own = append(own, BuildGroupInfo(gr))
 	}
 	for _, gr := range mgroups {
-		result["member"] = append(result["member"], BuildGroupInfo(gr))
+		member = append(member, BuildGroupInfo(gr))
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "getGroups encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("own", own)
+	w.Set("member", member)
 }
 
-func groupinfo(w http.ResponseWriter, r *http.Request) {
+func groupinfo(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	group, ok := r.Context().Value(GROUP).(database.GroupI)
 	if !ok {
 		panic(srverror.Basic(404, "Not Found", "id was an owner but not a group"))
@@ -150,13 +157,15 @@ func groupinfo(w http.ResponseWriter, r *http.Request) {
 			Name: group.GetName(),
 		}
 	}
-	if err := json.NewEncoder(w).Encode(result); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "groupinfo encode json"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+
+	w.Set("id", result.ID)
+	w.Set("name", result.Name)
+	w.Set("members", result.Members)
 }
 
-func searchGroupFiles(w http.ResponseWriter, r *http.Request) {
+func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+
 	if err := r.ParseForm(); err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
 	}
@@ -197,14 +206,13 @@ func searchGroupFiles(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	if err := json.NewEncoder(w).Encode(BuildSearchResponse(r, result)); err != nil {
-		panic(srverror.New(err, 500, "Failed to encode responce"))
-	}
-	w.Header().Add("Content-Type", "application/json")
+	w.Set("matched", BuildSearchResponse(r, result).Files)
 }
 
 func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(out http.ResponseWriter, r *http.Request) {
+		w := out.(*srvjson.ResponseWriter)
+
 		r.FormValue("id")
 		if len(r.Form["id"]) == 0 {
 			panic(srverror.Basic(400, "Missing Member ID"))
@@ -230,23 +238,25 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		w.Write([]byte("updated members"))
+
+		w.Set("message", "updated members")
 	}
 }
 
-func lookupGroup(w http.ResponseWriter, r *http.Request) {
+func lookupGroup(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
 	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	vals := mux.Vars(r)
 	match, err := ownerbase.FindGroupName(vals["name"])
 	if err != nil {
 		panic(err)
 	}
-	responce := BuildGroupInfo(match)
+	response := BuildGroupInfo(match)
 	if !match.Match(r.Context().Value(USER).(database.Owner)) {
-		responce.Members = nil
+		response.Members = nil
 	}
-	if err = json.NewEncoder(w).Encode(responce); err != nil {
-		panic(srverror.New(err, 500, "Server Error", "unable to encode json"))
-	}
-	w.Header().Set("Content-Type", "application/json")
+
+	w.Set("id", response.ID)
+	w.Set("name", response.Name)
+	w.Set("members", response.Members)
 }

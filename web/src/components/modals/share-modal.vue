@@ -10,14 +10,15 @@ events:
 -->
 <template>
   <b-modal
-  :id="id"
-  ref="modal"
-  @hidden="onClose"
-  centered
-  hide-footer
-  hide-header
-  size="lg"
-  content-class="modal-style">
+    :id="id"
+    ref="modal"
+    @hidden="onClose"
+    centered
+    hide-footer
+    hide-header
+    size="lg"
+    content-class="modal-style"
+  >
     <b-container>
       <b-row align-h="center" v-if="!hideList">
         <h4>Files to share:</h4>
@@ -40,8 +41,10 @@ events:
             <b-form-invalid-feedback>Name not found!</b-form-invalid-feedback>
           </b-col>
           <b-col class="text-center" cols="2">
-            <b-spinner v-if="shareLoading"/>
-            <b-button v-else :disabled="!validName" type="submit">Share</b-button>
+            <b-spinner v-if="shareLoading" />
+            <b-button v-else :disabled="!validName" type="submit"
+              >Share</b-button
+            >
           </b-col>
         </b-row>
       </b-form>
@@ -50,7 +53,9 @@ events:
       </b-row>
       <b-row class="w-75 mx-auto viewer-list" align-h="center">
         <div v-if="objIsEmpty(viewers)">
-          <span v-if="!loadingViewers">There are currently no viewers for these files.</span>
+          <span v-if="!loadingViewers"
+            >There are currently no viewers for these files.</span
+          >
           <div v-else>
             <b-spinner class="align-middle"></b-spinner>
             <strong>Loading...</strong>
@@ -58,7 +63,12 @@ events:
         </div>
         <!-- Relying on b-col's behavior of wrapping when #cols exceeds 12 -->
         <b-col cols="3" v-for="(name, uid) in viewers" :key="uid">
-          <share-viewer :uid="uid" :name="name" :fids="fileIDs" @stop-share="getViewers"/>
+          <share-viewer
+            :uid="uid"
+            :name="name"
+            :fids="fileIDs"
+            @stop-share="getViewers"
+          />
         </b-col>
       </b-row>
     </b-container>
@@ -131,18 +141,11 @@ export default {
         this.validName = null
         return
       }
-      UserService.lookup({ name: currName }).then(({ data }) => {
-        if (!data.id) {
-          throw new Error('name is not user')
-        }
-        this.validName = !!data.id && this.inputName === currName
-        if (this.validName) {
-          this.nameID = data.id
-        } else {
-          this.nameID = ''
-        }
-      }).catch(() => {
-        GroupService.lookup({ name: currName }).then(({ data }) => {
+      UserService.lookup({ name: currName })
+        .then(({ data }) => {
+          if (!data.id) {
+            throw new Error('name is not user')
+          }
           this.validName = !!data.id && this.inputName === currName
           if (this.validName) {
             this.nameID = data.id
@@ -150,7 +153,16 @@ export default {
             this.nameID = ''
           }
         })
-      })
+        .catch(() => {
+          GroupService.lookup({ name: currName }).then(({ data }) => {
+            this.validName = !!data.id && this.inputName === currName
+            if (this.validName) {
+              this.nameID = data.id
+            } else {
+              this.nameID = ''
+            }
+          })
+        })
     },
     getViewers () {
       if (this.files.length === 0) {
@@ -159,9 +171,11 @@ export default {
       }
       this.loadingViewers = true
       let intersectNames = []
-      Promise.all(this.fileIDs.map(id => {
-        return PermissionService.permissions({ id })
-      })).then(resArray => {
+      Promise.all(
+        this.fileIDs.map(id => {
+          return PermissionService.permissions({ id })
+        })
+      ).then(resArray => {
         const viewerLists = resArray.map(({ data }) => {
           if (data.vals) {
             return data.vals.view
@@ -211,15 +225,20 @@ export default {
     share () {
       if (this.validName) {
         this.shareLoading = true
-        Promise.all(this.fileIDs.map((fid) => {
-          return PermissionService.share({ id: fid, targets: this.nameID })
-        })).then((res) => {
-          this.getViewers()
-        }).catch(res => {
-          console.log('share error:', res)
-        }).finally(() => {
-          this.shareLoading = false
-        })
+        Promise.all(
+          this.fileIDs.map(fid => {
+            return PermissionService.share({ id: fid, targets: this.nameID })
+          })
+        )
+          .then(res => {
+            this.getViewers()
+          })
+          .catch(res => {
+            // console.log('share error:', res)
+          })
+          .finally(() => {
+            this.shareLoading = false
+          })
       }
     },
     onClose () {
@@ -233,7 +252,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 .file-list {
   height: 90px;
   width: 60%;
@@ -258,5 +276,4 @@ button {
 ::v-deep .modal-style {
   @extend %modal-corners;
 }
-
 </style>

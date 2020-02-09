@@ -1,6 +1,7 @@
 # Testing the Knaxim Client.
 Instructions for setting up a karma instance for testing a Knaxim client.
 
+
 The requirements are a Knaxim web server connected to a Knaxim client along
 with application code, tests, and karma dependencies.  Node and npm are also
 required.

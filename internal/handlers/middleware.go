@@ -91,7 +91,7 @@ func UserCookie(next http.Handler) http.Handler {
 		} else if !u.GetRole("Guest") && !u.CheckCookie(r) {
 			panic(srverror.New(errors.New("Cookie not valid"), 401, "login", "Cookie Invalid", uid.String()))
 		} else {
-			u.RefreshCookie(time.Now().Add(config.V.UserTimeouts.Inactivity))
+			u.RefreshCookie(time.Now().Add(config.V.UserTimeouts.Inactivity.Duration))
 			if err := userbase.Update(u); err != nil {
 				panic(err)
 			}
@@ -137,8 +137,8 @@ func ConnectDatabase(next http.Handler) http.Handler {
 
 func Timeout(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if config.V.BasicTimeout > 0 {
-			c, cancel := context.WithTimeout(r.Context(), config.V.BasicTimeout)
+		if config.V.BasicTimeout.Duration > 0 {
+			c, cancel := context.WithTimeout(r.Context(), config.V.BasicTimeout.Duration)
 			defer cancel()
 			r = r.WithContext(c)
 		}

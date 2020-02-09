@@ -81,7 +81,49 @@ type Tag struct {
 	Data Data   `bson:"data" json:"data"`
 }
 
+func (t Tag) Update(oth Tag) Tag {
+	newt := Tag{
+		Word: t.Word,
+		Type: t.Type | oth.Type,
+		Data: t.Data.Copy(),
+	}
+	for tk, mapping := range oth.Data {
+		if newt.Data[tk] == nil {
+			newt.Data[tk] = make(map[string]string)
+		}
+		for k, v := range mapping {
+			newt.Data[tk][k] = v
+		}
+	}
+	return newt
+}
+
 type Data map[Type]map[string]string
+
+func (d Data) Copy() Data {
+	if d == nil {
+		return make(Data)
+	}
+	newd := make(Data)
+	for tk, mapping := range d {
+		newd[tk] = make(map[string]string)
+		for k, v := range mapping {
+			newd[tk][k] = v
+		}
+	}
+	return newd
+}
+
+func (d Data) Contains(oth Data) bool {
+	for typ, mapping := range oth {
+		for k, v := range mapping {
+			if d[typ] == nil || d[typ][k] != v {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 func (d Data) MarshalBSON() ([]byte, error) {
 	form := make(map[string]map[string]string)

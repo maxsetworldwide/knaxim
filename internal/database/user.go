@@ -12,7 +12,6 @@ import (
 
 type UserI interface {
 	Owner
-	GetName() string
 	GetLock() UserCredentialI
 	SetLock(UserCredentialI)
 	NewCookies(time.Time, time.Time) []*http.Cookie
@@ -46,7 +45,6 @@ func NewUser(name, password, email string) *User {
 
 	n.ID.Type = 'u'
 	n.ID.UserDefined = name2userdefined(name)
-	n.ID.Stamp = newstamp()
 
 	n.Name = name
 	n.Pass = NewUserCredential(password)
@@ -177,6 +175,15 @@ func (u *User) Equal(o Owner) bool {
 	}
 }
 
+func (u *User) Copy() Owner {
+	if u == nil {
+		return nil
+	}
+	nu := new(User)
+	*nu = *u
+	return nu
+}
+
 func (u *User) GetRole(k string) bool {
 	return u.Roles[k]
 }
@@ -243,56 +250,3 @@ func (up UserCredential) Valid(credential map[string]interface{}) bool {
 	}
 	return true
 }
-
-// type UserToken struct {
-// 	UID     string    `json:"uid"`
-// 	Timeout time.Time `json:"timeout"`
-// 	Sig     string    `json:"sig"`
-// }
-//
-// func (token *UserToken) GetUID() string {
-// 	return token.UID
-// }
-//
-// func (token *UserToken) GetTimeout() time.Time {
-// 	return token.Timeout
-// }
-//
-// func tokensig(t *UserToken, key []byte) string {
-// 	b := new(bytes.Buffer)
-// 	b.WriteString(t.UID)
-// 	b.WriteString(t.Timeout.Format(time.RFC3339Nano))
-// 	mssg := b.Bytes()
-// 	h := sha256.New()
-// 	if _, err := h.Write(mssg); err != nil {
-// 		panic(err)
-// 	}
-// 	if _, err := h.Write(key); err != nil {
-// 		panic(err)
-// 	}
-// 	sig := h.Sum(nil)
-// 	sb := new(strings.Builder)
-// 	encoder := base64.NewEncoder(base64.URLEncoding, sb)
-// 	if _, err := encoder.Write(sig); err != nil {
-// 		panic(err)
-// 	}
-// 	if err := encoder.Close(); err != nil {
-// 		panic(err)
-// 	}
-// 	return sb.String()
-// }
-//
-// func (token *UserToken) Sign(key []byte) error {
-// 	token.Sig = tokensig(token, key)
-// 	//log.Printf("generated token signature: %s", token.Sig)
-// 	//log.Printf("token is: %v", token)
-// 	return nil
-// }
-//
-// func (token *UserToken) Check(key []byte) (bool, error) {
-// 	expect := tokensig(token, key)
-// 	// if expect != token.Sig {
-// 	//   log.Printf("expected: %s\nDelivered: %s", expect, token.Sig);
-// 	// }
-// 	return token.Sig == expect, nil
-// }

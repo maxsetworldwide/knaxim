@@ -1,17 +1,16 @@
-package database
+package process
 
 import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
 
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/google/go-tika/tika"
@@ -59,16 +58,9 @@ func NewContentExtractor(httpClient *http.Client, urlString string) *ContentExtr
 	return (*ContentExtractor)(tika.NewClient(httpClient, urlString))
 }
 
-type ContentLine struct {
-	ID filehash.StoreID `bson:"id"`
-	//PageNum  int              `bson:"pagenum"`
-	Position int      `bson:"position"`
-	Content  []string `bson:"content"`
-}
+func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
 
-func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Reader) ([]ContentLine, error) {
-
-	out := make([]ContentLine, 0, 128)
+	out := make([]database.ContentLine, 0, 128)
 
 	text, err := ((*tika.Client)(ce)).Parse(ctx, filecontent)
 	if err != nil {
@@ -78,7 +70,7 @@ func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Read
 	scanner.Split(SentenceSplitter)
 	count := 0
 	for scanner.Scan() {
-		out = append(out, ContentLine{
+		out = append(out, database.ContentLine{
 			Position: count,
 			Content:  []string{scanner.Text()},
 		})
@@ -87,17 +79,20 @@ func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Read
 	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
-	//Generate ContentLines based on meta
+	//Generate database.ContentLines based on meta
 	return out, nil
 }
 
 var xlsNewSheet = regexp.MustCompile("^Sheet[[:digit:]]+")
 
-var csvRow = regexp.MustCompile("^(\t.*)+$")
+var csvRow = regexp.MustCompile("^.*([,\t].*)*$")
+var csvSep = regexp.MustCompile("[,\t]")
 
-func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reader) ([]ContentLine, error) {
+// var csvRow = regexp.MustCompile("^.*(,.*)*$")
 
-	out := make([]ContentLine, 0, 128)
+func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
+
+	out := make([]database.ContentLine, 0, 128)
 
 	text, err := ((*tika.Client)(ce)).Parse(ctx, filecontent)
 	if err != nil {
@@ -111,10 +106,10 @@ func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reade
 		if xlsNewSheet.MatchString(line) {
 			page++
 		} else if csvRow.MatchString(line) {
-			out = append(out, ContentLine{
+			out = append(out, database.ContentLine{
 				//PageNum:  page,
 				Position: count,
-				Content:  strings.Split(line, "\t")[1:],
+				Content:  csvSep.Split(line, -1),
 			})
 			count++
 		}
@@ -124,35 +119,4 @@ func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reade
 	}
 
 	return out, nil
-}
-
-func NewContentReader(lines []ContentLine) (result io.Reader, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			result = nil
-			switch v := r.(type) {
-			case error:
-				err = v
-			case string:
-				err = errors.New(v)
-			default:
-				err = fmt.Errorf("Building Content Reader %v", v)
-			}
-		}
-	}()
-	out := make([]ContentLine, len(lines))
-	copy(out, lines)
-	for i := range out {
-		for target := out[i].Position; target != i; target = out[i].Position {
-			if target == out[target].Position {
-				panic("double position")
-			}
-			out[i], out[target] = out[target], out[i]
-		}
-	}
-	linereaders := make([]io.Reader, 0, len(out))
-	for _, line := range out {
-		linereaders = append(linereaders, strings.NewReader(strings.Join(line.Content, ", ")))
-	}
-	return io.MultiReader(linereaders...), nil
 }
