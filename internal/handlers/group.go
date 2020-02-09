@@ -212,12 +212,16 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 	return func(out http.ResponseWriter, r *http.Request) {
 		w := out.(*srvjson.ResponseWriter)
+		group := r.Context().Value(GROUP).(database.GroupI)
+		actor := r.Context().Value(USER).(database.Owner)
 
+		if !group.GetOwner().Match(actor) {
+			panic(srverror.Basic(403, "Not Owner", actor.GetName(), actor.GetID().String(), group.GetName(), group.GetID().String()))
+		}
 		r.FormValue("id")
 		if len(r.Form["id"]) == 0 {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
-		group := r.Context().Value(GROUP).(database.GroupI)
 		ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 		for _, idstr := range r.Form["id"] {
 			id, err := database.DecodeObjectIDString(idstr)
