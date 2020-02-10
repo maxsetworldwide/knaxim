@@ -2,12 +2,31 @@ package mongo
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 )
+
+func putStorePlaceholder(db *Database, sid filehash.StoreID) error {
+	placeholder, err := database.NewFileStore(strings.NewReader(sid.String()))
+	if err != nil {
+		return err
+	}
+	placeholder.ID = sid
+	placeholder.ContentType = "test"
+	placeholder.FileSize = 42
+	placeholder.Perr = nil
+	sb := db.Store(nil)
+	_, err = sb.Reserve(sid)
+	if err != nil {
+		return err
+	}
+	return sb.Insert(placeholder)
+}
 
 func TestTagbase(t *testing.T) {
 	t.Parallel()
@@ -38,6 +57,9 @@ func TestTagbase(t *testing.T) {
 			},
 			Stamp: []byte("bb"),
 		},
+	}
+	for _, fid := range fileids {
+		putStorePlaceholder(&tb.Database, fid.StoreID)
 	}
 	stags := []tag.Tag{
 		tag.Tag{

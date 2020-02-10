@@ -13,7 +13,7 @@ import (
 type OwnerID struct {
 	Type        byte    `bson:"type"`
 	UserDefined [3]byte `bson:"ud"`
-	Stamp       []byte  `bson:"stamp"`
+	Stamp       []byte  `bson:"stamp,omitempty"`
 }
 
 func name2userdefined(name string) [3]byte {
@@ -71,6 +71,9 @@ func DecodeObjectIDString(s string) (oid OwnerID, err error) {
 	b, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
 		return OwnerID{}, err
+	}
+	if len(b) < 4 {
+		return OwnerID{}, fmt.Errorf("Unable to Decode Object ID, too short")
 	}
 	var out OwnerID
 	out.Type = b[0]

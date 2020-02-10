@@ -2,7 +2,7 @@
 
 # Knaxim
 
-knaxim 'knowledge maxim' is a file management using a nlp organizational paradigm. 
+knaxim 'knowledge maxim' is a file management using a nlp organizational paradigm.
 
 combination of server/knaxim and maxsetdev/knaxim-client
 
@@ -23,9 +23,13 @@ combination of server/knaxim and maxsetdev/knaxim-client
 
 200 Success - Probably the easiest response for any successful requests.  Use other codes if more detail is helpful.
 
+202 Server Still Processing - The server has successfully processed the request but there are elements that are still being processed that may effect the same request in the future.
+
 204 No Content - Helps mitigate the confusion between malformed requests and well formed request that do not return anything.
 
 205 Reset Content - Request succeeded, reset the view.
+
+242 Error Processing File - attempted to access data relating to file that failed to be properly processed
 
 ### 4xx
 >    The 4xx class of status code is intended for cases in which the client seems to have erred.
@@ -74,7 +78,7 @@ An API response should provide consistant behavior and simplfy client side devel
             name: ""
         }],
         group: {
-            
+
         }
     },
     "error": {
@@ -90,7 +94,7 @@ The following commands are can be usd for testing, headless testing, running a d
 |Command|Description|
 | ---     |---------|
 | docker-compose up | Start the application with all its required containers. |
-| docker-compose down | Stop all application containers. | 
+| docker-compose down | Stop all application containers. |
 
 ## Client
 |Command|Description|
@@ -128,4 +132,3 @@ Adding files to a volume is done with a container that is using that volume.  Th
 
 #### Remove a file from a volume
 ```docker exec knaxim_server_1 rm /public/statuscode.txt```
-

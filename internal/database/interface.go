@@ -28,6 +28,8 @@ var (
 	ErrPermission     = srverror.New(errors.New("User does not have appropriate permission"), 403, "Permission Denied")
 	ErrIDNotReserved  = srverror.Basic(500, "Database Error 011", "ID has not been reserved for Insert")
 	ErrIDUnrecognized = srverror.Basic(400, "Unrecognized ID")
+
+	FileLoadInProgress = &ProcessingError{Status: 202, Message: "Processing File"}
 )
 
 type Database interface {
@@ -74,6 +76,7 @@ type Storebase interface {
 	Insert(fs *FileStore) error
 	Get(id filehash.StoreID) (*FileStore, error)
 	MatchHash(h uint32) ([]*FileStore, error)
+	UpdateMeta(fs *FileStore) error
 	//Get Total size
 }
 

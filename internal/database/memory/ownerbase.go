@@ -10,8 +10,8 @@ type Ownerbase struct {
 }
 
 func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID, error) {
-	ob.lock.Lock()
-	defer ob.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if id.Type == 'u' {
 		if _, ok := ob.Owners.UserName[name]; ok {
 			return id, database.ErrNameTaken
@@ -41,8 +41,8 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID
 }
 
 func (ob *Ownerbase) Insert(u database.Owner) error {
-	ob.lock.Lock()
-	defer ob.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	idstr := u.GetID().String()
 	if expectnil, ok := ob.Owners.ID[idstr]; !ok {
 		return database.ErrIDNotReserved
@@ -76,8 +76,12 @@ func (ob *Ownerbase) Insert(u database.Owner) error {
 }
 
 func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
+	return ob.get(id)
+}
+
+func (ob *Ownerbase) get(id database.OwnerID) (database.Owner, error) {
 	if ob.Owners.ID[id.String()] == nil {
 		return nil, database.ErrNotFound
 	}
@@ -85,8 +89,8 @@ func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 }
 
 func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	if ob.Owners.UserName[name] == nil {
 		return nil, database.ErrNotFound
 	}
@@ -94,8 +98,8 @@ func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
 }
 
 func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	if ob.Owners.GroupName[name] == nil {
 		return nil, database.ErrNotFound
 	}
@@ -103,8 +107,8 @@ func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 }
 
 func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, member []database.GroupI, err error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 LOOP:
 	for _, grp := range ob.Owners.GroupName {
 		if grp.GetOwner().GetID().Equal(id) {
@@ -122,8 +126,8 @@ LOOP:
 }
 
 func (ob *Ownerbase) Update(o database.Owner) error {
-	ob.lock.Lock()
-	defer ob.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if ob.Owners.ID[o.GetID().String()] == nil {
 		return database.ErrNotFound
 	}
@@ -140,8 +144,8 @@ func (ob *Ownerbase) Update(o database.Owner) error {
 }
 
 func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	if ob.Owners.ID[o.String()] == nil {
 		return 0, database.ErrNotFound
 	}
@@ -155,8 +159,8 @@ func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
 }
 
 func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
-	ob.lock.RLock()
-	defer ob.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	if ob.Owners.ID[o.String()] == nil {
 		return 0, database.ErrNotFound
 	}

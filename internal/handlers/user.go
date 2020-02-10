@@ -177,6 +177,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	user, err := userbase.FindUserName(r.PostFormValue("name"))
 	if err != nil {
+		util.VerboseRequest(r, "request username: %s", r.PostFormValue("name"))
 		panic(err)
 	}
 	if user.GetLock().Valid(map[string]interface{}{"pass": r.PostFormValue("pass")}) {

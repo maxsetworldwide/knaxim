@@ -13,15 +13,33 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+type ProcessingError struct {
+	Status  int    `json:"status" bson:"s"`
+	Message string `json:"msg" bson:"m"`
+}
+
+func (pe *ProcessingError) Equal(oth *ProcessingError) bool {
+	if pe.Status != oth.Status {
+		return false
+	}
+	return pe.Message == oth.Message
+}
+
+func (pe *ProcessingError) Error() string {
+	return pe.Message
+}
+
 type FileStore struct {
 	ID          filehash.StoreID `json:"id" bson:"id"`
 	Content     []byte           `json:"content" bson:"-"`
 	ContentType string           `json:"ctype" bson:"ctype"`
 	FileSize    int64            `json:"fsize" bson:"fsize"`
+	Perr        *ProcessingError `json:"err,omitempty" bson:"perr,omitempty"`
 }
 
 func NewFileStore(r io.Reader) (*FileStore, error) {
 	n := new(FileStore)
+	n.Perr = FileLoadInProgress
 
 	pout, pin := io.Pipe()
 	ContentBuf := new(bytes.Buffer)
@@ -61,13 +79,20 @@ func (fs *FileStore) Reader() (io.Reader, error) {
 func (fs *FileStore) Copy() *FileStore {
 	c := make([]byte, len(fs.Content))
 	copy(c, fs.Content)
+	var perrcopy *ProcessingError
+	if fs.Perr != nil {
+		perrcopy = &ProcessingError{
+			Status:  fs.Perr.Status,
+			Message: fs.Perr.Message,
+		}
+	}
 	return &FileStore{
 		ID:          fs.ID,
 		ContentType: fs.ContentType,
 		FileSize:    fs.FileSize,
 		Content:     c,
+		Perr:        perrcopy,
 	}
-
 }
 
 type FileI interface {

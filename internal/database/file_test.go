@@ -30,6 +30,15 @@ func TestFileStore(t *testing.T) {
 	if s := sb.String(); s != "This is the file content" {
 		t.Fatalf("uncorrect read string: %s", s)
 	}
+
+	fs.Perr = &ProcessingError{
+		Status:  444,
+		Message: "all lasers",
+	}
+	fs2 := fs.Copy()
+	if fs.ContentType != fs2.ContentType || fs.FileSize != fs2.FileSize || fs.Perr.Status != fs2.Perr.Status {
+		t.Fatal("Failed to copy file store")
+	}
 }
 
 func TestFile(t *testing.T) {
