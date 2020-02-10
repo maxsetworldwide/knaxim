@@ -1,3 +1,8 @@
+/*
+this test requires Gotenberg and Tika to be running, and the TIKA_PATH and
+GOTENBERG_PATH env variables to both be set to the correct URLs of the services
+*/
+
 package process
 
 import (
@@ -50,7 +55,6 @@ func TestTextConversion(t *testing.T) {
 	if err != nil {
 		t.Fatal("Extraction fail:", err)
 	}
-	t.Logf("lines out:%+#v", lines)
 	found := false
 	for i := 0; i < len(lines) && !found; i++ {
 		found = strings.Index(lines[i], testContent) != -1
