@@ -4,10 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"git.maxset.io/web/knaxim/internal/config"
 )
 
+func setupUserTest() {
+	config.V.AdminKey = "adminKey1234"
+}
+
 func TestUserAPI(t *testing.T) {
+	setupUserTest()
 	t.Run("Create", func(t *testing.T) {
 		vals := map[string]string{
 			"name":  "testuser",
@@ -15,16 +23,28 @@ func TestUserAPI(t *testing.T) {
 			"email": "test@example.com",
 		}
 		jsonbytes, _ := json.Marshal(vals)
-		req, _ := http.NewRequest("PUT", server.URL+"/api/user", bytes.NewReader(jsonbytes))
+		req, _ := http.NewRequest("PUT", "/api/user", bytes.NewReader(jsonbytes))
 		req.Header.Add("Content-Type", "application/json")
-		client := server.Client()
-		res, err := client.Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("error returned from client", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("non success status code: %+#v", res)
+		}
+	})
+	t.Run("CreateAdminWrongKey", func(t *testing.T) {
+		vals := map[string]string{
+			"name":     "testadmin",
+			"pass":     "testPassAdmin!1",
+			"email":    "admin@example.com",
+			"adminkey": "thisKeyShouldBeWrong",
+		}
+		jsonbytes, _ := json.Marshal(vals)
+		req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
+		req.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 400 {
+			t.Fatalf("expected non success status code: %+#v", res)
 		}
 	})
 	t.Run("CreateAdmin", func(t *testing.T) {
@@ -32,91 +52,116 @@ func TestUserAPI(t *testing.T) {
 			"name":     "testadmin",
 			"pass":     "testPassAdmin!1",
 			"email":    "admin@example.com",
-			"adminkey": conf.AdminKey,
+			"adminkey": config.V.AdminKey,
 		}
 		jsonbytes, _ := json.Marshal(vals)
-		req, _ := http.NewRequest("PUT", server.URL+"/api/user/admin", bytes.NewReader(jsonbytes))
+		req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
 		req.Header.Add("Content-Type", "application/json")
-		client := server.Client()
-		res, err := client.Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("error returned from client", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("non success status code: %+#v", res)
 		}
 	})
-	//login
-	ldata := map[string]string{
-		"name": "testadmin",
-		"pass": "testPassAdmin!1",
-	}
-	loginbody, _ := json.Marshal(ldata)
-	loginreq, _ := http.NewRequest("POST", server.URL+"/api/user/login", bytes.NewReader(loginbody))
-	loginreq.Header.Add("Content-Type", "application/json")
-	res, err := server.Client().Do(loginreq)
-	if err != nil {
-		t.Fatal("Unable to login", err)
-	}
-	if res.StatusCode != 200 {
-		t.Fatalf("login non success status code: %+#v", res)
-	}
-	cookies := res.Cookies()
+	t.Run("AdminLoginWrongPassword", func(t *testing.T) {
+		ldata := map[string]string{
+			"name": "testadmin",
+			"pass": "wrongPassword",
+		}
+		loginbody, _ := json.Marshal(ldata)
+		loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
+		loginreq.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, loginreq)
+		if res.Code != 404 {
+			t.Fatalf("expected non success status code: %+#v", res)
+		}
+	})
+	t.Run("AdminLogin", func(t *testing.T) {
+		ldata := map[string]string{
+			"name": "testadmin",
+			"pass": "testPassAdmin!1",
+		}
+		loginbody, _ := json.Marshal(ldata)
+		loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
+		loginreq.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, loginreq)
+		if res.Code != 200 {
+			t.Fatalf("login non success status code: %+#v", res)
+		}
+		cookies = res.Result().Cookies()
+	})
 	t.Run("UserInfo=Self", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", server.URL+"/api/user", nil)
+		req, _ := http.NewRequest("GET", "/api/user", nil)
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("Unable to Get User Info", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("Bad Status Code: %+#v", res)
 		}
 	})
 	t.Run("UserInfo=Other", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", server.URL+"/api/user?id="+testingdata["users"][0]["id"], nil)
+		req, _ := http.NewRequest("GET", "/api/user?id="+testUsers["users"][0]["id"], nil)
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("Unable to Get User Info", err)
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
+			t.Fatalf("Bad Status Code: %+#v", res)
 		}
-		if res.StatusCode != 200 {
+	})
+	t.Run("UserInfoMissingID", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/user?id=thisisabadid", nil)
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 404 {
 			t.Fatalf("Bad Status Code: %+#v", res)
 		}
 	})
 	t.Run("UserComplete", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", server.URL+"/api/user/complete", nil)
+		req, _ := http.NewRequest("GET", "/api/user/complete", nil)
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("Unable to Get User Info", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("Bad Status Code: %+#v", res)
 		}
 	})
 	t.Run("Data", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", server.URL+"/api/user/data", nil)
+		req, _ := http.NewRequest("GET", "/api/user/data", nil)
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("unable to get data", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("Bad Status Code: %+#v", res)
+		}
+	})
+	t.Run("ChangePassWrongPass", func(t *testing.T) {
+		vals := map[string]string{
+			"oldpass": "wrongPassword",
+			"newpass": "testPassAdmin!2",
+		}
+		jsonbytes, _ := json.Marshal(vals)
+		req, _ := http.NewRequest("POST", "/api/user/pass", bytes.NewReader(jsonbytes))
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		req.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 404 {
+			t.Fatalf("Expected 404 Status Code: %+#v", res)
 		}
 	})
 	t.Run("ChangePass", func(t *testing.T) {
@@ -125,31 +170,64 @@ func TestUserAPI(t *testing.T) {
 			"newpass": "testPassAdmin!2",
 		}
 		jsonbytes, _ := json.Marshal(vals)
-		req, _ := http.NewRequest("POST", server.URL+"/api/user/pass", bytes.NewReader(jsonbytes))
+		req, _ := http.NewRequest("POST", "/api/user/pass", bytes.NewReader(jsonbytes))
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
 		req.Header.Add("Content-Type", "application/json")
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("Unable to Change password", err)
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
+			t.Fatalf("Bad Status Code: %+#v", res)
 		}
-		if res.StatusCode != 200 {
+	})
+	t.Run("LookupMissingUser", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/user/name/missinguser", nil)
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 404 {
+			t.Fatalf("Bad Status Code: %+#v", res)
+		}
+	})
+	t.Run("LookupUser", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/user/name/"+testUsers["users"][0]["name"], nil)
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
+			t.Fatalf("Bad Status Code: %+#v", res)
+		}
+	})
+	t.Run("SearchUserFiles", func(t *testing.T) {
+		// just search for clean response
+		vals := map[string]string{
+			"find": "search term",
+		}
+		jsonbytes, _ := json.Marshal(vals)
+		req, _ := http.NewRequest("GET", "/api/user/search", bytes.NewReader(jsonbytes))
+		for _, c := range cookies {
+			req.AddCookie(c)
+		}
+		req.Header.Add("Content-Type", "application/json")
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("Bad Status Code: %+#v", res)
 		}
 	})
 	t.Run("Logout", func(t *testing.T) {
-		req, _ := http.NewRequest("DELETE", server.URL+"/api/user", nil)
+		req, _ := http.NewRequest("DELETE", "/api/user", nil)
 		for _, c := range cookies {
 			req.AddCookie(c)
 		}
-		res, err := server.Client().Do(req)
-		LogBuffer(t)
-		if err != nil {
-			t.Fatal("Unable to Log Out", err)
-		}
-		if res.StatusCode != 200 {
+		res := httptest.NewRecorder()
+		testRouter.ServeHTTP(res, req)
+		if res.Code != 200 {
 			t.Fatalf("Bad Status Code: %+#v", res)
 		}
 	})

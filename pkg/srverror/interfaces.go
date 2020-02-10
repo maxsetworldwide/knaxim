@@ -59,13 +59,13 @@ func (se *srverr) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(200)
 		w.Write([]byte("Success"))
 	} else {
+		w.WriteHeader(se.status)
 		if err := json.NewEncoder(w).Encode(map[string]string{
 			"message": se.msgs[0],
 		}); err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("Server Error Error"))
 		} else {
-			w.WriteHeader(se.status)
 			w.Header().Set("Content-Type", "application/json")
 		}
 	}
