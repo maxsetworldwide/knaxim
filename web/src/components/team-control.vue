@@ -20,6 +20,10 @@ export default {
   },
   data () {
     return {
+      owner: {
+        id: '',
+        name: ''
+      },
       members: [],
       loading: false,
       processing: false
@@ -52,32 +56,44 @@ export default {
         this.loading = true
         this.members = []
         let newmembers = this.members
+        let ths = this
         GroupService.info({ gid: this.activeGroup.id }).then(res => res.data)
           .then(data => {
+            let ownerid = data.owner
             let memberGettingProms = []
-            if (data.members) {
-              data.members.forEach(memberid => {
-                memberGettingProms.push(new Promise((resolve, reject) => {
-                  let gp = GroupService.info({ gid: memberid }).then(res => res.data).then(data => {
-                    if (data && data.id && data.name) {
-                      newmembers.push(data)
-                      resolve(true)
-                    }
-                  })
-                  let up = UserService.info({ id: memberid }).then(res => res.data).then(data => {
-                    if (data && data.id && data.name) {
-                      newmembers.push(data)
-                      resolve(true)
-                    }
-                  })
-                  let inversegp = new Promise((resolve) => {
-                    gp.catch(() => { resolve(false) })
-                  })
-                  let inverseup = new Promise((resolve) => {
-                    up.catch(() => { resolve(false) })
-                  })
-                  Promise.all([inversegp, inverseup]).then(() => reject(new Error(`invalid id: ${memberid}`)))
-                }))
+            if (data.members || data.owner) {
+              [data.owner, ...data.members].forEach(memberid => {
+                if (memberid) {
+                  memberGettingProms.push(new Promise((resolve, reject) => {
+                    let gp = GroupService.info({ gid: memberid }).then(res => res.data).then(data => {
+                      if (data && data.id && data.name) {
+                        if (data.id === ownerid) {
+                          ths.owner = data
+                        } else {
+                          newmembers.push(data)
+                        }
+                        resolve(true)
+                      }
+                    })
+                    let up = UserService.info({ id: memberid }).then(res => res.data).then(data => {
+                      if (data && data.id && data.name) {
+                        if (data.id === ownerid) {
+                          ths.owner = data
+                        } else {
+                          newmembers.push(data)
+                        }
+                        resolve(true)
+                      }
+                    })
+                    let inversegp = new Promise((resolve) => {
+                      gp.catch(() => { resolve(false) })
+                    })
+                    let inverseup = new Promise((resolve) => {
+                      up.catch(() => { resolve(false) })
+                    })
+                    Promise.all([inversegp, inverseup]).then(() => reject(new Error(`invalid id: ${memberid}`)))
+                  }))
+                }
               })
             }
             Promise.all(memberGettingProms).then(() => { this.loading = false; return true }).catch(() => {
@@ -97,6 +113,7 @@ export default {
 
   render () {
     return this.$scopedSlots.default({
+      owner: this.owner,
       members: this.members,
       createTeam: this[CREATE_GROUP],
       removeTeam: this.removeGroup,

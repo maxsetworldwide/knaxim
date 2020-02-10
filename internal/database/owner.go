@@ -13,7 +13,7 @@ import (
 type OwnerID struct {
 	Type        byte    `bson:"type"`
 	UserDefined [3]byte `bson:"ud"`
-	Stamp       []byte  `bson:"stamp"`
+	Stamp       []byte  `bson:"stamp,omitempty"`
 }
 
 func name2userdefined(name string) [3]byte {
