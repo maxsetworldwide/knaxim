@@ -112,9 +112,8 @@ import FileService from '@/service/file'
 import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import FolderService from '@/service/folder'
-import { EventBus } from '@/main'
 import Vue from 'vue'
-import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
+import { EventBus, humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
 export default {
   name: 'file-list',

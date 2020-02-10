@@ -19,8 +19,7 @@
 <script>
 import { GET_USER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
-import { humanReadableSize } from '@/plugins/utils'
-import { EventBus } from '@/main'
+import { EventBus, humanReadableSize } from '@/plugins/utils'
 
 export default {
   name: 'storage-info',
@@ -29,7 +28,7 @@ export default {
   created () {
     EventBus.$on(['file-upload', 'url-upload'], this.refresh)
   },
-  method: {
+  methods: {
     refresh () {
       this.$store.dispatch(GET_USER)
     }

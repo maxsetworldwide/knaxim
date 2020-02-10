@@ -2,6 +2,7 @@
 node_modules
 *.swp
 local
+web/test/local/
 
 dist/
 build/

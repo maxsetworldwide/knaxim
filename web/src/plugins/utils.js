@@ -1,7 +1,7 @@
 /**
  * knax-utils - small plugin for Knaxim to supply global utility functions.
  */
-// import Vue from 'vue'
+import Vue from 'vue'
 //
 // const install = function (Vue) {
 // }
@@ -32,6 +32,21 @@ export function humanReadableTime (time) {
   var d = new Date(Date.parse(time))
   return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
 }
+
+/*
+ * To use the event bus:
+ * import { EventBus } from '@/main'
+ * EventBus.$emit('event-name', payload)
+ * EventBus.$on('event-name', func)
+ * EventBus.$off('event-name')
+ * func (payload) {
+ *   ...
+ * }
+ * https://alligator.io/vuejs/global-event-bus/
+ *
+ * Please be sure to keep track of events you emit within your components.
+ */
+export const EventBus = new Vue()
 
 export default {
   // install,

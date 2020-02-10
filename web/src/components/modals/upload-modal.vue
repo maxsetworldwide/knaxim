@@ -43,7 +43,7 @@ global events:
 
 <script>
 import { CREATE_FILE } from '@/store/actions.type'
-import { EventBus } from '@/main'
+import { EventBus } from '@/plugins/utils'
 
 export default {
   name: 'upload-modal',

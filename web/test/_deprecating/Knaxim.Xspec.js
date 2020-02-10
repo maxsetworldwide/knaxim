@@ -167,10 +167,10 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('searchUser', function() {
+  describe('searchUser', function () {
     let find = 'macroMeString'
 
-    it('gets content summary', function(done) {
+    it('gets content summary', function (done) {
       console.log('TODO: Does the server return content-type application/json')
 
       this.knc.searchUser(find).then(res => {
@@ -183,15 +183,15 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('changePassword', function() {
-    let newPass = 'testErr2',
-      password
+  describe('changePassword', function () {
+    let newPass = 'testErr2'
+    let password
 
-    beforeAll(function() {
+    beforeAll(function () {
       password = this.password
     })
 
-    it('changes the password', function(done) {
+    it('changes the password', function (done) {
       this.knc.changePassword(password, newPass).then(res => {
         this.knc.changePassword(newPass, password).then(res => {
           done()
@@ -203,14 +203,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('userProfile', function() {
+  describe('userProfile', function () {
     let username
 
-    beforeAll(function() {
+    beforeAll(function () {
       username = this.username
     })
 
-    it('gets a user profile', function(done) {
+    it('gets a user profile', function (done) {
       console.log('TODO: Does the server return content-type application/json')
 
       this.knc.userProfile().then(res => {
@@ -222,15 +222,15 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getPermissions', function() {
-    let type = 'group',  // {'dir' | 'group' | 'file'} type
-      id
+  describe('getPermissions', function () {
+    let type = 'group' // {'dir' | 'group' | 'file'} type
+    let id
 
-    beforeEach(function() {
+    beforeEach(function () {
       id = this.groupId
     })
 
-    it('returns Not Found', function(done) {
+    it('returns Not Found', function (done) {
       console.log('TODO: Does the server return content-type application/json')
 
       this.knc.getPermissions(type, id).then(res => {
@@ -243,18 +243,18 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('setPermission', function() {
-    let type = 'group', // {'dir' | 'group' | 'file'}
-      record,
-      user = 'macroMeString',
-      key = 'macroMeString',
-      value = true
+  describe('setPermission', function () {
+    let type = 'group' // {'dir' | 'group' | 'file'}
+    let record
+    let user = 'macroMeString'
+    let key = 'macroMeString'
+    let value = true
 
-    beforeEach(function() {
+    beforeEach(function () {
       record = this.groupId
     })
 
-    it('returns Not Found', function(done) {
+    it('returns Not Found', function (done) {
       console.log('TODO: Mock resource on Test server?')
 
       this.knc.setPermission(type, record, user, key, value).then(res => {
@@ -267,17 +267,17 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('setPermissionPublic', function() {
-    let type = 'macroMeString',
-      record = 'group', // {'dir' | 'group' | 'file'}
-      key,
-      value = true
+  describe('setPermissionPublic', function () {
+    let type = 'macroMeString'
+    let record = 'group' // {'dir' | 'group' | 'file'}
+    let key
+    let value = true
 
-    beforeEach(function() {
+    beforeEach(function () {
       key = this.groupId
     })
 
-    it('sets public permissions', function(done) {
+    it('sets public permissions', function (done) {
       this.knc.setPermissionPublic(type, record, key, value).then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -288,15 +288,15 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getRecords', function() {
-    let key = 'testErr',
-      group
+  describe('getRecords', function () {
+    let key = 'testErr'
+    let group
 
-    beforeEach(function() {
+    beforeEach(function () {
       group = this.groupId
     })
 
-    it('returns Not Found', function(done) {
+    it('returns Not Found', function (done) {
       this.knc.getRecords(key, group).then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -307,11 +307,11 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('setRecordName', function() {
-    let id = 'macroMeString',
-      name = 'macroMeString'
+  describe('setRecordName', function () {
+    let id = 'macroMeString'
+    let name = 'macroMeString'
 
-    it('gets something', function(done) {
+    it('gets something', function (done) {
       // TODO: Set Record Name of file
       // TODO: Test Cleanup reSet record name
       console.log('TODO: Is invalid data handled correctly w/500?')
@@ -326,15 +326,15 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('createGroup', function() {
-    let name = 'aTestGroupTmp',
-      maker
+  describe('createGroup', function () {
+    let name = 'aTestGroupTmp'
+    let maker
 
-    beforeAll(function() {
+    beforeAll(function () {
       maker = this.username
     })
 
-    it('creates a group', function(done) {
+    it('creates a group', function (done) {
       console.log('TODO: Is invalid data handled correctly w/500?')
       console.log(' - creating duplicate group returns 500?')
 
@@ -349,15 +349,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getGroups', function() {
+  describe('getGroups', function () {
     let group
 
-    beforeAll(function() {
+    beforeAll(function () {
       group = this.groupId
     })
 
-
-    it('gets group metadata', function(done) {
+    it('gets group metadata', function (done) {
       console.log('TODO: Does the server return content-type application/json')
 
       this.knc.getGroups(group).then(res => {
@@ -369,7 +368,7 @@ describe('Knaxim', function () {
       })
     })
 
-    it('gets a groups metadata for the current user', function(done) {
+    it('gets a groups metadata for the current user', function (done) {
       this.knc.getGroups().then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -380,15 +379,15 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('searchGroup', function() {
-    let find = 'test',
-      id
+  describe('searchGroup', function () {
+    let find = 'test'
+    let id
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.groupId
     })
 
-    it('finds content that matches a search term', function(done) {
+    it('finds content that matches a search term', function (done) {
       console.log('TODO: Does the server return content-type application/json')
 
       this.knc.searchGroup(find, id).then(res => {
@@ -401,10 +400,10 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('searchPublic', function() {
+  describe('searchPublic', function () {
     let find = 'aSearchString'
 
-    it('gets a list of documents', function(done) {
+    it('gets a list of documents', function (done) {
       this.knc.searchPublic(find).then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -415,14 +414,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getGroupMembers', function() {
+  describe('getGroupMembers', function () {
     let group
 
-    beforeAll(function() {
+    beforeAll(function () {
       group = this.groupId
     })
 
-    it('gets member info', function(done) {
+    it('gets member info', function (done) {
       console.log('TODO: Does the server return content-type application/json')
       console.log('TODO: Mock resource on Test server?')
 
@@ -436,16 +435,16 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('changeGroupMember', function() {
-    let group,
-      user = 'testUserA',
-      add = true
+  describe('changeGroupMember', function () {
+    let group
+    let user = 'testUserA'
+    let add = true
 
-    beforeAll(function() {
+    beforeAll(function () {
       group = this.groupId
     })
 
-    it('adds current user to their own group??', function(done) {
+    it('adds current user to their own group??', function (done) {
       this.knc.changeGroupMember(group, this.username, add).then(res => {
         expect(res.modified).toBe('updated members')
         done()
@@ -455,8 +454,8 @@ describe('Knaxim', function () {
       })
     })
 
-    it('removes current user from their own group??', function(done) {
-      this.knc.changeGroupMember(group, this.username, ! add).then(res => {
+    it('removes current user from their own group??', function (done) {
+      this.knc.changeGroupMember(group, this.username, !add).then(res => {
         expect(res.modified).toBe('updated members')
         done()
       }).catch(e => {
@@ -465,22 +464,22 @@ describe('Knaxim', function () {
       })
     })
 
-    xit('adds a user', function(done) {
+    xit('adds a user', function (done) {
     })
-    xit('removes a user', function(done) {
+    xit('removes a user', function (done) {
     })
   })
 
-  describe('createDirectory', function() {
-    let name = 'aTestDirectoryTmp',
-      owner,
-      content = ['abc','123'] // Array of file id's
+  describe('createDirectory', function () {
+    let name = 'aTestDirectoryTmp'
+    let owner
+    let content = ['abc', '123'] // Array of file id's
 
-    beforeAll(function() {
+    beforeAll(function () {
       owner = this.username
     })
 
-    it('creates a directory', function(done) {
+    it('creates a directory', function (done) {
       console.log('Creating a directory with fake file ids ignores file ids??')
       console.log('Creating a w/ duplicate name creates a new directory??')
 
@@ -495,18 +494,18 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('createDynDir', function() {
-    let name = 'aTestDynDir',
-      owner,
-      contexttype = 'dir', // 'dir' | 'group' | 'user'
-      contextid = 'aTestDirectory',
-      search = 'aTestTerm'
+  describe('createDynDir', function () {
+    let name = 'aTestDynDir'
+    let owner
+    let contexttype = 'dir' // 'dir' | 'group' | 'user'
+    let contextid = 'aTestDirectory'
+    let search = 'aTestTerm'
 
-    beforeAll(function() {
+    beforeAll(function () {
       owner = this.username
     })
 
-    it('creates a dynamic dir', function(done) {
+    it('creates a dynamic dir', function (done) {
       console.log('TODO: Is invalid data handled correctly w/500?')
       console.log('TODO: Mock resource on Test server?')
 
@@ -520,10 +519,10 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('refreshDynDir', function() {
+  describe('refreshDynDir', function () {
     let id = 'aTestDynDir'
 
-    it('Updates document contents', function(done) {
+    it('Updates document contents', function (done) {
       console.log('TODO: Is invalid data handled correctly w/500?')
       console.log('TODO: Mock resource on Test server?')
 
@@ -537,14 +536,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getDirectory', function() {
+  describe('getDirectory', function () {
     let id
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.directoryId
     })
 
-    it('gets a directory', function(done) {
+    it('gets a directory', function (done) {
       console.log('TODO: Does the server return content-type application/json')
       console.log('TODO: non-existing IDs cause 500 error?')
 
@@ -558,17 +557,17 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('editDirectory', function() {
-    let id,
-      fileid,
-      add = true
+  describe('editDirectory', function () {
+    let id
+    let fileid
+    let add = true
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.directoryId,
       fileid = this.fileId
     })
 
-    it('adds a file', function(done) {
+    it('adds a file', function (done) {
       this.knc.editDirectory(id, fileid, add).then(res => {
         console.log('TODO: Is invalid data handled correctly w/500?')
 
@@ -580,19 +579,19 @@ describe('Knaxim', function () {
       })
     })
 
-    xit('removes a file', function(done) {
+    xit('removes a file', function (done) {
     })
   })
 
-  describe('searchDirectory', function() {
-    let id,
-      find = 'testTerm'
+  describe('searchDirectory', function () {
+    let id
+    let find = 'testTerm'
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.directoryId
     })
 
-    it('gets a list of file ids', function(done) {
+    it('gets a list of file ids', function (done) {
       this.knc.searchDirectory(id, find).then(res => {
         console.log('TODO: Is invalid data handled correctly w/500?')
 
@@ -605,13 +604,13 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('deleteDirectory', function() {
-    let name = 'aTestDirectoryToDelete',
-      owner,
-      content = ['abc','123'], // Array of file id's
-      id
+  describe('deleteDirectory', function () {
+    let name = 'aTestDirectoryToDelete'
+    let owner
+    let content = ['abc', '123'] // Array of file id's
+    let id
 
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       owner = this.username
 
       this.knc.createDirectory(name, owner, content).then(res => {
@@ -626,7 +625,7 @@ describe('Knaxim', function () {
       })
     })
 
-    it('deletes a directory', function(done) {
+    it('deletes a directory', function (done) {
       this.knc.deleteDirectory('randO').then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -637,17 +636,17 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('createFile', function() {
-    let owner,
-      folder, //      folder = 'o_5KZHw4',
-      aFileParts = ['<a id="a"><b id="b">hey!</b></a>']
-    let file = new Blob(aFileParts, {type : 'text/html'})
+  describe('createFile', function () {
+    let owner
+    let folder //      folder = 'o_5KZHw4',
+    let aFileParts = ['<a id="a"><b id="b">hey!</b></a>']
+    let file = new Blob(aFileParts, { type: 'text/html' })
 
-    beforeAll(function(done) {
+    beforeAll(function (done) {
       owner = this.username
     })
 
-    it('creates a file', function(done) {
+    it('creates a file', function (done) {
       console.log('TODO: Does the server return content-type application/json')
       console.log('TODO: Name ends up being "blob", is another param needed??')
 
@@ -669,16 +668,16 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('trackWebPage', function() {
-    let url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      owner,
-      folder
+  describe('trackWebPage', function () {
+    let url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+    let owner
+    let folder
 
-    beforeEach(function() {
+    beforeEach(function () {
       owner = this.username
     })
 
-    it('creates a web resource', function(done) {
+    it('creates a web resource', function (done) {
       this.knc.trackWebPage(url, owner, folder).then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -689,13 +688,13 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('refreshWebPage', function() {
-    let url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-      owner,
-      folder,
-      id
+  describe('refreshWebPage', function () {
+    let url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+    let owner
+    let folder
+    let id
 
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       owner = this.username
 
       this.knc.trackWebPage(url, owner, folder).then(res => {
@@ -706,7 +705,7 @@ describe('Knaxim', function () {
       })
     })
 
-    it('refreshes a web resource', function(done) {
+    it('refreshes a web resource', function (done) {
       this.knc.refreshWebPage(id).then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -717,14 +716,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getFile', function() {
+  describe('getFile', function () {
     let id
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.fileId
     })
 
-    it('gets a file record', function(done) {
+    it('gets a file record', function (done) {
       this.knc.getFile(id).then(res => {
         expect(res.modified.id).toBe(id)
         done()
@@ -735,16 +734,16 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('getFileSlice', function() {
-    let id,
-      start = 0,
-      end = 1
+  describe('getFileSlice', function () {
+    let id
+    let start = 0
+    let end = 1
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.fieldId
     })
 
-    it('gets a range of sentences', function(done) {
+    it('gets a range of sentences', function (done) {
       this.knc.getFileSlice(id, start, end).then(res => {
         expect(res.modified.size).toBe(1)
         done()
@@ -755,17 +754,17 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('searchFileSlice', function() {
-    let id,
-      start = 0,
-      end = 1,
-      find = 'hey'
+  describe('searchFileSlice', function () {
+    let id
+    let start = 0
+    let end = 1
+    let find = 'hey'
 
-    beforeAll(function() {
+    beforeAll(function () {
       id = this.fieldId
     })
 
-    it('returns slices by search term', function(done) {
+    it('returns slices by search term', function (done) {
       this.knc.searchFileSlice(id, start, end, find).then(res => {
         expect(res.modified.size).toBe(1)
         done()
@@ -776,14 +775,14 @@ describe('Knaxim', function () {
     })
   })
 
-  describe('deleteFile', function() {
-    let id,
-      owner,
-      folder,
-      aFileParts = ['<a id="a"><b id="b">hey!</b></a>']
-    let file = new Blob(aFileParts, {type : 'text/html'})
+  describe('deleteFile', function () {
+    let id
+    let owner
+    let folder
+    let aFileParts = ['<a id="a"><b id="b">hey!</b></a>']
+    let file = new Blob(aFileParts, { type: 'text/html' })
 
-    beforeAll(function(done) {
+    beforeAll(function (done) {
       owner = this.username
 
       this.knc.createFile(owner, file, folder).then(res => {
@@ -795,7 +794,7 @@ describe('Knaxim', function () {
       })
     })
 
-    it('deletes a file', function(done) {
+    it('deletes a file', function (done) {
       this.knc.deleteFile(id).then(res => {
         expect(res.modified).toBe('Record Removed')
         done()
@@ -807,11 +806,11 @@ describe('Knaxim', function () {
   })
 
   // Disabled in api for some reason.
-  xdescribe('_deleteGroup', function() {
-    beforeEach(function() {
+  xdescribe('_deleteGroup', function () {
+    beforeEach(function () {
     })
 
-    it('gets something', function(done) {
+    it('gets something', function (done) {
       this.knc._deleteGroup().then(res => {
         expect(res.modified).toBe('something')
         done()
@@ -821,5 +820,4 @@ describe('Knaxim', function () {
       })
     })
   })
-
-});
+})
