@@ -16,6 +16,9 @@ import (
 )
 
 func AttachDir(r *mux.Router) {
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	//r.HandleFunc("/dynamic", createDynDir).Methods("PUT")

@@ -12,8 +12,12 @@ import (
 )
 
 func AttachRecord(r *mux.Router) {
+
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
+	// r.Use(ParseBody) // I believe parsebody is not needed
 	r.HandleFunc("", getOwnedRecords).Methods("GET")
 	r.HandleFunc("/view", getPermissionRecords("view")).Methods("GET")
 	r.HandleFunc("/{id}/name", changeRecordName).Methods("POST")

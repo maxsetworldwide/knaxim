@@ -15,6 +15,9 @@ import (
 )
 
 func AttachPublic(r *mux.Router) {
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.HandleFunc("/search", searchPublic).Methods("GET")
 }

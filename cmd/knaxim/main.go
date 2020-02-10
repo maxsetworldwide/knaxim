@@ -12,7 +12,6 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/handlers"
 	"git.maxset.io/web/knaxim/internal/util"
-	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	muxhandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -93,9 +92,9 @@ func main() {
 
 	{
 		apirouter := mainR.PathPrefix("/api").Subrouter()
-		apirouter.Use(srvjson.JSONResponse)
-		apirouter.Use(handlers.ConnectDatabase)
-		apirouter.Use(handlers.ParseBody)
+		// apirouter.Use(srvjson.JSONResponse)
+		// apirouter.Use(handlers.ConnectDatabase)
+		// apirouter.Use(handlers.ParseBody)
 		handlers.AttachUser(apirouter.PathPrefix("/user").Subrouter())
 		handlers.AttachPerm(apirouter.PathPrefix("/perm").Subrouter())
 		handlers.AttachRecord(apirouter.PathPrefix("/record").Subrouter())

@@ -22,6 +22,9 @@ import (
 )
 
 func AttachFile(r *mux.Router) {
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")

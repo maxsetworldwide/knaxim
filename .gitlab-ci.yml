@@ -63,6 +63,14 @@ internalUtil:
     - cd internal/util
     - go test -v
 
+internalHandlers:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd internal/handlers
+    - go test
+
 pkgPassentropy:
   stage: test
   tags:

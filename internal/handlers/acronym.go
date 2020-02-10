@@ -10,6 +10,9 @@ import (
 )
 
 func AttachAcronym(r *mux.Router) {
+	r = r.NewRoute().Subrouter()
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
 	r.Use(UserCookie)
 
 	r.HandleFunc("/{acronym}", getAcronym).Methods("GET")
