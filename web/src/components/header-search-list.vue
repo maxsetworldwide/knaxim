@@ -8,9 +8,9 @@
       </b-col>
       <b-col cols="11">
         <b-link :to="`/file/` + item.id">{{ item.name }}</b-link>
-        <ul>
+        <ol>
           <li v-for="(sum, indx) in item.summary" :key="indx" v-html="highlight(sum)"></li>
-        </ul>
+        </ol>
       </b-col>
       <!-- TODO: Add the expand, collapse triagle at the bottom.
       <b-row align-v="center" class="text-center w-100">
@@ -125,6 +125,10 @@ export default {
 
 <style lang="scss">
 .header-search-list {
+  li {
+    line-height: 1.2em;
+    padding-top: .3em;
+  }
   .expand {
     width: 25px;
     height: 25px;
