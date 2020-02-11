@@ -56,7 +56,7 @@ export default {
         this.loading = true
         this.members = []
         let newmembers = this.members
-        let ths = this
+        let vm = this
         GroupService.info({ gid: this.activeGroup.id }).then(res => res.data)
           .then(data => {
             let ownerid = data.owner
@@ -68,7 +68,7 @@ export default {
                     let gp = GroupService.info({ gid: memberid }).then(res => res.data).then(data => {
                       if (data && data.id && data.name) {
                         if (data.id === ownerid) {
-                          ths.owner = data
+                          vm.owner = data
                         } else {
                           newmembers.push(data)
                         }
@@ -78,7 +78,7 @@ export default {
                     let up = UserService.info({ id: memberid }).then(res => res.data).then(data => {
                       if (data && data.id && data.name) {
                         if (data.id === ownerid) {
-                          ths.owner = data
+                          vm.owner = data
                         } else {
                           newmembers.push(data)
                         }
