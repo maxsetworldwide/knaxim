@@ -30,6 +30,8 @@ clientTest:
     - mkdir local
     - cp example-karma-headless.conf.js local/karma.headless.conf.js
     - npm run headless
+  dependencies:
+    - clientBuild
 
 serverBuild:
   stage: build
@@ -54,6 +56,8 @@ memoryDatabase:
   script:
     - cd internal/database/memory
     - go test -v -timeout 45s
+  dependencies:
+    - serverBuild
 
 internalUtil:
   stage: test
@@ -62,6 +66,8 @@ internalUtil:
   script:
     - cd internal/util
     - go test -v
+  dependencies:
+    - serverBuild
 
 internalHandlers:
   stage: test
@@ -70,6 +76,8 @@ internalHandlers:
   script:
     - cd internal/handlers
     - go test
+  dependencies:
+    - serverBuild
 
 pkgPassentropy:
   stage: test
@@ -78,6 +86,8 @@ pkgPassentropy:
   script:
     - cd pkg/passentropy
     - go test -v
+  dependencies:
+    - serverBuild
 
 databaseTypes:
   stage: test
@@ -86,6 +96,8 @@ databaseTypes:
   script:
     - cd internal/database/
     - go test -v
+  dependencies:
+    - serverBuild
 
 fileProcessing:
   stage: test
@@ -99,6 +111,8 @@ fileProcessing:
   script:
     - cd internal/database/process
     - go test -v
+  dependencies:
+    - serverBuild
 
 mongoDatabaseConnector:
   stage: test
@@ -110,3 +124,5 @@ mongoDatabaseConnector:
   script:
     - cd internal/database/mongo
     - go test -v -dbpath mongodb://mongo:27017
+  dependencies:
+    - serverBuild
