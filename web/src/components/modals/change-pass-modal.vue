@@ -55,6 +55,7 @@ export default {
     feedback () {
       return 'invalid password'
     },
+
     validPassword () {
       if (this.newpass.length === 0) {
         return null
@@ -74,19 +75,19 @@ export default {
       return this.matchPassword && this.validPassword && this.oldpass.length > 5
     },
     ...mapGetters(['isAuthenticated'])
-  }
+  },
   methods: {
     changepass () {
       if (!this.validateForm) {
         return
       }
       this.loading = true
-      UserService.changePassword({oldpass: this.oldpass, newpass: this.newpass}).then(res => {
+      UserService.changePassword({ oldpass: this.oldpass, newpass: this.newpass }).then(res => {
         this.loading = false
         this.fail = false
         this.$emit('changed')
         this.hide()
-      }, err => {
+      }, () => {
         this.loading = false
         this.fail = true
       })
@@ -94,7 +95,10 @@ export default {
       this.newpass = ''
       this.newpassconfirm = ''
     },
-    toLogin() {
+    show () {
+      this.$refs['modal'].show()
+    },
+    toLogin () {
       this.$router.push('/login')
     },
     onClose () {
