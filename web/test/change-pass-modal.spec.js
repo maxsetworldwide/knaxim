@@ -1,5 +1,5 @@
 import { shallowMount } from '@vue/test-utils'
-import Auth from '@/components/auth'
+import ChangePassModal from '@/components/modals/change-pass-modal'
 
 // API options for test-utils - mount, shallowMount, etc.:
 //   https://vue-test-utils.vuejs.org/api
@@ -9,17 +9,13 @@ import Auth from '@/components/auth'
 
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
-const $route = {
-  name: 'login'
-}
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
-  return shallowMount(Auth, {
-    stubs: [],
-    mocks: {
-      $route
-    },
+  return shallowMount(ChangePassModal, {
+    stubs: ['b-img', 'b-form-group', 'b-form-invalid-feedback', 'b-form',
+      'b-modal', 'b-form-input', 'b-form-text', 'b-button'],
     propsData: {
+      id: 'id-abc-123',
       ...options.props
     },
     methods: {
@@ -31,9 +27,9 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   })
 }
 
-describe('Auth', () => {
+describe('ChangePassModal', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
-    expect(wrapper.is(Auth)).toBe(true)
+    expect(wrapper.is(ChangePassModal)).toBe(true)
   })
 })

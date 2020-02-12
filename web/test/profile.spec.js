@@ -1,5 +1,5 @@
 import { shallowMount } from '@vue/test-utils'
-import Auth from '@/components/auth'
+import Profile from '@/components/profile'
 
 // API options for test-utils - mount, shallowMount, etc.:
 //   https://vue-test-utils.vuejs.org/api
@@ -14,7 +14,7 @@ const $route = {
 }
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
-  return shallowMount(Auth, {
+  return shallowMount(Profile, {
     stubs: [],
     mocks: {
       $route
@@ -31,9 +31,9 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   })
 }
 
-describe('Auth', () => {
+describe('Profile', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
-    expect(wrapper.is(Auth)).toBe(true)
+    expect(wrapper.is(Profile)).toBe(true)
   })
 })
