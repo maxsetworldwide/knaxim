@@ -62,7 +62,7 @@ export default {
             let ownerid = data.owner
             let memberGettingProms = []
             if (data.members || data.owner) {
-              [data.owner, ...data.members].forEach(memberid => {
+              [data.owner, ...(data.members || [])].forEach(memberid => {
                 if (memberid) {
                   memberGettingProms.push(new Promise((resolve, reject) => {
                     let gp = GroupService.info({ gid: memberid }).then(res => res.data).then(data => {
