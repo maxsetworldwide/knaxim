@@ -14,9 +14,9 @@ func NewFileConverter(url string) *FileConverter {
 	})
 }
 
-func (fc *FileConverter) ConvertOffice(name string, in *bytes.Buffer) (out *bytes.Buffer, err error) {
+func (fc *FileConverter) ConvertOffice(inputName string, in *bytes.Buffer) (out *bytes.Buffer, err error) {
 	out = new(bytes.Buffer)
-	index, err := gotenberg.NewDocumentFromBytes(name, in.Bytes())
+	index, err := gotenberg.NewDocumentFromBytes(inputName, in.Bytes())
 	if err != nil {
 		return
 	}
