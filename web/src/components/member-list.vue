@@ -1,5 +1,5 @@
 <template>
-  <team-control v-if="!!activeGroup" #default="{ members, addMember, removeMember }">
+  <team-control v-if="!!activeGroup" #default="{ owner, members, addMember, removeMember }">
     <b-col class="member-list" cols="2">
       <b-list-group>
         <b-list-group-item>
@@ -7,6 +7,8 @@
             <use href="../assets/app.svg#group" />
           </svg>
           <span> {{ activeGroup.name }}</span>
+          <br>
+          <span> Leader: {{ owner.name }} </span>
         </b-list-group-item>
         <b-list-group-item v-for="mem in members" :key="mem.id">
           {{ mem.name }}

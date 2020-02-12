@@ -177,7 +177,12 @@ func groupinfo(out http.ResponseWriter, r *http.Request) {
 
 	w.Set("id", result.ID)
 	w.Set("name", result.Name)
-	w.Set("members", result.Members)
+	if result.Owner != "" {
+		w.Set("owner", result.Owner)
+	}
+	if len(result.Members) != 0 {
+		w.Set("members", result.Members)
+	}
 }
 
 func searchGroupFiles(out http.ResponseWriter, r *http.Request) {

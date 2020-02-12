@@ -70,13 +70,15 @@ type FileContent struct {
 type GroupInformation struct {
 	ID      string   `json:"id"`
 	Name    string   `json:"name"`
+	Owner   string   `json:"owner"`
 	Members []string `json:"members,omitempty"`
 }
 
 func BuildGroupInfo(grp database.GroupI) GroupInformation {
 	return GroupInformation{
-		ID:   grp.GetID().String(),
-		Name: grp.GetName(),
+		ID:    grp.GetID().String(),
+		Name:  grp.GetName(),
+		Owner: grp.GetOwner().GetID().String(),
 		Members: func() []string {
 			var out []string
 			for _, mem := range grp.GetMembers() {
