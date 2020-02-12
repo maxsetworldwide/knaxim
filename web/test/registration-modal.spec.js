@@ -13,7 +13,7 @@ import RegistrationModal from '@/components/modals/registration-modal'
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(RegistrationModal, {
     stubs: ['b-img', 'b-form-group', 'b-form-invalid-feedback', 'b-form',
-      'b-modal', 'b-form-input', 'b-form-text', 'b-button'],
+      'b-modal', 'b-form-input', 'b-form-text', 'b-button', 'b-form-checkbox'],
     propsData: {
       id: 'id-abc-123',
       ...options.props

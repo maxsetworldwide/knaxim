@@ -23,6 +23,9 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
       ...options.props
     },
     methods: {
+      showChangePass () {
+        return true
+      },
       ...options.methods
     },
     computed: {

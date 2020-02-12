@@ -17,10 +17,13 @@ export default {
   methods: {
     home () {
       this.$router.push('/')
+    },
+    showChangePass() {
+      this.$refs['changepass'].show()
     }
   },
   mounted () {
-    this.$refs['changepass'].show()
+    this.showChangePass
   }
 }
 </script>

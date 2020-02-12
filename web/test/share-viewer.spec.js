@@ -12,7 +12,7 @@ import ShareViewer from '@/components/share-viewer'
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(ShareViewer, {
-    stubs: ['b-badge'],
+    stubs: ['b-badge', 'b-tooltip'],
     propsData: {
       ...options.props
     },

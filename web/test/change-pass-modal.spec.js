@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import ChangePassModal from '@/components/modals/change-pass-modal'
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -10,10 +10,25 @@ import ChangePassModal from '@/components/modals/change-pass-modal'
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
 
+import Vuex from 'vuex'
+
+const localVue = createLocalVue()
+localVue.use(Vuex)
+
+let store = new Vuex.Store({
+  getters: {
+    isAuthenticated () {
+      return true
+    }
+  }
+})
+
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(ChangePassModal, {
     stubs: ['b-img', 'b-form-group', 'b-form-invalid-feedback', 'b-form',
       'b-modal', 'b-form-input', 'b-form-text', 'b-button'],
+    localVue,
+    store,
     propsData: {
       id: 'id-abc-123',
       ...options.props

@@ -8,7 +8,7 @@ required.
 
 The Kaxim server and client are stored in repositories. All relevant code and
 tests are located in the Knaxim client repository.  All karma dependencies
-are located in the package.json of the Knaxim client repository.  Any 
+are located in the package.json of the Knaxim client repository.  Any
 environment specific settings should be placed in the /local folder of the
 Knaxim client repo.
 
@@ -35,8 +35,8 @@ npm install
 	options for config karma for knaximserver proxy
 	1. custom karma config in local folder
 	2. ssh port map knaximserver to localhost:8000
-2. Start Karma with `karma start`, or `karma start local/custom.config` if
-using a custom config.
+2. Start Karma with `karma start`, or `karma start local/custom.config` if using a custom config.  
+Also `npm run test` and `npm run headless` will also start karma testing, with `test` launching with configuration at local/karma.conf.js and `headless` launching with configuration at local/karma.headless.conf.js
 3. Connect one or more browsers.  After running Karma it should give you a
 url for connecting to the karma server.  Load that url in any browser you
 want to test from.
