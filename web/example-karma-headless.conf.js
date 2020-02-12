@@ -5,7 +5,7 @@ var webpackConfig = require('../node_modules/@vue/cli-service/webpack.config.js'
 // Setup headless chrome executabale.
 process.env.CHROME_BIN = require('puppeteer').executablePath()
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
 
     // Client configuration.
@@ -76,12 +76,12 @@ module.exports = function(config) {
           '--disable-gpu',
           '--no-sandbox',
           '--disable-web-security',
-           // Without a remote debugging port, Google Chrome exits immediately.
+          // Without a remote debugging port, Google Chrome exits immediately.
           '--remote-debugging-port=9222'
         ]
       }
     },
-    
+
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true,

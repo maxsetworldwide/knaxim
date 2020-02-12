@@ -8,6 +8,7 @@ import FileView from '../components/file-viewer.vue'
 import HeaderSearchList from '../components/header-search-list'
 import AppInfo from '../components/app-info'
 import MemberList from '@/components/member-list'
+import Profile from '@/components/profile'
 
 Vue.use(VueRouter)
 
@@ -27,6 +28,10 @@ const routes = [
     path: '/register',
     name: 'register',
     component: Auth
+  }, {
+    path: '/profile/newpassword',
+    name: 'changepass',
+    component: Profile
   }, {
     path: '/search/:find',
     name: 'search',

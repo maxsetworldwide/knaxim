@@ -1,5 +1,5 @@
 import { shallowMount } from '@vue/test-utils'
-import ShareViewer from '@/components/share-viewer'
+import Profile from '@/components/profile'
 
 // API options for test-utils - mount, shallowMount, etc.:
 //   https://vue-test-utils.vuejs.org/api
@@ -9,14 +9,23 @@ import ShareViewer from '@/components/share-viewer'
 
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
+const $route = {
+  name: 'login'
+}
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
-  return shallowMount(ShareViewer, {
-    stubs: ['b-badge', 'b-tooltip'],
+  return shallowMount(Profile, {
+    stubs: [],
+    mocks: {
+      $route
+    },
     propsData: {
       ...options.props
     },
     methods: {
+      showChangePass () {
+        return true
+      },
       ...options.methods
     },
     computed: {
@@ -25,9 +34,9 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   })
 }
 
-describe('ShareViewer', () => {
+describe('Profile', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
-    expect(wrapper.is(ShareViewer)).toBe(true)
+    expect(wrapper.is(Profile)).toBe(true)
   })
 })
