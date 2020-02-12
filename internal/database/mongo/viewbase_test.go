@@ -26,14 +26,12 @@ func TestViewbase(t *testing.T) {
 	}
 	{
 		contentString := "View version of a file FFFFF*****"
-		contentSize := int64(len(contentString) + 1)
 		inputVS := &database.ViewStore{
 			ID: filehash.StoreID{
 				Hash:  12345,
 				Stamp: 678,
 			},
-			Content:  []byte(contentString),
-			FileSize: contentSize,
+			Content: []byte(contentString),
 		}
 		t.Run("Insert", func(t *testing.T) {
 			err := vb.Insert(inputVS)
@@ -46,10 +44,8 @@ func TestViewbase(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error getting: %s", err)
 			}
-			if !inputVS.ID.Equal(result.ID) ||
-				!bytes.Equal(inputVS.Content, result.Content) ||
-				inputVS.FileSize != result.FileSize {
-				t.Errorf("Did not get correct file store:\ngot: %+#v\nexpected: %+#v\n", result, inputVS)
+			if !inputVS.ID.Equal(result.ID) || !bytes.Equal(inputVS.Content, result.Content) {
+				t.Errorf("Did not get correct view store:\ngot: %+#v\nexpected: %+#v\n", result, inputVS)
 			}
 		})
 	}

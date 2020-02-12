@@ -12,9 +12,8 @@ import (
 )
 
 type ViewStore struct {
-	ID       filehash.StoreID `json:"id" bson:"id"`
-	Content  []byte           `json:"content" bson:"-"`
-	FileSize int64            `json:"fsize" bson:"fsize"`
+	ID      filehash.StoreID `json:"id" bson:"id"`
+	Content []byte           `json:"content" bson:"-"`
 }
 
 func NewViewStore(r io.Reader) (*ViewStore, error) {
@@ -28,7 +27,7 @@ func NewViewStore(r io.Reader) (*ViewStore, error) {
 		writeall := io.MultiWriter(pipeWrite, gzWrite)
 		defer pipeWrite.Close()
 		var err error
-		if store.FileSize, err = io.Copy(writeall, r); err != nil {
+		if _, err = io.Copy(writeall, r); err != nil {
 			pipeWrite.CloseWithError(err)
 		}
 	}()
