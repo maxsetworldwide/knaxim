@@ -88,5 +88,15 @@ func TestStorebase(t *testing.T) {
 				t.Error("did not get correct file store", out[0])
 			}
 		})
+		t.Run("Update", func(t *testing.T) {
+			input.Perr = &database.ProcessingError{
+				Status:  420,
+				Message: "Hey, You see this",
+			}
+			err := sb.UpdateMeta(input)
+			if err != nil {
+				t.Fatalf("unable to UpdateMeta: %s", err)
+			}
+		})
 	}
 }

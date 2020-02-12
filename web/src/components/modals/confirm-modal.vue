@@ -71,10 +71,13 @@ export default {
       return new Promise((resolve) => {
         this.promResolve = resolve
       })
+    },
+    show () {
+      this.$refs['modal'].show()
     }
   },
   mounted () {
-    this.$refs['modal'].show()
+    this.show()
   }
 }
 </script>

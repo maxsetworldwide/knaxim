@@ -17,4 +17,5 @@ func TestMain(m *testing.M) {
 
 func fill(db *Database) {
 	fillowners(db)
+	fillstores(db)
 }

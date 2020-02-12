@@ -8,8 +8,17 @@ import (
 )
 
 var sid = filehash.StoreID{
-	Hash:  10,
-	Stamp: 10,
+	Hash:  42,
+	Stamp: 42,
+}
+
+func fillstores(db *Database) {
+	db.Stores[sid.String()] = &database.FileStore{
+		ID:          sid,
+		Content:     []byte("placeholder"),
+		ContentType: "test",
+		FileSize:    42,
+	}
 }
 
 func TestStore(t *testing.T) {
@@ -17,6 +26,11 @@ func TestStore(t *testing.T) {
 	sb := DB.Store(nil)
 	defer sb.Close(nil)
 	t.Parallel()
+
+	var sid = filehash.StoreID{
+		Hash:  10,
+		Stamp: 10,
+	}
 
 	fs := &database.FileStore{
 		ID:          sid,
@@ -56,5 +70,18 @@ func TestStore(t *testing.T) {
 	}
 	if len(matched) != 1 || !matched[0].ID.Equal(sid) {
 		t.Fatalf("incorrect matches: %v", matched)
+	}
+
+	t.Log("UpdateMeta")
+	fs.Perr = &database.ProcessingError{
+		Status:  420,
+		Message: "hello",
+	}
+	err = sb.UpdateMeta(fs)
+	if err != nil {
+		t.Fatalf("Failed to UpdateMeta: %s", err)
+	}
+	if fs2, _ := sb.Get(sid); fs2.Perr == nil || fs2.Perr.Status != 420 {
+		t.Fatalf("file store not updated: %+v", fs2)
 	}
 }

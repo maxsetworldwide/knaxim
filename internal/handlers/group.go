@@ -36,38 +36,55 @@ func groupMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func groupidMiddleware(next http.Handler, checkmembership bool) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		groupidstr := mux.Vars(r)["id"]
-		groupid, err := database.DecodeObjectIDString(groupidstr)
-		if err != nil {
-			panic(srverror.New(err, 400, "Corrupt Group id"))
-		}
-		group, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(groupid)
-		if err != nil {
-			panic(err)
-		}
-		if checkmembership {
-			if !group.Match(r.Context().Value(USER).(database.Owner)) {
-				panic(srverror.Basic(403, "Not Group Member"))
+func groupidMiddleware(checkmembership bool) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			groupidstr := mux.Vars(r)["id"]
+			groupid, err := database.DecodeObjectIDString(groupidstr)
+			if err != nil {
+				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
-		}
-		r = r.WithContext(context.WithValue(r.Context(), GROUP, group))
-		next.ServeHTTP(w, r)
-	})
+			group, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(groupid)
+			if err != nil {
+				panic(err)
+			}
+			if checkmembership {
+				if !group.Match(r.Context().Value(USER).(database.Owner)) {
+					panic(srverror.Basic(403, "Not Group Member"))
+				}
+			}
+			r = r.WithContext(context.WithValue(r.Context(), GROUP, group))
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // server sends: /api/group
 func AttachGroup(r *mux.Router) {
+	r.Use(ConnectDatabase)
 	r.Use(UserCookie)
-	r.Handle("", groupMiddleware(http.HandlerFunc(createGroup))).Methods("PUT")
+	r.Use(srvjson.JSONResponse)
+	r.Use(ParseBody)
 	r.HandleFunc("/options", getGroups).Methods("GET")
-	r.Handle("/options/{id}", groupidMiddleware(http.HandlerFunc(getGroupsGroups), true)).Methods("GET")
-	r.Handle("/{id}", groupidMiddleware(http.HandlerFunc(groupinfo), false)).Methods("GET")
-	r.Handle("/{id}/search", groupidMiddleware(http.HandlerFunc(searchGroupFiles), true)).Methods("GET")
-	r.Handle("/{id}/member", groupidMiddleware(http.HandlerFunc(updateGroupMember(true)), true)).Methods("POST")
-	r.Handle("/{id}/member", groupidMiddleware(http.HandlerFunc(updateGroupMember(false)), true)).Methods("DELETE")
 	r.HandleFunc("/name/{name}", lookupGroup).Methods("GET")
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(groupMiddleware)
+		r.HandleFunc("", createGroup).Methods("PUT")
+	}
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(groupidMiddleware(false))
+		r.HandleFunc("/{id}", groupinfo).Methods("GET")
+	}
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(groupidMiddleware(true))
+		r.HandleFunc("/options/{id}", getGroupsGroups).Methods("GET")
+		r.HandleFunc("/{id}/search", searchGroupFiles).Methods("GET")
+		r.HandleFunc("/{id}/member", updateGroupMember(true)).Methods("POST")
+		r.HandleFunc("/{id}/member", updateGroupMember(false)).Methods("DELETE")
+	}
 }
 
 func createGroup(out http.ResponseWriter, r *http.Request) {
@@ -212,12 +229,16 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 	return func(out http.ResponseWriter, r *http.Request) {
 		w := out.(*srvjson.ResponseWriter)
+		group := r.Context().Value(GROUP).(database.GroupI)
+		actor := r.Context().Value(USER).(database.Owner)
 
+		if !group.GetOwner().Match(actor) {
+			panic(srverror.Basic(403, "Not Owner", actor.GetName(), actor.GetID().String(), group.GetName(), group.GetID().String()))
+		}
 		r.FormValue("id")
 		if len(r.Form["id"]) == 0 {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
-		group := r.Context().Value(GROUP).(database.GroupI)
 		ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 		for _, idstr := range r.Form["id"] {
 			id, err := database.DecodeObjectIDString(idstr)

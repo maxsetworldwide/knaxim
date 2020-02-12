@@ -42,7 +42,7 @@ global events:
 
 <script>
 import FileService from '@/service/file'
-import { EventBus } from '@/main'
+import { EventBus } from '@/plugins/utils'
 
 export default {
   name: 'url-upload-modal',

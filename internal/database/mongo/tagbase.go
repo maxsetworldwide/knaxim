@@ -171,6 +171,20 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 	for _, f := range files {
 		stores = append(stores, f.StoreID)
 	}
+	var perr error
+	{
+		sb := tb.Store(nil)
+		for _, sid := range stores {
+			fs, err := sb.Get(sid)
+			if err != nil {
+				return nil, err
+			}
+			if fs.Perr != nil {
+				perr = fs.Perr
+				break
+			}
+		}
+	}
 	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"]).Find(
 		tb.ctx,
 		bson.M{
@@ -182,6 +196,9 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
@@ -189,11 +206,17 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 	var matches []*tagbson
 	if err := cursor.All(tb.ctx, &matches); err != nil {
 		if err == mongo.ErrNoDocuments {
+			if perr != nil {
+				return nil, perr
+			}
 			return nil, database.ErrNotFound
 		}
 		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
 	}
 	if len(matches) == 0 {
+		if perr != nil {
+			return nil, perr
+		}
 		return nil, database.ErrNotFound
 	}
 	out := make(map[string][]tag.Tag)
@@ -209,7 +232,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			}
 		}
 	}
-	return out, nil
+	return out, perr
 }
 
 type tagAggReturn struct {

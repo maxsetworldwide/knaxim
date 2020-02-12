@@ -20,16 +20,24 @@ import (
 
 // '/user/...'
 func AttachUser(r *mux.Router) {
+	r = r.NewRoute().Subrouter()
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.HandleFunc("", createUser).Methods("PUT")
 	r.HandleFunc("/admin", createAdmin).Methods("PUT")
-	r.Handle("", UserCookie(http.HandlerFunc(userInfo))).Methods("GET")
-	r.Handle("/name/{name}", UserCookie(http.HandlerFunc(lookupUser))).Methods("GET")
-	r.Handle("", UserCookie(http.HandlerFunc(signoutUser))).Methods("DELETE")
-	r.Handle("/complete", UserCookie(http.HandlerFunc(completeUserInfo))).Methods("GET")
-	r.Handle("/search", UserCookie(http.HandlerFunc(searchAllUserFiles))).Methods("GET")
 	r.HandleFunc("/login", loginUser).Methods("POST")
-	r.Handle("/pass", UserCookie(http.HandlerFunc(updateCredentials))).Methods("POST")
-	r.Handle("/data", UserCookie(http.HandlerFunc(getUserData))).Methods("GET")
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(UserCookie)
+		r.HandleFunc("", userInfo).Methods("GET")
+		r.HandleFunc("/name/{name}", lookupUser).Methods("GET")
+		r.HandleFunc("", signoutUser).Methods("DELETE")
+		r.HandleFunc("/complete", completeUserInfo).Methods("GET")
+		r.HandleFunc("/search", searchAllUserFiles).Methods("GET")
+		r.HandleFunc("/pass", updateCredentials).Methods("POST")
+		r.HandleFunc("/data", getUserData).Methods("GET")
+	}
 }
 
 func lookupUser(out http.ResponseWriter, r *http.Request) {
@@ -177,6 +185,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 	userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 	user, err := userbase.FindUserName(r.PostFormValue("name"))
 	if err != nil {
+		util.VerboseRequest(r, "request username: %s", r.PostFormValue("name"))
 		panic(err)
 	}
 	if user.GetLock().Valid(map[string]interface{}{"pass": r.PostFormValue("pass")}) {

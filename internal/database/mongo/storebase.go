@@ -179,3 +179,16 @@ func (db *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) 
 	err = <-cherr
 	return
 }
+
+func (sb *Storebase) UpdateMeta(fs *database.FileStore) error {
+	result, err := sb.client.Database(sb.DBName).Collection(sb.CollNames["store"]).ReplaceOne(sb.ctx, bson.M{
+		"id": fs.ID,
+	}, fs)
+	if err != nil {
+		return srverror.New(err, 500, "Database Error S12", "error updating file store metadata")
+	}
+	if result.ModifiedCount == 0 {
+		return database.ErrNotFound
+	}
+	return nil
+}

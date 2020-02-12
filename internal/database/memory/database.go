@@ -9,9 +9,11 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/tag"
 )
 
+var lock = new(sync.RWMutex)
+
 type Database struct {
-	ctx    context.Context
-	lock   *sync.RWMutex
+	ctx context.Context
+
 	Owners struct {
 		ID        map[string]database.Owner // key Owner.ID.String()
 		UserName  map[string]database.UserI
@@ -32,9 +34,8 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	if !reset {
 		return nil
 	}
-	db.lock = new(sync.RWMutex)
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	db.Owners.ID = make(map[string]database.Owner)
 	db.Owners.UserName = make(map[string]database.UserI)
 	db.Owners.GroupName = make(map[string]database.GroupI)
@@ -50,11 +51,10 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 var connectionCount int
 var countLock sync.Mutex
 
-func updateCount(delta int) {
-	countLock.Lock()
-	defer countLock.Unlock()
-	connectionCount += delta
-}
+// func connectionCount += delta int {
+//
+// 	connectionCount += delta
+// }
 
 func CurrentOpenConnections() int {
 	countLock.Lock()
@@ -63,81 +63,104 @@ func CurrentOpenConnections() int {
 }
 
 func (db *Database) Owner(c context.Context) database.Ownerbase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Ownerbase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) File(c context.Context) database.Filebase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Filebase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) Store(c context.Context) database.Storebase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+
+	return db.store(c)
+}
+
+func (db *Database) store(c context.Context) database.Storebase {
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Storebase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) Content(c context.Context) database.Contentbase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Contentbase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) Tag(c context.Context) database.Tagbase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Tagbase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) Acronym(c context.Context) database.Acronymbase {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
 	out := &Acronymbase{
 		Database: *db,
 	}
 	out.ctx = c
-	updateCount(1)
+	connectionCount += 1
 	return out
 }
 
 func (db *Database) Close(_ context.Context) error {
-	db.lock.Lock()
-	defer db.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
+	return db.close()
+}
+
+func (db *Database) close() error {
+	countLock.Lock()
+	defer countLock.Unlock()
 	db.ctx = nil
-	updateCount(-1)
+	connectionCount += -1
 	return nil
 }
 
 func (db *Database) GetContext() context.Context {
-	db.lock.RLock()
-	defer db.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	return db.ctx
 }

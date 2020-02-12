@@ -35,6 +35,14 @@ events:
           <b-form-input v-model="passConf" placeholder="Confirm Password" type="password" :state="matchPasswords"/>
           <b-form-invalid-feedback>Passwords must match</b-form-invalid-feedback>
         </b-form-group>
+        <b-form-group>
+          <b-form-checkbox
+            id="checkbox-terms"
+            v-model="acceptedTerms"
+            value="accepted"
+            unchecked-value="not_accepted"
+          >I agree to the <a href="/TermsAndConditions.pdf">terms and conditions</a> and <a href="/PrivacyPolicy.pdf">privacy policy</a></b-form-checkbox>
+        </b-form-group>
       </b-form-group>
       <div v-if="loading">
         <b-spinner class="m-3"/>
@@ -66,7 +74,8 @@ export default {
       passConf: '',
       loading: false,
       takenNames: [],
-      success: false
+      success: false,
+      acceptedTerms: 'not_accepted'
     }
   },
   methods: {
@@ -105,7 +114,7 @@ export default {
   },
   computed: {
     validateForm () {
-      return this.validEmail && this.validUser && this.validPassword && this.matchPasswords
+      return this.validEmail && this.validUser && this.validPassword && this.matchPasswords && this.acceptedTerms === 'accepted'
     },
     validEmail () {
       if (this.email.length === 0) {

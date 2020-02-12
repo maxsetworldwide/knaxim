@@ -22,6 +22,9 @@ import (
 )
 
 func AttachFile(r *mux.Router) {
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
 	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
@@ -118,7 +121,21 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
+			fs.Perr = &database.ProcessingError{
+				Status:  242,
+				Message: err.Error(),
+			}
+		} else {
+			fs.Perr = nil
 		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		sb := config.DB.Store(ctx)
+		err := sb.UpdateMeta(fs)
+		if err != nil {
+			util.VerboseRequest(r, "Unable to Update Processing Error: %s", err.Error())
+		}
+		sb.Close(ctx)
 	}()
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
@@ -280,7 +297,10 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 	}
 
 	lines, err := r.Context().Value(database.CONTENT).(database.Contentbase).Slice(rec.GetID().StoreID, startindx, endindx)
-	if err != nil {
+	if pe, ok := err.(*database.ProcessingError); ok {
+		w.WriteHeader(pe.Status)
+		w.Set("ProcessingError", pe.Message)
+	} else if err != nil && lines == nil {
 		panic(err)
 	}
 
@@ -321,12 +341,17 @@ func searchFile(out http.ResponseWriter, r *http.Request) {
 	if !file.GetOwner().Match(owner) && !file.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "user does not have view permission", owner.GetID().String(), file.GetName(), file.GetID().String()))
 	}
-	if matched, err := r.Context().Value(database.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end); err != nil {
-		panic(err)
-	} else {
-		w.Set("size", len(matched))
-		w.Set("lines", matched)
+	matched, err := r.Context().Value(database.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end)
+	if err != nil {
+		if pe, ok := err.(*database.ProcessingError); ok {
+			w.WriteHeader(pe.Status)
+			w.Set("ProcessingError", pe.Message)
+		} else if matched == nil {
+			panic(err)
+		}
 	}
+	w.Set("size", len(matched))
+	w.Set("lines", matched)
 }
 
 func deleteRecord(out http.ResponseWriter, r *http.Request) {

@@ -10,8 +10,8 @@ type Filebase struct {
 }
 
 func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
-	fb.lock.Lock()
-	defer fb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	for _, ok := fb.Files[id.String()]; ok; _, ok = fb.Files[id.String()] {
 		id = id.Mutate()
 	}
@@ -20,8 +20,8 @@ func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 }
 
 func (fb *Filebase) Insert(r database.FileI) error {
-	fb.lock.Lock()
-	defer fb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if expectnil, ok := fb.Files[r.GetID().String()]; !ok {
 		return database.ErrIDNotReserved
 	} else if expectnil != nil {
@@ -32,8 +32,12 @@ func (fb *Filebase) Insert(r database.FileI) error {
 }
 
 func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
-	fb.lock.RLock()
-	defer fb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
+	return fb.get(fid)
+}
+
+func (fb *Filebase) get(fid filehash.FileID) (database.FileI, error) {
 	if fb.Files[fid.String()] == nil {
 		return nil, database.ErrNotFound
 	}
@@ -41,11 +45,11 @@ func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 }
 
 func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
-	fb.lock.RLock()
-	defer fb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	out := make([]database.FileI, 0, len(fids))
 	for _, fid := range fids {
-		temp, err := fb.Get(fid)
+		temp, err := fb.get(fid)
 		if err != nil {
 			return nil, err
 		}
@@ -55,8 +59,8 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 }
 
 func (fb *Filebase) Update(r database.FileI) error {
-	fb.lock.Lock()
-	defer fb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if fb.Files[r.GetID().String()] == nil {
 		return database.ErrNotFound
 	}
@@ -65,8 +69,8 @@ func (fb *Filebase) Update(r database.FileI) error {
 }
 
 func (fb *Filebase) Remove(r filehash.FileID) error {
-	fb.lock.Lock()
-	defer fb.lock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	if fb.Files[r.String()] == nil {
 		return database.ErrNotFound
 	}
@@ -75,8 +79,8 @@ func (fb *Filebase) Remove(r filehash.FileID) error {
 }
 
 func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
-	fb.lock.RLock()
-	defer fb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	var out []database.FileI
 	for _, file := range fb.Files {
 		if file.GetOwner().GetID().Equal(uid) {
@@ -87,8 +91,8 @@ func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 }
 
 func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.FileI, error) {
-	fb.lock.RLock()
-	defer fb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	var out []database.FileI
 LOOP:
 	for _, file := range fb.Files {
@@ -103,8 +107,8 @@ LOOP:
 }
 
 func (fb *Filebase) MatchStore(oid database.OwnerID, sids []filehash.StoreID, pkeys ...string) ([]database.FileI, error) {
-	fb.lock.RLock()
-	defer fb.lock.RUnlock()
+	lock.RLock()
+	defer lock.RUnlock()
 	var out []database.FileI
 	for _, file := range fb.Files {
 		if func() bool {

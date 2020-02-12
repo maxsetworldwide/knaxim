@@ -16,6 +16,10 @@ import (
 
 func AttachPerm(r *mux.Router) {
 	// TODO: Move neccessary middleware use commands here and each attach??
+
+	r.Use(srvjson.JSONResponse)
+	r.Use(ConnectDatabase)
+	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(true)).Methods("POST")
 	r.HandleFunc("/{type}/{id}/public", setPermissionPublic(false)).Methods("DELETE")
