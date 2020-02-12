@@ -45,7 +45,10 @@ func lookupUser(out http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Set("user", BuildUserInfo(r, user))
+	resp := BuildUserInfo(r, user)
+	w.Set("id", resp.ID)
+	w.Set("name", resp.Name)
+	w.Set("data", resp.Data)
 }
 
 type dataUsage struct {
@@ -68,7 +71,8 @@ func getUserData(out http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Set("user", du)
+	w.Set("current", du.Current)
+	w.Set("total", du.Total)
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
