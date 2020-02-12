@@ -99,3 +99,9 @@ type Acronymbase interface {
 	Put(string, string) error
 	Get(string) ([]string, error)
 }
+
+type Viewbase interface {
+	Database
+	Insert(*ViewStore) error
+	Get(filehash.StoreID) (*ViewStore, error)
+}
