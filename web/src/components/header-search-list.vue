@@ -127,7 +127,7 @@ export default {
 .header-search-list {
   li {
     line-height: 1.2em;
-    padding-top: .3em;
+    padding-top: .6em;
   }
   .expand {
     width: 25px;
