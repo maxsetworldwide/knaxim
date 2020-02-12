@@ -23,12 +23,6 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
       ...options.props
     },
     methods: {
-      openLogin () {
-        return true
-      },
-      openReg () {
-        return true
-      },
       ...options.methods
     },
     computed: {
