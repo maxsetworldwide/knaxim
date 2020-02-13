@@ -30,6 +30,10 @@ type Tika struct {
 	PingTimeout int    `json:"child_ping_timeout"`
 }
 
+type SMTP struct {
+	From string `json:"from"`
+}
+
 type Duration struct {
 	time.Duration
 }
@@ -69,4 +73,5 @@ type Configuration struct {
 		Inactivity Duration
 		Total      Duration
 	}
+	Email SMTP
 }
