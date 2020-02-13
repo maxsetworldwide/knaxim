@@ -5,14 +5,19 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestViewStore(t *testing.T) {
-	buf := new(bytes.Buffer)
 	contentString := "This is the view content! It's like the file store content, but it should be a PDF version of the file."
-	buf.WriteString(contentString)
+	inBytes := []byte(contentString)
 
-	vs, err := NewViewStore(buf)
+	mockStoreID := filehash.StoreID{
+		Hash:  12345,
+		Stamp: 6789,
+	}
+	vs, err := NewViewStore(mockStoreID, bytes.NewReader(inBytes))
 	if err != nil {
 		t.Fatalf("error creating viewstore: %s", err)
 	}
