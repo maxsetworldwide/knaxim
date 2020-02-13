@@ -22,7 +22,7 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
-	"github.com/thecodingmachine/gotenberg-go-client/v7"
+	gotenberg "github.com/thecodingmachine/gotenberg-go-client"
 )
 
 func AttachFile(r *mux.Router) {
@@ -49,8 +49,11 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if cancel != nil {
 		defer cancel()
 	}
+	cb := config.DB.Content(ctx)
+	defer cb.Close(ctx)
+
 	gotenbergErr := make(chan error, 1)
-	go createView(ctx, config.)
+	go createView(ctx, cb.Database, file, fs, gotenbergErr)
 	rcontent, err := fs.Reader()
 	if err != nil {
 		return err
@@ -73,7 +76,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		contentlines[i].ID = fs.ID
 	}
 	// util.Verbose("generated content: %v", contentlines)
-	err = config.DB.Content(ctx).Insert(contentlines...)
+	err = cb.Insert(contentlines...)
 	if err != nil {
 		return err
 	}
@@ -85,7 +88,11 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
+	err = cb.Tag(nil).UpsertStore(fs.ID, tags...)
+	if err != nil {
+		return err
+	}
+	return <-gotenbergErr
 }
 
 func createView(ctx context.Context, db database.Database, file database.FileI, fs *database.FileStore, out chan error) {
@@ -109,13 +116,13 @@ func createView(ctx context.Context, db database.Database, file database.FileI, 
 		result, err = converter.ConvertOffice(name, buf)
 		gotenFinished <- err
 	}()
-	select{
-	case err := <- gotenFinished:
+	select {
+	case err := <-gotenFinished:
 		if err != nil {
 			out <- err
 			return
 		}
-	case <- ctx.Done():
+	case <-ctx.Done():
 		out <- ctx.Err()
 		return
 	}

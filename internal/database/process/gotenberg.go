@@ -3,7 +3,7 @@ package process
 import (
 	"bytes"
 
-	"github.com/thecodingmachine/gotenberg-go-client/v7"
+	gotenberg "github.com/thecodingmachine/gotenberg-go-client"
 )
 
 type FileConverter gotenberg.Client
