@@ -40,6 +40,7 @@ type Database interface {
 	Content(context.Context) Contentbase
 	Tag(context.Context) Tagbase
 	Acronym(context.Context) Acronymbase
+	View(context.Context) Viewbase
 	Close(context.Context) error
 	GetContext() context.Context
 }

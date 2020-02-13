@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
@@ -19,6 +22,7 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
+	"github.com/thecodingmachine/gotenberg-go-client/v7"
 )
 
 func AttachFile(r *mux.Router) {
@@ -34,6 +38,7 @@ func AttachFile(r *mux.Router) {
 	r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
 	r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
 	r.HandleFunc("/{id}/download", sendFile).Methods("GET")
+	r.HandleFunc("/{id}/view", sendView).Methods("GET")
 	//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
 	r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
 }
@@ -44,6 +49,8 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if cancel != nil {
 		defer cancel()
 	}
+	gotenbergErr := make(chan error, 1)
+	go createView(ctx, config.)
 	rcontent, err := fs.Reader()
 	if err != nil {
 		return err
@@ -79,6 +86,50 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		return err
 	}
 	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
+}
+
+func createView(ctx context.Context, db database.Database, file database.FileI, fs *database.FileStore, out chan error) {
+	name := file.GetName()
+	buf := &bytes.Buffer{}
+	r, err := fs.Reader()
+	if err != nil {
+		out <- err
+		return
+	}
+	if _, err = io.Copy(buf, r); err != nil {
+		out <- err
+		return
+	}
+	url := config.V.GotenPath
+	converter := process.NewFileConverter(url)
+	var result *bytes.Buffer
+	gotenFinished := make(chan error)
+	go func() {
+		var err error
+		result, err = converter.ConvertOffice(name, buf)
+		gotenFinished <- err
+	}()
+	select{
+	case err := <- gotenFinished:
+		if err != nil {
+			out <- err
+			return
+		}
+	case <- ctx.Done():
+		out <- ctx.Err()
+		return
+	}
+	vb := db.View(nil)
+	vs, err := database.NewViewStore(fs.ID, result)
+	if err != nil {
+		out <- err
+		return
+	}
+	if err = vb.Insert(vs); err != nil {
+		out <- err
+		return
+	}
+	out <- nil
 }
 
 func createFile(out http.ResponseWriter, r *http.Request) {
@@ -118,6 +169,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
+
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
@@ -411,6 +463,60 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+rec.GetName()+"\"")
+	w.Header().Set("Content-Type", store.ContentType)
+	io.Copy(w, rdr)
+}
+
+func sendView(w http.ResponseWriter, r *http.Request) {
+	var owner database.Owner
+	if group := r.Context().Value(GROUP); group != nil {
+		owner = group.(database.Owner)
+	} else {
+		owner = r.Context().Value(USER).(database.Owner)
+	}
+	vals := mux.Vars(r)
+	fid, err := filehash.DecodeFileID(vals["id"])
+	if err != nil {
+		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
+	}
+	rec, err := r.Context().Value(database.FILE).(database.Filebase).Get(fid)
+	if err != nil {
+		panic(err)
+	}
+	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
+		panic(srverror.Basic(403, "Permission Denied", "sendView user not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
+	}
+	store, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
+	if err != nil {
+		panic(err)
+	}
+	rdr, err := store.Reader()
+	if err != nil {
+		panic(err)
+	}
+
+	bytes, err := ioutil.ReadAll(rdr)
+	if err != nil {
+		panic(err)
+	}
+
+	gotenClient := &gotenberg.Client{
+		Hostname: "http://gotenberg:3000",
+	}
+
+	// capital extensions
+	// landscape spreadsheets
+	// deadline
+	lower := strings.ToLower(rec.GetName())
+	index, err := gotenberg.NewDocumentFromBytes(lower, bytes)
+
+	req := gotenberg.NewOfficeRequest(index)
+	res, err := gotenClient.Post(req)
+	if err != nil {
+		panic(err)
+	}
+	rdr = res.Body
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+rec.GetName()+"\"")
 	w.Header().Set("Content-Type", store.ContentType)
 	io.Copy(w, rdr)

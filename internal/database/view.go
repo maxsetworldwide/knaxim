@@ -16,32 +16,23 @@ type ViewStore struct {
 	Content []byte           `json:"content" bson:"-"`
 }
 
-func NewViewStore(r io.Reader) (*ViewStore, error) {
+func NewViewStore(id filehash.StoreID, r io.Reader) (*ViewStore, error) {
 	store := new(ViewStore)
 
-	pipeRead, pipeWrite := io.Pipe()
 	contentBuf := new(bytes.Buffer)
 	gzWrite := gzip.NewWriter(contentBuf)
 
-	go func() {
-		writeall := io.MultiWriter(pipeWrite, gzWrite)
-		defer pipeWrite.Close()
-		var err error
-		if _, err = io.Copy(writeall, r); err != nil {
-			pipeWrite.CloseWithError(err)
-		}
-	}()
-
 	var err error
-	store.ID, err = filehash.NewStoreID(pipeRead)
-	if err != nil {
-		return nil, srverror.New(err, 500, "Database Error V1")
+	if _, err = io.Copy(gzWrite, r); err != nil {
+		return nil, err
 	}
+
 	if err = gzWrite.Close(); err != nil {
 		return nil, srverror.New(err, 500, "Database Error V2")
 	}
 
 	store.Content = contentBuf.Bytes()
+	store.ID = id
 	return store, nil
 }
 

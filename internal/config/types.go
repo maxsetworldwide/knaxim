@@ -60,6 +60,7 @@ type Configuration struct {
 	Database        json.RawMessage `json:"db"`
 	DatabaseReset   bool            `json:"db_clear"`
 	Tika            Tika            `json:"tika"`
+	GotenPath       string          `json:"gotenpath"`
 	FileLimit       int64           `json:"filelimit"`
 	FreeSpace       int             `json:"total_free_space"`
 	AdminKey        string
