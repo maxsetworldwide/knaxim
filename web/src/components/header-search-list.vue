@@ -8,9 +8,18 @@
       </b-col>
       <b-col cols="11">
         <b-link :to="`/file/` + item.id">{{ item.name }}</b-link>
-        <ul>
-          <li v-for="(sum, indx) in item.summary" :key="indx" v-html="highlight(sum)"></li>
-        </ul>
+        <ol class="pl-3">
+          <li v-for="(sum, indx) in item.summary" :key="indx">
+            <b-row>
+              <b-col class="line-no">
+                <span>.{{ sum.lineNo + 1 }}</span>
+              </b-col>
+              <b-col class="pl-2">
+                <span v-html="highlight(sum.text)"></span>
+              </b-col>
+            </b-row>
+          </li>
+        </ol>
       </b-col>
       <!-- TODO: Add the expand, collapse triagle at the bottom.
       <b-row align-v="center" class="text-center w-100">
@@ -70,10 +79,16 @@ export default {
           name: file.name,
           webpage: file.name.includes('/'),
           ext: splits.length > 1 ? splits[splits.length - 1] : '',
-          summary: ''
+          summary: []
         }
+
         if (file.lines) {
-          row.summary = file.lines.slice(0, 4).map(line => line.Content[0])
+          row.summary = file.lines.slice(0, 4).map((line) => {
+            return {
+              'text': line.Content[0],
+              'lineNo': line.Position
+            }
+          })
         }
         return row
       })
@@ -125,6 +140,20 @@ export default {
 
 <style lang="scss">
 .header-search-list {
+  .line-no {
+    max-width: 3em;
+    text-align: right;
+    padding-right: 0px;
+    direction: rtl;
+    overflow: hidden;
+  }
+  ol {
+    list-style: none;
+  }
+  li {
+    line-height: 1.2em;
+    padding-top: .6em;
+  }
   .expand {
     width: 25px;
     height: 25px;
