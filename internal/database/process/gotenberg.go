@@ -1,9 +1,9 @@
 package process
 
 import (
-	"bytes"
+	"io"
 
-	gotenberg "github.com/thecodingmachine/gotenberg-go-client"
+	gotenberg "github.com/thecodingmachine/gotenberg-go-client/v7"
 )
 
 type FileConverter gotenberg.Client
@@ -14,9 +14,8 @@ func NewFileConverter(url string) *FileConverter {
 	})
 }
 
-// input []byte, return []byte
-func (fc *FileConverter) ConvertOffice(inputName string, in *bytes.Buffer) (out *bytes.Buffer, err error) {
-	index, err := gotenberg.NewDocumentFromBytes(inputName, in.Bytes())
+func (fc *FileConverter) ConvertOffice(inputName string, in []byte) (out []byte, err error) {
+	index, err := gotenberg.NewDocumentFromBytes(inputName, in)
 	if err != nil {
 		return
 	}
@@ -25,7 +24,8 @@ func (fc *FileConverter) ConvertOffice(inputName string, in *bytes.Buffer) (out 
 	if err != nil {
 		return
 	}
-	out = new(bytes.Buffer)
-	out.ReadFrom(res.Body)
+	out = make([]byte, res.ContentLength)
+	io.ReadFull(res.Body, out)
+
 	return
 }

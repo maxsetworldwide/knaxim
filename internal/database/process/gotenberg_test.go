@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func extractContent(t *testing.T, content *bytes.Buffer) (out []string, err error) {
+func extractContent(t *testing.T, content []byte) (out []string, err error) {
 	tikapath := os.Getenv("TIKA_PATH")
 	if len(tikapath) == 0 {
 		tikapath = "http://localhost:9998"
@@ -25,11 +25,10 @@ func extractContent(t *testing.T, content *bytes.Buffer) (out []string, err erro
 	testctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 	defer cancel()
 
-	extracted, err := extractor.ExtractText(testctx, content)
+	extracted, err := extractor.ExtractText(testctx, bytes.NewReader(content))
 	if err != nil {
 		return
 	}
-	// out = lines.Content
 	for _, curr := range extracted {
 		for _, line := range curr.Content {
 			out = append(out, line)
@@ -45,9 +44,8 @@ func TestTextConversion(t *testing.T) {
 	}
 	client := NewFileConverter(url)
 	testContent := "Test content!!"
-	var inBytes bytes.Buffer
-	inBytes.Write([]byte(testContent))
-	out, err := client.ConvertOffice("test.txt", &inBytes)
+	inBytes := []byte(testContent)
+	out, err := client.ConvertOffice("test.txt", inBytes)
 	if err != nil {
 		t.Fatal("Conversion fail:", err)
 	}
