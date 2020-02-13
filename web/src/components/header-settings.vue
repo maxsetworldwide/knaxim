@@ -9,6 +9,7 @@
      </template>
 
      <b-dropdown-item @click="login">Login</b-dropdown-item>
+     <b-dropdown-item @click="changePass">Change Password</b-dropdown-item>
      <b-dropdown-item @click="logout">Logout</b-dropdown-item>
    </b-nav-item-dropdown>
  </b-navbar-nav>
@@ -16,6 +17,7 @@
 
 <script>
 import { LOGOUT } from '@/store/actions.type'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'header-settings',
@@ -26,10 +28,14 @@ export default {
   props: {
   },
   components: {
+    ...mapGetters(['isAuthenticated'])
   },
   methods: {
     login () {
       this.$router.push('/login')
+    },
+    changePass () {
+      this.$router.push('/profile/newpassword')
     },
     logout () {
       this.$store.dispatch(LOGOUT)
