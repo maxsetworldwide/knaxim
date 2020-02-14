@@ -20,6 +20,13 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
       ...options.methods
     },
     computed: {
+      expandedSearchMatches () {
+        return [{
+          id: 'id-abc-123',
+          name: 'fake-file',
+          isActive: true
+        }]
+      },
       searchMatches () {
         return [{
           id: 'id-abc-123',
