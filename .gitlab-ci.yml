@@ -126,3 +126,13 @@ mongoDatabaseConnector:
     - go test -v -dbpath mongodb://mongo:27017
   dependencies:
     - serverBuild
+
+sendEmail:
+  stage: test
+  tags:
+    - golang
+  dependencies:
+    - serverBuild
+  script:
+    - cd internal/email
+    - go test -v -to=delete@maxset.org

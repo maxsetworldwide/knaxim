@@ -31,7 +31,14 @@ type Tika struct {
 }
 
 type SMTP struct {
-	From string `json:"from"`
+	From       string `json:"from"`
+	Server     string `json:"server"`
+	Credential struct {
+		Identity string
+		Username string
+		Password string
+		Host     string
+	} `json:"cred"`
 }
 
 type Duration struct {
