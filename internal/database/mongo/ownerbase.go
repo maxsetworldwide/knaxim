@@ -479,3 +479,13 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	return resetDoc.User, nil
 }
+
+func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
+	_, err := ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).DeleteOne(ob.ctx, bson.M{
+		"user": id,
+	})
+	if err != nil {
+		return srverror.New(err, 500, "Server Error", "unable to remove reset key")
+	}
+	return nil
+}

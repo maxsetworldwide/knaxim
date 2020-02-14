@@ -191,3 +191,13 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	return
 }
+
+func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
+	for k, v := range ob.Owners.Reset {
+		if v.Equal(id) {
+			delete(ob.Owners.Reset, k)
+			break
+		}
+	}
+	return nil
+}

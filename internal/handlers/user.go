@@ -85,6 +85,10 @@ func updateCredentialsReset(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	err = ob.DeleteResetKey(user.GetID())
+	if err != nil {
+		panic(err)
+	}
 	w.Write([]byte("password updated"))
 }
 
