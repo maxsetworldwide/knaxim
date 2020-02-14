@@ -59,6 +59,18 @@ const UserService = {
     return ApiService.get(`user/data`).catch(error => {
       throw new Error(`UserService ${error}`)
     })
+  },
+
+  requestReset ({ name }) {
+    return ApiService.put('user/reset', { name }).catch(error => {
+      throw new Error(`UserService ${error}`)
+    })
+  },
+
+  resetPass ({ key, newpass }) {
+    return ApiService.post('user/reset', { key, newpass }).catch(error => {
+      throw new Error(`UserService ${error}`)
+    })
   }
 }
 

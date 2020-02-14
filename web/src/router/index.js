@@ -29,6 +29,10 @@ const routes = [
     name: 'register',
     component: Auth
   }, {
+    path: '/request',
+    name: 'request',
+    component: Auth
+  }, {
     path: '/profile/newpassword',
     name: 'changepass',
     component: Profile
