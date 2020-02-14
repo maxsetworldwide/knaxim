@@ -9,6 +9,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/email"
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/passentropy"
@@ -27,6 +28,8 @@ func AttachUser(r *mux.Router) {
 	r.HandleFunc("", createUser).Methods("PUT")
 	r.HandleFunc("/admin", createAdmin).Methods("PUT")
 	r.HandleFunc("/login", loginUser).Methods("POST")
+	r.HandleFunc("/reset", sendReset).Methods("PUT")
+	r.HandleFunc("/reset", updateCredentialsReset).Methods("POST")
 	{
 		r = r.NewRoute().Subrouter()
 		r.Use(UserCookie)
@@ -38,6 +41,51 @@ func AttachUser(r *mux.Router) {
 		r.HandleFunc("/pass", updateCredentials).Methods("POST")
 		r.HandleFunc("/data", getUserData).Methods("GET")
 	}
+}
+
+func sendReset(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("name")
+	if len(username) == 0 {
+		panic(srverror.Basic(400, "Missing Username"))
+	}
+	ob := r.Context().Value(database.OWNER).(database.Ownerbase)
+	user, err := ob.FindUserName(username)
+	if err != nil {
+		panic(err)
+	}
+	key, err := ob.GetResetKey(user.GetID())
+	if err != nil {
+		panic(err)
+	}
+	err = email.SendResetEmail([]string{user.GetEmail()}, user.GetName(), config.V.Address, key)
+	if err != nil {
+		panic(srverror.New(err, 500, "Server Error", "unable to send reset email"))
+	}
+	w.Write([]byte("success"))
+}
+
+func updateCredentialsReset(w http.ResponseWriter, r *http.Request) {
+	key := r.FormValue("key")
+	ob := r.Context().Value(database.OWNER).(database.Ownerbase)
+	id, err := ob.CheckResetKey(key)
+	if err != nil {
+		panic(err)
+	}
+	owner, err := ob.Get(id)
+	if err != nil {
+		panic(err)
+	}
+	user, ok := owner.(database.UserI)
+	if !ok {
+		panic(srverror.Basic(404, "Not Found", "non-user owner assigned a key", key))
+	}
+	newpass := r.FormValue("newpass")
+	user.SetLock(database.NewUserCredential(newpass))
+	err = ob.Update(user)
+	if err != nil {
+		panic(err)
+	}
+	w.Write([]byte("password updated"))
 }
 
 func lookupUser(out http.ResponseWriter, r *http.Request) {

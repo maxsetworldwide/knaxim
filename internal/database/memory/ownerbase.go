@@ -190,3 +190,4 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 		return id, database.ErrNotFound
 	}
 	return
+}
