@@ -1,5 +1,5 @@
 {
-	"address": "localhost:80",
+	"address": "localhost:8080",
 	"static": "/public",
 	"server":{
 		"Addr": "0.0.0.0:80",
@@ -27,15 +27,6 @@
 		"start": "2s",
 		"restart_time": "40m"
 	},
-	"smtp": {
-		"active": true,
-		"identity": "",
-		"username": "ai@maxset.org",
-		"password": "eDmxqgWb",
-		"host": "sub5.mail.dreamhost.com",
-		"path": "sub5.mail.dreamhost.com:587",
-		"from": "ai@maxset.org"
-	},
 	"total_free_space": 52428800,
 	"AdminKey": "b9!5v789DEp$5Yqw@9h",
 	"GuestUser": {
@@ -47,5 +38,14 @@
   "UserTimeouts": {
     "Inactivity": "24h",
     "Total": "24h"
-  }
+  },
+	"Email": {
+		"from": "noreply@maxset.org",
+		"server": "sub5.mail.dreamhost.com:587",
+		"cred": {
+			"Username": "ai@maxset.org",
+			"Password": "anM5x3B8",
+			"Host": "sub5.mail.dreamhost.com"
+		}
+	}
 }

@@ -67,8 +67,8 @@ const UserService = {
     })
   },
 
-  resetPass ({ key, newpass }) {
-    return ApiService.post('user/reset', { key, newpass }).catch(error => {
+  resetPass ({ passkey, newpass }) {
+    return ApiService.post('user/reset', { 'key': passkey, 'newpass': newpass }).catch(error => {
       throw new Error(`UserService ${error}`)
     })
   }

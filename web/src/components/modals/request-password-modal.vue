@@ -13,7 +13,10 @@
       <b-form-group>
         <b-form-input autofocus v-model="name" placeholder="Username"/>
       </b-form-group>
-      <b-form-group>
+      <div v-if="loading">
+        <b-spinner class="m-3"/>
+      </div>
+      <b-form-group v-else>
         <b-button type="submit" class="shadow-sm" :disabled="name.length < 6">Send Reset Email</b-button>
         <b-button @click="toLogin" class="shadow-sm">Back to Login</b-button>
       </b-form-group>

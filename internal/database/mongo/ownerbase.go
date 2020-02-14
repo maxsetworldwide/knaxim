@@ -463,7 +463,7 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 		"key": key,
 	})
 	if result.Err() != nil {
-		return database.OwnerID{}, database.ErrNotFound
+		return database.OwnerID{}, srverror.New(result.Err(), 404, "Not Found")
 	}
 	var resetDoc struct {
 		User   database.OwnerID `bson:"user"`
@@ -472,10 +472,10 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	err = result.Decode(&resetDoc)
 	if err != nil {
-		return database.OwnerID{}, database.ErrNotFound
+		return database.OwnerID{}, srverror.New(err, 404, "Not Found")
 	}
 	if resetDoc.Expire.Before(time.Now()) {
-		return database.OwnerID{}, database.ErrNotFound
+		return database.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")
 	}
 	return resetDoc.User, nil
 }

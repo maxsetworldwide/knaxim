@@ -20,7 +20,7 @@ Content-Type: text/plain; charset=\"UTF-8\"
 
 A request for a password reset has been recieved for your account named %s. Follow the path to reset the password.
 
-https://%s/profile/reset/%s
+https://%s/reset/%s
 
 Knaxim Team
 `, "\n", "\r\n")

@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
@@ -64,7 +65,11 @@ func sendReset(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("success"))
 }
 
+var updateCredentialsResetLock = &sync.Mutex{}
+
 func updateCredentialsReset(w http.ResponseWriter, r *http.Request) {
+	updateCredentialsResetLock.Lock()
+	defer updateCredentialsResetLock.Unlock()
 	key := r.FormValue("key")
 	ob := r.Context().Value(database.OWNER).(database.Ownerbase)
 	id, err := ob.CheckResetKey(key)
@@ -80,6 +85,9 @@ func updateCredentialsReset(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(404, "Not Found", "non-user owner assigned a key", key))
 	}
 	newpass := r.FormValue("newpass")
+	if passentropy.Score(newpass) < passentropy.Char6Cap1num1 {
+		panic(srverror.Basic(400, "Password not secure"))
+	}
 	user.SetLock(database.NewUserCredential(newpass))
 	err = ob.Update(user)
 	if err != nil {

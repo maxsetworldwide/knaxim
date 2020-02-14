@@ -9,6 +9,7 @@ call this component's openLogin() method to open the login modal
       @register="pushReg" @login="loginSuccess" @request="pushRequest" @close="loginClose"/>
     <registration-modal ref="reg" id="auth-register" @close="pushLogin" @register="regSuccess"/>
     <request-password-modal id="auth-request" ref="request" @close="reqLogin"/>
+    <reset-password-modal id="auth-reset" :passkey="passkey" ref="reset" @close="resLogin"/>
   </div>
 </template>
 
@@ -16,6 +17,7 @@ call this component's openLogin() method to open the login modal
 import LoginModal from '@/components/modals/login-modal'
 import RegistrationModal from '@/components/modals/registration-modal'
 import RequestPasswordModal from '@/components/modals/request-password-modal'
+import ResetPasswordModal from '@/components/modals/reset-password-modal'
 import { FILES_LIST } from '@/store/actions.type'
 
 export default {
@@ -23,7 +25,14 @@ export default {
   components: {
     LoginModal,
     RegistrationModal,
-    RequestPasswordModal
+    RequestPasswordModal,
+    ResetPasswordModal
+  },
+  props: {
+    passkey: {
+      type: String,
+      default: ''
+    }
   },
   data () {
     return {
@@ -41,6 +50,10 @@ export default {
     reqLogin () {
       this.$router.push('/login')
       this.$refs['request'].hide()
+    },
+    resLogin () {
+      this.$router.push('/login')
+      this.$refs['reset'].hide()
     },
     openReg () {
       this.$refs['reg'].show()
@@ -67,6 +80,9 @@ export default {
     },
     openRequest () {
       this.$refs['request'].show()
+    },
+    openReset () {
+      this.$refs['reset'].show()
     }
   },
   mounted () {
@@ -74,6 +90,10 @@ export default {
       this.openLogin()
     } else if (this.$route.name === 'register') {
       this.openReg()
+    } else if (this.$route.name === 'request') {
+      this.openRequest()
+    } else if (this.$route.name === 'reset') {
+      this.openReset()
     }
   },
   watch: {
@@ -84,6 +104,8 @@ export default {
         this.openReg()
       } else if (to.name === 'request') {
         this.openRequest()
+      } else if (to.name === 'reset') {
+        this.openReset()
       }
     }
   }
