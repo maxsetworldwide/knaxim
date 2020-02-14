@@ -1,6 +1,8 @@
 package mongo
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math"
 	"time"
@@ -427,4 +429,53 @@ func (ob *Ownerbase) GetTotalSpace(id database.OwnerID) (int64, error) {
 	default:
 		return 0, database.ErrNotFound
 	}
+}
+
+func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
+	newkey := make([]byte, 32)
+	_, err = rand.Read(newkey)
+	if err != nil {
+		return "", srverror.New(err, 500, "Server Error", "Unable to generate new password reset key")
+	}
+	_, err = ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).UpdateOne(ob.ctx, bson.M{
+		"user": id,
+	}, bson.M{
+		"$set": bson.M{
+			"key":    newkey,
+			"expire": time.Now().Add(time.Hour * 6),
+		},
+		"$setOnInsert": bson.M{
+			"user": id,
+		},
+	}, options.Update().SetUpsert(true))
+	if err != nil {
+		return "", srverror.New(err, 500, "Server Error", "unable to insert key")
+	}
+	return base64.RawURLEncoding.EncodeToString(newkey), nil
+}
+
+func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err error) {
+	key, err := base64.RawURLEncoding.DecodeString(keystr)
+	if err != nil {
+		return database.OwnerID{}, srverror.New(err, 400, "Bad Reset", "malformed reset key string")
+	}
+	result := ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).FindOne(ob.ctx, bson.M{
+		"key": key,
+	})
+	if result.Err() != nil {
+		return database.OwnerID{}, database.ErrNotFound
+	}
+	var resetDoc struct {
+		User   database.OwnerID `bson:"user"`
+		Key    []byte           `bson:"key"`
+		Expire time.Time        `bson:"expire"`
+	}
+	err = result.Decode(&resetDoc)
+	if err != nil {
+		return database.OwnerID{}, database.ErrNotFound
+	}
+	if resetDoc.Expire.Before(time.Now()) {
+		return database.OwnerID{}, database.ErrNotFound
+	}
+	return resetDoc.User, nil
 }

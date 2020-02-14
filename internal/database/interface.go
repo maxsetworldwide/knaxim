@@ -55,6 +55,8 @@ type Ownerbase interface {
 	Update(u Owner) error
 	GetSpace(o OwnerID) (int64, error)
 	GetTotalSpace(o OwnerID) (int64, error)
+	GetResetKey(id OwnerID) (key string, err error)
+	CheckResetKey(key string) (id OwnerID, err error)
 }
 
 type Filebase interface {

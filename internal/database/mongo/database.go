@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
 	//"log"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -43,7 +44,7 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			return err
 		}
 		var wg sync.WaitGroup
-		wg.Add(8)
+		wg.Add(9)
 		indexctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cherr := make(chan error, 8)
@@ -230,6 +231,27 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 				return
 			}
 		}()
+		go func() {
+			defer wg.Done()
+			I := testclient.Database(d.DBName).Collection(d.CollNames["reset"]).Indexes()
+			var err error
+			if _, err = I.CreateMany(indexctx, []mongo.IndexModel{
+				mongo.IndexModel{
+					Keys:    bson.M{"user": 1},
+					Options: options.Index().SetUnique(true).SetExpireAfterSeconds(60 * 60 * 24),
+				},
+				mongo.IndexModel{
+					Keys:    bson.M{"key": 1},
+					Options: options.Index().SetUnique(true),
+				},
+			}); err != nil {
+				select {
+				case cherr <- err:
+				case <-indexctx.Done():
+				}
+				return
+			}
+		}()
 		wg.Wait()
 		cherr <- nil
 		err := <-cherr
@@ -268,6 +290,9 @@ func initcoll(c map[string]string) map[string]string {
 	}
 	if _, ok := c["acronym"]; !ok {
 		c["acronym"] = "acronym"
+	}
+	if _, ok := c["reset"]; !ok {
+		c["reset"] = "reset"
 	}
 	return c
 }

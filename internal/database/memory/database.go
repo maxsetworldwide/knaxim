@@ -18,6 +18,7 @@ type Database struct {
 		ID        map[string]database.Owner // key Owner.ID.String()
 		UserName  map[string]database.UserI
 		GroupName map[string]database.GroupI
+		Reset     map[string]database.OwnerID
 	}
 	Files     map[string]database.FileI         // key filehash.FileID.String()
 	Stores    map[string]*database.FileStore    // key filehash.StoreID.String()
@@ -39,6 +40,7 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	db.Owners.ID = make(map[string]database.Owner)
 	db.Owners.UserName = make(map[string]database.UserI)
 	db.Owners.GroupName = make(map[string]database.GroupI)
+	db.Owners.Reset = make(map[string]database.OwnerID)
 	db.Files = make(map[string]database.FileI)
 	db.Stores = make(map[string]*database.FileStore)
 	db.Lines = make(map[string][]database.ContentLine)
