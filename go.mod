@@ -22,7 +22,7 @@ require (
 	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/thecodingmachine/gotenberg-go-client/v7 v7.0.1
+	github.com/thecodingmachine/gotenberg-go-client/v7 v7.1.0
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect
