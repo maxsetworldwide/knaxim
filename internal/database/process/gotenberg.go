@@ -3,8 +3,32 @@ package process
 import (
 	"io"
 
-	gotenberg "github.com/thecodingmachine/gotenberg-go-client/v7"
+	"github.com/thecodingmachine/gotenberg-go-client/v7"
 )
+
+type ExtConst int
+
+const (
+	OFFICE ExtConst = iota
+	URL
+	PDF
+)
+
+var ExtMap = map[string]ExtConst{
+	".pdf":  PDF,
+	".txt":  OFFICE,
+	".rtf":  OFFICE,
+	".fodt": OFFICE,
+	".doc":  OFFICE,
+	".docx": OFFICE,
+	".odt":  OFFICE,
+	".xls":  OFFICE,
+	".xlsx": OFFICE,
+	".ods":  OFFICE,
+	".ppt":  OFFICE,
+	".pptx": OFFICE,
+	".odp":  OFFICE,
+}
 
 type FileConverter gotenberg.Client
 
