@@ -69,6 +69,21 @@ const getters = {
           return state.fileSet[i]
         })
       }
+      throw new Error('unrecognized file id type')
+    }
+  },
+  ownedFiles (state, getters) {
+    if (!getters.activeGroup) {
+      return state.user.owned
+    } else {
+      return state.groups[getters.activeGroup.id].owned
+    }
+  },
+  sharedFiles (state) {
+    if (!getters.activeGroup) {
+      return state.user.shared
+    } else {
+      return state.groups[getters.activeGroup.id].shared
     }
   }
 }
