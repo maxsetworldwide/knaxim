@@ -18,6 +18,7 @@ const (
 	CONTENT
 	TAG
 	ACRONYM
+	VIEW
 )
 
 var (
