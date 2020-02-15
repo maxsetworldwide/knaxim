@@ -14,8 +14,7 @@ import {
 
 const state = {
   errors: null,
-  user: {},
-  isAuthenticated: false
+  user: null
 }
 
 const getters = {
@@ -23,7 +22,7 @@ const getters = {
     return state.user
   },
   isAuthenticated (state) {
-    return state.isAuthenticated
+    return !!state.user
   }
 }
 
@@ -132,14 +131,12 @@ const mutations = {
   },
 
   [SET_USER] (state, user) {
-    state.isAuthenticated = true
     state.user = user
     state.errors = {}
   },
 
   [PURGE_AUTH] (state) {
-    state.isAuthenticated = false
-    state.user = {}
+    state.user = null
     state.errors = {}
   }
 }

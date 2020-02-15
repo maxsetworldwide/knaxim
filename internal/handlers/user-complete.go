@@ -211,5 +211,8 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Set("user", info)
+	w.Set("user", info.User)
+	w.Set("public", info.Public)
+	w.Set("groups", info.Groups)
+	w.Set("files", info.Records)
 }

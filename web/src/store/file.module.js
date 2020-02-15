@@ -5,11 +5,20 @@ import {
   END_SLICES,
   FILE_CREATED,
   FILE_START_LOADING,
-  FILE_STOP_LOADING
+  FILE_STOP_LOADING,
+  SET_FILE,
+  PROCESS_SERVER_STATE
 } from './mutations.type'
 
 const state = {
-  loading: 0
+  loading: 0,
+  fileSet: {},
+  user: {
+    owned: [],
+    shared: []
+  },
+  groups: {},
+  public: []
 }
 
 const actions = {
@@ -27,12 +36,40 @@ const mutations = {
   },
   [FILE_STOP_LOADING] (state) {
     state.loading -= 1
+  },
+  [SET_FILE] (state, file) {
+    state.fileSet[file.id] = file
+  },
+  [PROCESS_SERVER_STATE] (state, server) {
+    state.fileSet = server.files
+    state.public = server.public
+    state.user.owned = server.user.files.own
+    state.user.shared = server.user.files.view
+    state.groups = {}
+    for (let key in server.groups) {
+      state.groups[key] = {
+        owned: server.groups[key].files.own,
+        shared: server.groups[key].files.view
+      }
+    }
   }
 }
 
 const getters = {
   fileLoading (state) {
     return state.loading > 0
+  },
+  populateFiles (state) {
+    return id => {
+      if (typeof id === 'string') {
+        return state.fileSet[id]
+      }
+      if (id instanceof Array) {
+        return id.map(i => {
+          return state.fileSet[i]
+        })
+      }
+    }
   }
 }
 
