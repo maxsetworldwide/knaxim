@@ -3,72 +3,37 @@ import { FILE_SLICES, CREATE_FILE } from './actions.type'
 import {
   START_SLICES,
   END_SLICES,
-  FILE_CREATED
+  FILE_CREATED,
+  FILE_START_LOADING,
+  FILE_STOP_LOADING
 } from './mutations.type'
 
 const state = {
-  fileId: '',
-  lines: [],
-  size: 0,
-  isLoading: false
+  loading: 0
 }
 
 const actions = {
   [CREATE_FILE] (context, params) {
-    return new Promise(resolve => {
-      FileService.create(params).then(({ data }) => {
-        resolve(data)
-        context.commit(FILE_CREATED, data.id)
-      }).catch((error) => {
-        throw new Error(error)
-      })
-    })
-  },
-
-  /**
-   * Get a set of sentences from a file.
-   *
-   * @param {object} context  state
-   * @param {object} params  url properties
-   * @param {string} params.fid  file_id
-   * @param {number} params.start  starting sentence index
-   * @param {number} params.end  ending sentence index
-   * @return {Promise}
-   */
-  [FILE_SLICES] (context, params) {
-    context.commit(START_SLICES)
-    return new Promise((resolve, reject) => {
-      FileService.slice(params)
-        .then(({ data }) => {
-          context.commit(END_SLICES, {
-            slices: data.lines,
-            count: data.size
-          })
-          resolve(data)
-        }).catch((error) => {
-          context.commit(END_SLICES)
-          reject(error)
-        })
-    })
+    context.commit(FILE_START_LOADING)
+    return FileService.create(params)
+      .then(res => res.data)
+      .finally(() => { context.commit(FILE_STOP_LOADING) })
   }
 }
 
 const mutations = {
-  [FILE_CREATED] (state, fileId) {
-    state.fileId = fileId
+  [FILE_START_LOADING] (state) {
+    state.loading += 1
   },
-
-  [START_SLICES] (state) {
-    state.isLoading = true
-  },
-  [END_SLICES] (state, { slices, count }) {
-    state.lines = slices
-    state.size = count
-    state.isLoading = false
+  [FILE_STOP_LOADING] (state) {
+    state.loading -= 1
   }
 }
 
 const getters = {
+  fileLoading (state) {
+    return state.loading > 0
+  }
 }
 
 export default {

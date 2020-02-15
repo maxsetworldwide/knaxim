@@ -14,6 +14,9 @@ const state = {
 const getters = {
   acronymResults (state) {
     return state.acronyms
+  },
+  acronymLoading (state) {
+    return state.loading
   }
 }
 
