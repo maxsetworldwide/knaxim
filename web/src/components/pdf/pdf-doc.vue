@@ -66,7 +66,7 @@ export default {
       pdf: null,
       pages: [],
       currPage: 1,
-      scale: 1.25,
+      scale: 3,
       scrollTop: 0,
       clientHeight: 0,
       matchContexts: {}
@@ -124,6 +124,17 @@ export default {
     },
     handleVisible (num) {
       this.currPage = num
+    },
+    fetchPdf () {
+      pdfjs
+        .getDocument(this.url)
+        .promise.then(pdf => {
+          this.pdf = pdf
+        })
+        .catch(() => {
+          this.$emit('no-view')
+          // console.log(err)
+        })
     }
   },
   watch: {
@@ -142,27 +153,11 @@ export default {
         })
     },
     fileID () {
-      pdfjs
-        .getDocument(this.url)
-        .promise.then(pdf => {
-          this.pdf = pdf
-        })
-        .catch(() => {
-          this.$emit('no-view')
-          // console.log(err)
-        })
+      this.fetchPdf()
     }
   },
   created () {
-    pdfjs
-      .getDocument(this.url)
-      .promise.then(pdf => {
-        this.pdf = pdf
-      })
-      .catch(() => {
-        this.$emit('no-view')
-        // console.log(err)
-      })
+    this.fetchPdf()
   },
   mounted () {
     this.updateScrollBounds()
