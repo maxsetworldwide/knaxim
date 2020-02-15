@@ -1,7 +1,17 @@
 <template>
   <div class="h-100">
-    <pdf-doc v-if="fileType === 'pdf'" :fileID="id" :acr="acr"/>
-    <text-viewer v-else :fileName="name" :finalPage="sentenceCount" :acr="acr"/>
+    <pdf-doc
+      v-if="viewExists"
+      :fileID="id"
+      :acr="acr"
+      @no-view="viewExists = false"
+    />
+    <text-viewer
+      v-else
+      :fileName="name"
+      :finalPage="sentenceCount"
+      :acr="acr"
+    />
   </div>
 </template>
 
@@ -24,7 +34,8 @@ export default {
   data () {
     return {
       name: '',
-      sentenceCount: 0
+      sentenceCount: 0,
+      viewExists: true
     }
   },
   computed: {
@@ -32,7 +43,10 @@ export default {
       if (!this.name) {
         return 'txt'
       }
-      return this.name.split('.').slice(-1)[0].toLowerCase()
+      return this.name
+        .split('.')
+        .slice(-1)[0]
+        .toLowerCase()
     }
   },
   methods: {
@@ -62,6 +76,4 @@ export default {
 }
 </script>
 
-<style>
-
-</style>
+<style></style>

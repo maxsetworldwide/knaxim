@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
@@ -22,20 +24,25 @@ import (
 )
 
 func AttachFile(r *mux.Router) {
-	r.Use(srvjson.JSONResponse)
 	r.Use(ConnectDatabase)
 	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
-	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
-	r.HandleFunc("", createFile).Methods("PUT")
-	//r.HandleFunc("/copy", copyFile).Methods("PUT")
-	r.HandleFunc("/{id}", fileInfo).Methods("GET")
-	r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
-	r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
 	r.HandleFunc("/{id}/download", sendFile).Methods("GET")
-	//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
-	r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
+	r.HandleFunc("/{id}/view", sendView).Methods("GET")
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(srvjson.JSONResponse)
+		r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
+		r.HandleFunc("", createFile).Methods("PUT")
+		//r.HandleFunc("/copy", copyFile).Methods("PUT")
+		r.HandleFunc("/{id}", fileInfo).Methods("GET")
+		r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
+		r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
+		//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
+		r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
+	}
+
 }
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
@@ -44,6 +51,11 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if cancel != nil {
 		defer cancel()
 	}
+	cb := config.DB.Content(ctx)
+	defer cb.Close(ctx)
+
+	gotenbergErr := make(chan error, 1)
+	go createView(ctx, database.Database(cb), file, fs, gotenbergErr)
 	rcontent, err := fs.Reader()
 	if err != nil {
 		return err
@@ -66,7 +78,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 		contentlines[i].ID = fs.ID
 	}
 	// util.Verbose("generated content: %v", contentlines)
-	err = config.DB.Content(ctx).Insert(contentlines...)
+	err = cb.Insert(contentlines...)
 	if err != nil {
 		return err
 	}
@@ -78,7 +90,72 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	if err != nil {
 		return err
 	}
-	return config.DB.Tag(ctx).UpsertStore(fs.ID, tags...)
+	err = cb.Tag(nil).UpsertStore(fs.ID, tags...)
+	if err != nil {
+		return err
+	}
+	return <-gotenbergErr
+}
+
+func extensionFromName(name string) string {
+	return strings.ToLower(name[strings.LastIndex(name, "."):])
+}
+
+func createView(ctx context.Context, db database.Database, file database.FileI, fs *database.FileStore, out chan error) {
+	name := file.GetName()
+	var result []byte
+	ext := extensionFromName(name)
+	extConst, ok := process.ExtMap[ext]
+	if !ok || extConst == process.PDF {
+		// no conversions available. do not put a view in the db. retrieval of this
+		// view should return 404 or 302 or 303 to indicate that sentences should be used
+		// OR is PDF
+		// do not store a copy in the viewbase
+		// have the /view api just return the store by checking the name
+		return
+	}
+	buf := &bytes.Buffer{}
+	r, err := fs.Reader()
+	if err != nil {
+		out <- err
+		return
+	}
+	if _, err = io.Copy(buf, r); err != nil {
+		out <- err
+		return
+	}
+	url := config.V.GotenPath
+	converter := process.NewFileConverter(url)
+	gotenFinished := make(chan error)
+	go func() {
+		var err error
+		switch extConst {
+		case process.OFFICE:
+			result, err = converter.ConvertOffice(name, buf.Bytes())
+		}
+		gotenFinished <- err
+	}()
+	select {
+	case err := <-gotenFinished:
+		if err != nil {
+			out <- err
+			return
+		}
+	case <-ctx.Done():
+		out <- ctx.Err()
+		return
+	}
+	vb := db.View(nil)
+	vs, err := database.NewViewStore(fs.ID, bytes.NewReader(result))
+	if err != nil {
+		out <- err
+		return
+	}
+	if err = vb.Insert(vs); err != nil {
+		out <- err
+		return
+	}
+	out <- nil
 }
 
 func createFile(out http.ResponseWriter, r *http.Request) {
@@ -118,6 +195,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
+
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
@@ -413,5 +491,56 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+rec.GetName()+"\"")
 	w.Header().Set("Content-Type", store.ContentType)
+	io.Copy(w, rdr)
+}
+
+func sendView(w http.ResponseWriter, r *http.Request) {
+	var owner database.Owner
+	if group := r.Context().Value(GROUP); group != nil {
+		owner = group.(database.Owner)
+	} else {
+		owner = r.Context().Value(USER).(database.Owner)
+	}
+	vals := mux.Vars(r)
+	fid, err := filehash.DecodeFileID(vals["id"])
+	if err != nil {
+		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
+	}
+	rec, err := r.Context().Value(database.FILE).(database.Filebase).Get(fid)
+	if err != nil {
+		panic(err)
+	}
+	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
+		panic(srverror.Basic(403, "Permission Denied", "sendView user does not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
+	}
+	ext := extensionFromName(rec.GetName())
+	var rdr io.Reader
+	if ext == ".pdf" {
+		store, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
+		if err != nil {
+			panic(err)
+		}
+		rdr, err = store.Reader()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		view, err := r.Context().Value(database.VIEW).(database.Viewbase).Get(fid.StoreID)
+		if err != nil {
+			// 302 or 303
+			panic(err)
+		}
+		rdr, err = view.Reader()
+		if err != nil {
+			panic(err)
+		}
+	}
+	pdfName := rec.GetName()
+	dotIdx := strings.LastIndex(rec.GetName(), ".")
+	if dotIdx > -1 {
+		pdfName = rec.GetName()[:dotIdx+1] + "pdf"
+	}
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+pdfName+"\"")
+	w.Header().Set("Content-Type", "application/pdf")
 	io.Copy(w, rdr)
 }

@@ -27,6 +27,7 @@
 		"port": "",
 		"restart_time": "40m"
 	},
+  "gotenpath": "http://localhost:3000",
 	"smtp": {
 		"active": true,
 		"identity": "",
