@@ -182,22 +182,45 @@ export default {
       }
       return this.activeGroup.id
     },
+    nonTrashFileSet () {
+      let owned = {}
+      for (let key in this.fileSet.owned) {
+        if (this.trashFolder.reduce((acc, id) => {
+          return acc && key !== id
+        }, true)) {
+          owned[key] = this.fileSet.owned[key]
+        }
+      }
+      let shared = {}
+      for (let key in this.fileSet.shared) {
+        if (!this.trashFolder.reduce((acc, id) => {
+          return acc && key !== id
+        }, true)) {
+          shared[key] = this.fileSet.shared[key]
+        }
+      }
+      return { owned, shared }
+    },
     files () {
       if (this.src === 'recents') {
         return (this.recents || [])
+      } else if (this.src === 'trash') {
+        return (this.trashFolder.map(function (id) {
+          return this[id]
+        }, { ...this.fileSet.owned, ...this.fileSet.shared }) || [])
       } else if (this.src === 'favorites') {
         return (this.favoriteFolder.map(
           function (id) {
             return this[id]
           },
-          { ...this.fileSet.owned, ...this.fileSet.shared }
+          { ...this.nonTrashFileSet.owned, ...this.nonTrashFileSet.shared }
         ) || [])
       } else if (this.src === 'shared') {
-        return Object.values(this.fileSet.shared)
+        return Object.values(this.nonTrashFileSet.shared)
       } else if (this.src === 'owned') {
-        return Object.values(this.fileSet.owned)
+        return Object.values(this.nonTrashFileSet.owned)
       }
-      return [...Object.values(this.fileSet.owned), ...Object.values(this.fileSet.shared)]
+      return [...Object.values(this.nonTrashFileSet.owned), ...Object.values(this.nonTrashFileSet.shared)]
     },
     filterFiles () {
       return this.files.filter(file => {
@@ -247,11 +270,14 @@ export default {
     favoriteFolder () {
       return (this.$store.state.folder.user['_favorites_'] || [])
     },
+    trashFolder () {
+      return this.$store.state.folder.user['_trash_'] || []
+    },
     folderRows () {
       var rows = []
       var id = 0
       for (const name in this.folders) {
-        if (name !== '_favorites_' && this.folderFilters.reduce((acc, f) => {
+        if (name !== '_favorites_' && name !== '_trash_' && this.folderFilters.reduce((acc, f) => {
           return acc && f !== name
         }, true)) {
           rows.push({

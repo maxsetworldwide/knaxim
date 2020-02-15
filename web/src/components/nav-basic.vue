@@ -46,13 +46,13 @@
         <span>Favorites</span>
       </b-nav-item>
 
-      <!-- <b-nav-item class="mb-1"
-          disabled to="/user/file/delete">
+      <b-nav-item class="mb-1"
+          to="/list/trash">
         <svg>
           <use href="../assets/app.svg#bin" />
         </svg>
-        <span>Delete</span>
-      </b-nav-item> -->
+        <span>Trash</span>
+      </b-nav-item>
     </b-nav>
 
   </div>

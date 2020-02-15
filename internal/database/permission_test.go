@@ -109,7 +109,7 @@ func TestPermission(t *testing.T) {
 		np := new(Permission)
 		err = np.UnmarshalBSON(pbson)
 		if err != nil {
-			t.Fatalf("unable to UnmarshalBSON: %s", err)
+			t.Fatalf("unable to UnmarshalBSON: %s, %#v", err, pbson)
 		}
 		err = np.Populate(db.Owner(nil))
 		if err != nil {

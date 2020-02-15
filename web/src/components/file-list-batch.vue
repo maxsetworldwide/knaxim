@@ -30,7 +30,7 @@
       <span v-else>Favorite</span>
     </b-dropdown-item>
 
-    <batch-delete v-if="!singleFile" :files="checkedFiles" #default="{ inputEvents }"
+    <batch-delete v-if="!singleFile" :files="checkedFiles" :permanent="permanentDelete" #default="{ inputEvents }"
         v-on:delete-files="$emit('delete-files')">
       <b-dropdown-item href="#" v-on="inputEvents" :disabled="!fileSelected">
         <svg>
@@ -73,6 +73,18 @@ export default {
     },
     share () {
       this.$emit('share-file')
+    }
+  },
+  computed: {
+    trashFolder () {
+      return this.$store.state.folder.user['_trash_'] || []
+    },
+    permanentDelete () {
+      return this.checkedFiles.reduce((acc, file) => {
+        return acc && this.trashFolder.reduce((a, id) => {
+          return a || id === file.id
+        }, false)
+      }, true)
     }
   }
 }
