@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -22,25 +21,28 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 
 	"github.com/gorilla/mux"
-	gotenberg "github.com/thecodingmachine/gotenberg-go-client"
 )
 
 func AttachFile(r *mux.Router) {
-	r.Use(srvjson.JSONResponse)
 	r.Use(ConnectDatabase)
 	r.Use(ParseBody)
 	r.Use(UserCookie)
 	r.Use(groupMiddleware)
-	r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
-	r.HandleFunc("", createFile).Methods("PUT")
-	//r.HandleFunc("/copy", copyFile).Methods("PUT")
-	r.HandleFunc("/{id}", fileInfo).Methods("GET")
-	r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
-	r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
 	r.HandleFunc("/{id}/download", sendFile).Methods("GET")
 	r.HandleFunc("/{id}/view", sendView).Methods("GET")
-	//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
-	r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
+	{
+		r = r.NewRoute().Subrouter()
+		r.Use(srvjson.JSONResponse)
+		r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
+		r.HandleFunc("", createFile).Methods("PUT")
+		//r.HandleFunc("/copy", copyFile).Methods("PUT")
+		r.HandleFunc("/{id}", fileInfo).Methods("GET")
+		r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
+		r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
+		//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
+		r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
+	}
+
 }
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
@@ -53,7 +55,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	defer cb.Close(ctx)
 
 	gotenbergErr := make(chan error, 1)
-	go createView(ctx, cb.Database, file, fs, gotenbergErr)
+	go createView(ctx, database.Database(cb), file, fs, gotenbergErr)
 	rcontent, err := fs.Reader()
 	if err != nil {
 		return err
@@ -95,8 +97,23 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	return <-gotenbergErr
 }
 
+func extensionFromName(name string) string {
+	return strings.ToLower(name[strings.LastIndex(name, "."):])
+}
+
 func createView(ctx context.Context, db database.Database, file database.FileI, fs *database.FileStore, out chan error) {
 	name := file.GetName()
+	var result []byte
+	ext := extensionFromName(name)
+	extConst, ok := process.ExtMap[ext]
+	if !ok || extConst == process.PDF {
+		// no conversions available. do not put a view in the db. retrieval of this
+		// view should return 404 or 302 or 303 to indicate that sentences should be used
+		// OR is PDF
+		// do not store a copy in the viewbase
+		// have the /view api just return the store by checking the name
+		return
+	}
 	buf := &bytes.Buffer{}
 	r, err := fs.Reader()
 	if err != nil {
@@ -109,11 +126,13 @@ func createView(ctx context.Context, db database.Database, file database.FileI, 
 	}
 	url := config.V.GotenPath
 	converter := process.NewFileConverter(url)
-	var result *bytes.Buffer
 	gotenFinished := make(chan error)
 	go func() {
 		var err error
-		result, err = converter.ConvertOffice(name, buf)
+		switch extConst {
+		case process.OFFICE:
+			result, err = converter.ConvertOffice(name, buf.Bytes())
+		}
 		gotenFinished <- err
 	}()
 	select {
@@ -127,7 +146,7 @@ func createView(ctx context.Context, db database.Database, file database.FileI, 
 		return
 	}
 	vb := db.View(nil)
-	vs, err := database.NewViewStore(fs.ID, result)
+	vs, err := database.NewViewStore(fs.ID, bytes.NewReader(result))
 	if err != nil {
 		out <- err
 		return
@@ -492,39 +511,36 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
-		panic(srverror.Basic(403, "Permission Denied", "sendView user not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
+		panic(srverror.Basic(403, "Permission Denied", "sendView user does not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
-	store, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
-	if err != nil {
-		panic(err)
+	ext := extensionFromName(rec.GetName())
+	var rdr io.Reader
+	if ext == ".pdf" {
+		store, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
+		if err != nil {
+			panic(err)
+		}
+		rdr, err = store.Reader()
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		view, err := r.Context().Value(database.VIEW).(database.Viewbase).Get(fid.StoreID)
+		if err != nil {
+			// 302 or 303
+			panic(err)
+		}
+		rdr, err = view.Reader()
+		if err != nil {
+			panic(err)
+		}
 	}
-	rdr, err := store.Reader()
-	if err != nil {
-		panic(err)
+	pdfName := rec.GetName()
+	dotIdx := strings.LastIndex(rec.GetName(), ".")
+	if dotIdx > -1 {
+		pdfName = rec.GetName()[:dotIdx+1] + "pdf"
 	}
-
-	bytes, err := ioutil.ReadAll(rdr)
-	if err != nil {
-		panic(err)
-	}
-
-	gotenClient := &gotenberg.Client{
-		Hostname: "http://gotenberg:3000",
-	}
-
-	// capital extensions
-	// landscape spreadsheets
-	// deadline
-	lower := strings.ToLower(rec.GetName())
-	index, err := gotenberg.NewDocumentFromBytes(lower, bytes)
-
-	req := gotenberg.NewOfficeRequest(index)
-	res, err := gotenClient.Post(req)
-	if err != nil {
-		panic(err)
-	}
-	rdr = res.Body
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+rec.GetName()+"\"")
-	w.Header().Set("Content-Type", store.ContentType)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+pdfName+"\"")
+	w.Header().Set("Content-Type", "application/pdf")
 	io.Copy(w, rdr)
 }
