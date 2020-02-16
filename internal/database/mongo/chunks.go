@@ -14,15 +14,15 @@ type contentchunk struct {
 
 const chunksize = 15 << 20
 
-func chunkify(ID filehash.StoreID, content []byte) []interface{} {
-	var chunks []interface{}
+func chunkify(ID filehash.StoreID, content []byte) []*contentchunk {
+	var chunks []*contentchunk
 	var i uint32
 	for start := 0; start < len(content); start += chunksize {
 		end := start + chunksize
 		if end > len(content) {
 			end = len(content)
 		}
-		chunks = append(chunks, contentchunk{
+		chunks = append(chunks, &contentchunk{
 			ID:    ID,
 			Index: i,
 			Data:  content[start:end],
@@ -64,6 +64,7 @@ func filterchunks(list []*contentchunk) [][]*contentchunk {
 			if ch.ID.Equal(outlist[0].ID) {
 				out[i] = append(outlist, ch)
 				added = true
+				break
 			}
 		}
 		if !added {
