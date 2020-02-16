@@ -16,7 +16,7 @@ events:
 -->
 <template>
   <b-row>
-    <b-col offset-md="5" cols="1">
+    <b-col offset-md="3" cols="1">
       <b-button @click="increaseScale">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
@@ -30,6 +30,9 @@ events:
         </svg>
       </b-button>
     </b-col>
+    <b-col cols="4">
+      <h4 class="title text-center">{{ name }}</h4>
+    </b-col>
     <b-col cols="2">
       <input
         :value="currPage"
@@ -41,7 +44,7 @@ events:
       <span> / {{ maxPages }}</span>
     </b-col>
 
-    <b-col offset-md="2" cols="1">
+    <b-col cols="1">
       <file-list-batch
         fileSelected
         singleFile
@@ -83,7 +86,8 @@ export default {
   props: {
     currPage: Number,
     maxPages: Number,
-    id: String
+    id: String,
+    name: String
   },
   data () {
     return {
@@ -176,5 +180,12 @@ svg {
 
 input {
   width: 50%;
+}
+
+.title {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

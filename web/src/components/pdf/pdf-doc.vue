@@ -10,6 +10,7 @@
         :currPage="currPage"
         :maxPages="pages.length"
         :id="fileID"
+        :name="name"
         @scale-increase="increaseScale"
         @scale-decrease="decreaseScale"
         @page-input="pageInput"
@@ -64,6 +65,7 @@ export default {
   data () {
     return {
       pdf: null,
+      name: '',
       pages: [],
       currPage: 1,
       scale: 3,
@@ -126,6 +128,10 @@ export default {
       this.currPage = num
     },
     fetchPdf () {
+      FileService.info({ fid: this.fileID }).then(({ data }) => {
+        console.log(data)
+        this.name = data.file.name
+      })
       pdfjs
         .getDocument(this.url)
         .promise.then(pdf => {
