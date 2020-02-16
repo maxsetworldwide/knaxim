@@ -9,7 +9,8 @@ import {
 import {
   SET_USER,
   PURGE_AUTH,
-  SET_ERROR
+  SET_ERROR,
+  PROCESS_SERVER_STATE
 } from './mutations.type'
 
 const state = {
@@ -132,12 +133,21 @@ const mutations = {
 
   [SET_USER] (state, user) {
     state.user = user
-    state.errors = {}
+    state.errors = null
   },
 
   [PURGE_AUTH] (state) {
     state.user = null
-    state.errors = {}
+    state.errors = null
+  },
+
+  [PROCESS_SERVER_STATE] (state, { user }) {
+    state.user = {
+      id: user.id,
+      name: user.name,
+      data: user.data
+    }
+    state.errors = null
   }
 }
 

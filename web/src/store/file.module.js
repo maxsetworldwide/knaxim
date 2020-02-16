@@ -1,11 +1,7 @@
 import FileService from '@/service/file'
-import { FILE_SLICES, CREATE_FILE } from './actions.type'
+import { CREATE_FILE } from './actions.type'
 import {
-  START_SLICES,
-  END_SLICES,
-  FILE_CREATED,
-  FILE_START_LOADING,
-  FILE_STOP_LOADING,
+  FILE_LOADING,
   SET_FILE,
   PROCESS_SERVER_STATE
 } from './mutations.type'
@@ -23,19 +19,16 @@ const state = {
 
 const actions = {
   [CREATE_FILE] (context, params) {
-    context.commit(FILE_START_LOADING)
+    context.commit(FILE_LOADING, 1)
     return FileService.create(params)
       .then(res => res.data)
-      .finally(() => { context.commit(FILE_STOP_LOADING) })
+      .finally(() => { context.commit(FILE_LOADING, -1) })
   }
 }
 
 const mutations = {
-  [FILE_START_LOADING] (state) {
-    state.loading += 1
-  },
-  [FILE_STOP_LOADING] (state) {
-    state.loading -= 1
+  [FILE_LOADING] (state, d) {
+    state.loading += d
   },
   [SET_FILE] (state, file) {
     state.fileSet[file.id] = file

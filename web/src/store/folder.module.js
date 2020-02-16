@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import FolderService from '@/service/folder'
-import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from './actions.type'
+import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE } from './actions.type'
 import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE } from './mutations.type'
 
 const state = {
@@ -52,6 +52,15 @@ const actions = {
         context.commit(FOLDER_LOADING, -1)
       })
     })
+  },
+  async [HANDLE_SERVER_STATE] ({ commit, dispatch }, { user, groups }) {
+    commit(FOLDER_LOADING, 1)
+    let proms = user.folders.map(name => dispatch(LOAD_FOLDER, { name }))
+    for (let gid in groups) {
+      proms.push(...groups[gid].folders.map(name => dispatch(LOAD_FOLDER, { name, group: gid })))
+    }
+    await Promise.all(proms)
+    commit(FOLDER_LOADING, -1)
   }
 }
 

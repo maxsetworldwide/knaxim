@@ -1,7 +1,8 @@
+import Vue from 'vue'
 import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import { LOAD_OWNER } from './actions.type'
-import { SET_OWNER_NAME } from './mutations.type'
+import { SET_OWNER_NAME, PROCESS_SERVER_STATE } from './mutations.type'
 
 const state = {
   names: {} // map[ownerid]string
@@ -15,13 +16,20 @@ const actions = {
         response = await GroupService.info({ id })
       }
       context.commit(SET_OWNER_NAME, { id, name: response.data.name })
+      return response.data.name
     }
   }
 }
 
 const mutations = {
   [SET_OWNER_NAME] (state, { id, name }) {
-    state.names[id] = name
+    Vue.set(state.names, id, name)
+  },
+  [PROCESS_SERVER_STATE] (state, { user, groups }) {
+    Vue.set(state.names, user.id, user.name)
+    for (let id in groups) {
+      Vue.set(state.names, id, groups[id].name)
+    }
   }
 }
 

@@ -35,3 +35,6 @@ export const SET_OWNER_NAME = 'setOwnerName'
 
 export const SET_GROUP = 'setGroup'
 export const ACTIVATE_GROUP = 'activateGroup'
+
+export const FILE_LOADING = 'fileLoading'
+export const PROCESS_SERVER_STATE = 'PROCESS_SERVER_STATE'

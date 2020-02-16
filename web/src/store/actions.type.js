@@ -23,3 +23,6 @@ export const LOAD_OWNER = 'loadOwner'
 
 export const REFRESH_GROUPS = 'refreshGroups'
 export const CREATE_GROUP = 'createGroup'
+
+export const LOAD_SERVER = 'loadServer'
+export const HANDLE_SERVER_STATE = 'handleServerState'

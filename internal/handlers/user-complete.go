@@ -16,7 +16,7 @@ type userProfile struct {
 		Own    []string `json:"own"`
 		Member []string `json:"member"`
 	} `json:"groups"`
-	Dirs  []string `json:"dirs"`
+	Dirs  []string `json:"folders"`
 	Files struct {
 		Own  []string `json:"own"`
 		View []string `json:"view"`
@@ -38,7 +38,7 @@ type groupProfile struct {
 		Own    []string `json:"own"`
 		Member []string `json:"member"`
 	} `json:"groups"`
-	Dirs  []string `json:"dirs"`
+	Dirs  []string `json:"folders"`
 	Files struct {
 		Own  []string `json:"own"`
 		View []string `json:"view"`

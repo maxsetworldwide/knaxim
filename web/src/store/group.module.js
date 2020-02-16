@@ -3,7 +3,8 @@ import GroupService from '@/service/group'
 import { AFTER_LOGIN, REFRESH_GROUPS, CREATE_GROUP } from './actions.type'
 import {
   SET_GROUP,
-  ACTIVATE_GROUP
+  ACTIVATE_GROUP,
+  PROCESS_SERVER_STATE
 } from './mutations.type'
 
 const state = {
@@ -40,6 +41,9 @@ const mutations = {
   },
   [ACTIVATE_GROUP] (state, { id }) {
     state.active = id
+  },
+  [PROCESS_SERVER_STATE] ({ commit }, { groups }) {
+    groups.values().forEach(v => commit(SET_GROUP, v))
   }
 }
 
@@ -51,15 +55,13 @@ const getters = {
       name: state.options[state.active]
     }
   },
-  availableGroups (state) {
-    let teams = []
-    for (const id in state.options) {
-      teams.push({
+  availableGroups ({ options }) {
+    return options.keys().map(id => {
+      return {
         id,
-        name: state.options[id]
-      })
-    }
-    return teams
+        name: options[id]
+      }
+    })
   }
 }
 

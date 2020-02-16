@@ -12,7 +12,14 @@ const mutations = {
   }
 }
 
+const getters = {
+  recentFiles ({ files }) {
+    return files
+  }
+}
+
 export default {
   state,
+  getters,
   mutations
 }

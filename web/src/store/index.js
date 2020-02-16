@@ -11,11 +11,15 @@ import folder from './folder.module'
 import owner from './owner.module'
 import group from './group.module'
 
+import UserService from '@/service/user'
+import { LOAD_SERVER, HANDLE_SERVER_STATE, PROCESS_SERVER_STATE } from './actions.type'
+
 Vue.use(Vuex)
 
 // TODO: Much of this root level code should be in or is already apart of
 //  the search.module; move all search related code to the search.module.
 export default new Vuex.Store({
+  strict: true,
   modules: {
     auth,
     file,
@@ -46,5 +50,10 @@ export default new Vuex.Store({
   },
 
   actions: {
+    async [LOAD_SERVER] ({ commit, dispatch }) {
+      let res = await UserService.completeProfile()
+      dispatch(HANDLE_SERVER_STATE, res.data)
+      commit(PROCESS_SERVER_STATE, res.data)
+    }
   }
 })
