@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
 	//"log"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -269,6 +270,9 @@ func initcoll(c map[string]string) map[string]string {
 	if _, ok := c["acronym"]; !ok {
 		c["acronym"] = "acronym"
 	}
+	if _, ok := c["view"]; !ok {
+		c["view"] = "view"
+	}
 	return c
 }
 
@@ -332,6 +336,13 @@ func (d *Database) Tag(c context.Context) database.Tagbase {
 
 func (d *Database) Acronym(c context.Context) database.Acronymbase {
 	n := new(Acronymbase)
+	n.Database = *d
+	n.initclient(c)
+	return n
+}
+
+func (d *Database) View(c context.Context) database.Viewbase {
+	n := new(Viewbase)
 	n.Database = *d
 	n.initclient(c)
 	return n

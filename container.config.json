@@ -27,6 +27,7 @@
 		"start": "2s",
 		"restart_time": "40m"
 	},
+  "gotenpath": "http://gotenberg:3000",
 	"smtp": {
 		"active": true,
 		"identity": "",

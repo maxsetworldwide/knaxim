@@ -39,8 +39,13 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/thecodingmachine/gotenberg-go-client/v7 v7.0.1 h1:Wo9xMmkOqJoZ7y10ACGM5oNJVWMuIMWouFCsJW84t1o=
+github.com/thecodingmachine/gotenberg-go-client/v7 v7.0.1/go.mod h1:ABZ2YPzV+IMgtj91+DkoB8/y3qezCQvWhKnGxkY2cSs=
+github.com/thecodingmachine/gotenberg-go-client/v7 v7.1.0 h1:lQNb3PUKnKOODxoxvZkMjCbX9rh4ofyC3Bvx22rC20U=
+github.com/thecodingmachine/gotenberg-go-client/v7 v7.1.0/go.mod h1:ABZ2YPzV+IMgtj91+DkoB8/y3qezCQvWhKnGxkY2cSs=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c h1:u40Z8hqBAAQyv+vATcGgV0YCnDjqSL7/q/JyPhhJSPk=

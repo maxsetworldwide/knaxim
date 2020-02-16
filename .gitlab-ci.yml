@@ -73,6 +73,14 @@ internalHandlers:
   stage: test
   tags:
     - golang
+  services:
+    - name: lexpredict/tika-server:latest
+      alias: tika
+    - name: thecodingmachine/gotenberg:latest
+      alias: gotenberg
+  variables:
+    TIKA_PATH: http://tika:9998
+    GOTENBERG_PATH: http://gotenberg:3000
   script:
     - cd internal/handlers
     - go test
@@ -106,8 +114,11 @@ fileProcessing:
   services:
     - name: lexpredict/tika-server:latest
       alias: tika
+    - name: thecodingmachine/gotenberg:latest
+      alias: gotenberg
   variables:
     TIKA_PATH: http://tika:9998
+    GOTENBERG_PATH: http://gotenberg:3000
   script:
     - cd internal/database/process
     - go test -v

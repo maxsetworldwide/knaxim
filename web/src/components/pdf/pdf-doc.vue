@@ -1,3 +1,8 @@
+<!--
+  events:
+    no-view: emitted when the request for the view from the server returns
+             with an error
+-->
 <template>
   <div class="h-100">
     <b-container class="h-100" fluid>
@@ -69,7 +74,7 @@ export default {
   },
   computed: {
     url () {
-      return FileService.downloadURL({ fid: this.fileID })
+      return FileService.viewURL({ fid: this.fileID })
     },
     matchList () {
       let result = []
@@ -143,6 +148,7 @@ export default {
           this.pdf = pdf
         })
         .catch(() => {
+          this.$emit('no-view')
           // console.log(err)
         })
     }
@@ -154,6 +160,7 @@ export default {
         this.pdf = pdf
       })
       .catch(() => {
+        this.$emit('no-view')
         // console.log(err)
       })
   },
