@@ -2,39 +2,57 @@
   <b-dropdown class="file-list-batch" no-caret variant="link" size="sm">
     <template v-slot:button-content>
       <svg class="more">
-        <use href="../assets/app.svg#more"/>
+        <use href="../assets/app.svg#more" />
       </svg>
     </template>
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="newFolder">
       <svg>
-        <use href="../assets/app.svg#folder-2"/>
+        <use href="../assets/app.svg#folder-2" />
       </svg>
       <span>Folder+</span>
     </b-dropdown-item>
 
-    <b-dropdown-divider/>
+    <b-dropdown-divider />
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="share">
       <svg>
-        <use href="../assets/app.svg#share"/>
+        <use href="../assets/app.svg#share" />
       </svg>
       <span>Share</span>
     </b-dropdown-item>
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="addFavorite">
       <svg>
-        <use href="../assets/app.svg#star"/>
+        <use href="../assets/app.svg#star" />
       </svg>
       <span v-if="removeFavorite">UnFavorite</span>
       <span v-else>Favorite</span>
     </b-dropdown-item>
 
-    <batch-delete v-if="!singleFile" :files="checkedFiles" #default="{ inputEvents }"
-        v-on:delete-files="$emit('delete-files')">
+    <b-dropdown-item v-if="singleFile" href="#" @click="downloadOriginal">
+      <svg>
+        <use href="../assets/app.svg#cloud" />
+      </svg>
+      <span>Download Original</span>
+    </b-dropdown-item>
+
+    <b-dropdown-item v-if="singleFile" href="#" @click="downloadPdf">
+      <svg>
+        <use href="../assets/app.svg#pdf" />
+      </svg>
+      <span>Download as PDF</span>
+    </b-dropdown-item>
+
+    <batch-delete
+      v-if="!singleFile"
+      :files="checkedFiles"
+      #default="{ inputEvents }"
+      v-on:delete-files="$emit('delete-files')"
+    >
       <b-dropdown-item href="#" v-on="inputEvents" :disabled="!fileSelected">
         <svg>
-          <use href="../assets/app.svg#bin"/>
+          <use href="../assets/app.svg#bin" />
         </svg>
         <span>Delete</span>
       </b-dropdown-item>
@@ -73,28 +91,34 @@ export default {
     },
     share () {
       this.$emit('share-file')
+    },
+    downloadOriginal () {
+      this.$emit('download-orig')
+    },
+    downloadPdf () {
+      this.$emit('download-pdf')
     }
   }
 }
 </script>
 
 <style lang="scss">
-  .file-list-batch {
-    .dropdown {
-      height: 35px;
-    }
-
-    svg {
-      width: 25px;
-      height: 25px;
-      margin-right: 15px;
-    }
-
-    .more {
-      width: 40px;
-      height: 40px;
-      margin-left: 50%;
-      margin-top: -20%;
-    }
+.file-list-batch {
+  .dropdown {
+    height: 35px;
   }
+
+  svg {
+    width: 25px;
+    height: 25px;
+    margin-right: 15px;
+  }
+
+  .more {
+    width: 40px;
+    height: 40px;
+    margin-left: 50%;
+    margin-top: -20%;
+  }
+}
 </style>

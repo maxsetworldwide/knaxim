@@ -53,6 +53,8 @@ events:
         @favorite="adjustFavorite"
         @add-folder="showFolderModal"
         @share-file="showShareModal"
+        @download-orig="downloadOrig"
+        @download-pdf="downloadPdf"
       />
       <folder-modal
         ref="folderModal"
@@ -73,6 +75,7 @@ events:
 import FileListBatch from '@/components/file-list-batch'
 import FolderModal from '@/components/modals/folder-modal'
 import ShareModal from '@/components/modals/share-modal'
+import FileService from '@/service/file'
 import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 
@@ -147,6 +150,12 @@ export default {
         name,
         group: this.activeGroup ? this.activeGroup.id : undefined
       })
+    },
+    downloadOrig () {
+      window.location.href = FileService.downloadURL({ fid: this.id })
+    },
+    downloadPdf () {
+      window.location.href = FileService.viewURL({ fid: this.id })
     }
   },
   watch: {
