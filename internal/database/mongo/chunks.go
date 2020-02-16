@@ -14,8 +14,8 @@ type contentchunk struct {
 
 const chunksize = 15 << 20
 
-func chunkify(ID filehash.StoreID, content []byte) []*contentchunk {
-	var chunks []*contentchunk
+func chunkify(ID filehash.StoreID, content []byte) []interface{} {
+	var chunks []interface{}
 	var i uint32
 	for start := 0; start < len(content); start += chunksize {
 		end := start + chunksize

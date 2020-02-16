@@ -82,11 +82,9 @@ func (db *Storebase) Insert(fs *database.FileStore) error {
 	}
 	{
 		chunks := chunkify(fs.ID, fs.Content)
-		ichunks := make([]interface{}, len(chunks))
-		copy(ichunks, chunks)
 		_, e := db.client.Database(db.DBName).Collection(db.CollNames["chunk"]).InsertMany(
 			db.ctx,
-			ichunks,
+			chunks,
 			options.InsertMany().SetOrdered(false),
 		)
 		if e != nil {
