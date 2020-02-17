@@ -1,12 +1,13 @@
 import Vue from 'vue'
 import FolderService from '@/service/folder'
 import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE } from './actions.type'
-import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE } from './mutations.type'
+import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from './mutations.type'
 
 const state = {
   user: {}, // map filename to list of fileids
   loading: 0, // when greater then 0 folders are being loaded
-  group: {} // map[group id]map[filename][]fileid
+  group: {}, // map[group id]map[filename][]fileid
+  active: []
 }
 
 const actions = {
@@ -65,6 +66,19 @@ const actions = {
 }
 
 const mutations = {
+  [ACTIVATE_GROUP] (context) {
+    context.active = []
+  },
+  [ACTIVATE_FOLDER] (context, name) {
+    let newactive = context.active.filter(val => {
+      return val !== name
+    })
+    newactive.unshift(name)
+    context.active = newactive
+  },
+  [DEACTIVATE_FOLDER] (context, name) {
+    context.active = context.active.filter(val => val !== name)
+  },
   [FOLDER_LOADING] (context, delta) {
     context.loading += delta
   },
@@ -115,33 +129,28 @@ const mutations = {
 }
 
 const getters = {
-  userFolders (state) {
-    if (!state.user) {
-      return []
+  folders (state, getters) {
+    if (!getters.activeGroup) {
+      return state.user
     }
-    return state.user.keys()
+    return state.group[getters.activeGroup]
   },
-  groupFolders (state) {
-    return ({ group }) => {
-      if (!group) {
-        return []
-      }
-      if (!state.group[group]) {
-        return []
-      }
-      return state.group[group].keys()
-    }
-  },
-  getFolder (state) {
-    return ({ group, name }) => {
-      if (!group) {
+  getFolder (state, getters) {
+    return (name) => {
+      if (!getters.activeGroup) {
         return state.user[name] || []
       }
-      if (!state.group[group]) {
+      if (!state.group[getters.activeGroup]) {
         return []
       }
-      return state.group[group][name] || []
+      return state.group[getters.activeGroup][name] || []
     }
+  },
+  activeFolders ({ active }) {
+    return active
+  },
+  folderLoading ({ loading }) {
+    return loading > 0
   }
 }
 

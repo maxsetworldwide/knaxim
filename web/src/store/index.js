@@ -33,13 +33,20 @@ export default new Vuex.Store({
   },
   // TODO: Extract all the search functionality into a module!
   state: {
-    appSideType: null,
-    selected: ''
+    appSideType: null
   },
 
   getters: {
-    getAppSideType (state) {
+    appSideType (state) {
       return state.appSideType
+    },
+    loading (s, g) {
+      return g.fileLoading ||
+      g.folderLoading ||
+      g.authLoading ||
+      g.groupLoading ||
+      g.ownerLoading ||
+      g.searchLoading
     }
   },
 

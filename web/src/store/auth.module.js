@@ -10,12 +10,14 @@ import {
   SET_USER,
   PURGE_AUTH,
   SET_ERROR,
-  PROCESS_SERVER_STATE
+  PROCESS_SERVER_STATE,
+  AUTH_LOADING
 } from './mutations.type'
 
 const state = {
   errors: null,
-  user: null
+  user: null,
+  loading: 0
 }
 
 const getters = {
@@ -24,6 +26,9 @@ const getters = {
   },
   isAuthenticated (state) {
     return !!state.user
+  },
+  authLoading ({ loading }) {
+    return loading > 0
   }
 }
 
@@ -39,7 +44,8 @@ const actions = {
    */
   [LOGIN] (context, credentials) {
     context.commit(PURGE_AUTH)
-    return new Promise((resolve, reject) => {
+    context.commit(AUTH_LOADING, 1)
+    return (new Promise((resolve, reject) => {
       UserService.login({
         name: credentials.login,
         pass: credentials.password
@@ -55,7 +61,7 @@ const actions = {
         context.commit(SET_ERROR, response.data)
         reject(response)
       })
-    })
+    })).finally(() => context.commit(AUTH_LOADING, -1))
   },
 
   /**
@@ -66,9 +72,12 @@ const actions = {
    */
   [LOGOUT] (context) {
     context.commit(PURGE_AUTH)
+    context.commit(AUTH_LOADING, 1)
     UserService.logout().then(({ data }) => {
     }).catch(({ response }) => {
       context.commit(SET_ERROR, response.data)
+    }).finally(() => {
+      context.commit(AUTH_LOADING, -1)
     })
   },
 
@@ -83,7 +92,8 @@ const actions = {
    * @return {Promise}
    */
   [REGISTER] (context, credentials) {
-    return new Promise((resolve, reject) => {
+    context.commit(AUTH_LOADING, 1)
+    return (new Promise((resolve, reject) => {
       UserService.create({
         email: credentials.email,
         name: credentials.login,
@@ -99,7 +109,7 @@ const actions = {
         context.commit(SET_ERROR, response.data.errors)
         reject(response)
       })
-    })
+    })).finally(() => context.commit(AUTH_LOADING, -1))
   },
 
   /**
@@ -108,7 +118,8 @@ const actions = {
    * @return {Promise}
    */
   [GET_USER] (context) {
-    return new Promise((resolve, reject) => {
+    context.commit(AUTH_LOADING, 1)
+    return (new Promise((resolve, reject) => {
       UserService.info({})
         .then(({ data }) => {
           if (data.message === 'login') {
@@ -121,7 +132,7 @@ const actions = {
         }).catch(({ response }) => {
           context.commit(SET_ERROR, response.data.errors)
         })
-    })
+    })).finally(() => context.commit(AUTH_LOADING, -1))
   }
 }
 
@@ -147,6 +158,10 @@ const mutations = {
       data: user.data
     }
     state.errors = null
+  },
+
+  [AUTH_LOADING] (state, delta) {
+    state.loading += delta
   }
 }
 

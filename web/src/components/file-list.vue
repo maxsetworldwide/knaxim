@@ -14,92 +14,45 @@
     <p v-if="folderFilters.length > 0">
       Open Folders: <span v-for="fold in folderFilters" :key="fold">{{ fold }} <span @click="closeFolder(fold)" class="removeFolder">X</span> </span>
     </p>
-    <b-table
-      ref="fileTable"
-      striped
-      hover
-      selectable
-      :items="rows"
-      :fields="columnHeaders"
-      :busy="loading"
-      :sort-compare="sortCompare"
-      @row-selected="onCheck"
-    >
-      <template v-slot:table-colgroup="scope">
-        <col
-          v-for="field in scope.fields"
-          :key="field.key"
-          :class="field.class"
-        >
-      </template>
-      <template v-slot:head(expand)="col">
-        <svg @click.stop="expandAll">
-          <use href="../assets/app.svg#expand-tri" class="triangle"/>
-        </svg>
-      </template>
-      <template v-slot:table-busy>
-        <div class="text-center">
-          <b-spinner class="align-middle"></b-spinner>
-          <strong>Loading...</strong>
-        </div>
-      </template>
-      <template v-slot:head(select)>
-        <b-checkbox v-model="selectAllMode"/>
-      </template>
-      <template v-slot:cell(select)="{ rowSelected }">
-        <template v-if="rowSelected">
-          <span aria-hidden="true">&check;</span>
-        </template>
-        <template v-else>
-          <span aria-hidden="true">&nbsp;</span>
-        </template>
-      </template>
-      <template v-slot:head(action)>
-        <file-list-batch :checkedFiles="selected"
-          :removeFavorite="src === 'favorites'"
-          :fileSelected="selectAllMode"
-          @favorite="adjustFavorite"
-          @add-folder="showFolderModal"
-          @delete-files="refresh"
-          @share-file="showShareModal"
-        />
-        <folder-modal
-          ref="folderModal"
-          id="newFolderModal"
-          @new-folder="createFolder"
-        />
-        <share-modal
-          ref="shareModal"
-          id="file-list-share-modal"
-          :files="selected"
-        />
-      </template>
-      <template v-slot:cell(name)="data">
-        <span v-if="data.item.isFolder" class="file-name" @click.prevent.stop="openFolder(data.value)">{{ data.value }}</span>
-        <span v-else class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
-      </template>
-      <template v-slot:cell(expand)="row">
-        <svg v-if="row.item.preview" @click.stop="row.toggleDetails">
-          <use href="../assets/app.svg#expand-tri" class="triangle"/>
-        </svg>
-      </template>
-      <template v-slot:row-details="row">
-        <span>{{ row.item.preview }}</span>
-      </template>
-      <template v-slot:cell(action)="data">
-        <file-icon :extention="(data.item.ext || '')" :folder="data.item.isFolder" :webpage="!!data.item.url"/>
-      </template>
-    </b-table>
+     <file-table
+        :files="fileids"
+        :folders="folders"
+        :busy="busy"
+        @selection="onCheck"
+        @open-folder="openFolder"
+        @open="open"
+      >
+       <template #action>
+         <file-list-batch :checkedFiles="selected"
+           :removeFavorite="src === 'favorites'"
+           :fileSelected="selectAllMode"
+           @favorite="adjustFavorite"
+           @add-folder="showFolderModal"
+           @delete-files="refresh"
+           @share-file="showShareModal"
+         />
+         <folder-modal
+           ref="folderModal"
+           id="newFolderModal"
+           @new-folder="createFolder"
+         />
+         <share-modal
+           ref="shareModal"
+           id="file-list-share-modal"
+           :files="selected"
+         />
+       </template>
+     </file-table>
   </div>
 
 </template>
 
 <script>
-import uploadModal from '@/components/modals/upload-modal'
+import UploadModal from '@/components/modals/upload-modal'
 import FolderModal from '@/components/modals/folder-modal'
 import ShareModal from '@/components/modals/share-modal'
-import fileListBatch from '@/components/file-list-batch'
-import fileIcon from '@/components/file-icon'
+import FileListBatch from '@/components/file-list-batch'
+import FileTable from '@/components/file-table'
 import { LOAD_FOLDERS, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, GET_USER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 import FileService from '@/service/file'
@@ -112,11 +65,11 @@ import { EventBus, humanReadableSize, humanReadableTime } from '@/plugins/utils'
 export default {
   name: 'file-list',
   components: {
-    uploadModal,
-    fileListBatch,
+    UploadModal,
+    FileListBatch,
     FolderModal,
     ShareModal,
-    fileIcon
+    FileTable
   },
   props: {
     src: String
@@ -124,45 +77,7 @@ export default {
   data () {
     return {
       checked: [], // Only manipulated via onCheck method
-      fileSet: {
-        owned: {},
-        shared: {}
-      },
-      loading: true,
-      recents: [],
-      ownerNames: {},
       folderFilters: [],
-      columnHeaders: [
-        {
-          key: 'select'
-        },
-        {
-          key: 'action',
-          class: 'action-column'
-        },
-        {
-          key: 'name',
-          class: 'name-column',
-          sortable: true
-        },
-        {
-          key: 'expand',
-          label: '',
-          class: 'expand-column'
-        },
-        {
-          key: 'owner',
-          sortable: true
-        },
-        {
-          key: 'date',
-          sortable: true
-        },
-        {
-          key: 'size',
-          sortable: true
-        }
-      ]
     }
   },
   created () {
@@ -170,76 +85,24 @@ export default {
     this.refresh()
   },
   computed: {
-    gid () {
-      if (!this.activeGroup) {
-        return ''
-      }
-      return this.activeGroup.id
-    },
     files () {
       if (this.src === 'recents') {
-        return (this.recents || [])
+        return this.recentFiles || []
       } else if (this.src === 'favorites') {
-        return (this.favoriteFolder.map(
-          function (id) {
-            return this[id]
-          },
-          { ...this.fileSet.owned, ...this.fileSet.shared }
-        ) || [])
+        return this.folders['_favorites_'] || []
       } else if (this.src === 'shared') {
-        return Object.values(this.fileSet.shared)
+        return this.sharedFiles
       } else if (this.src === 'owned') {
-        return Object.values(this.fileSet.owned)
+        return this.ownedFiles
       }
-      return [...Object.values(this.fileSet.owned), ...Object.values(this.fileSet.shared)]
+      return [...this.ownedFiles, this.sharedFiles]
     },
-    filterFiles () {
-      return this.files.filter(file => {
-        return this.folderFilters.map(name => this.folders[name]).reduce((acc, content) => {
-          return acc && content.reduce((accu, id) => {
-            return accu || id === file.id
-          }, false)
+    fileids () {
+      return this.files.filter(id => {
+        return this.activeFolders.reduce((acc, name) => {
+          return acc && this.folders[name].indexOf(id) > -1
         }, true)
       })
-    },
-    fileRows () {
-      return this.filterFiles.map((file) => {
-        if (!file) {
-          return { filterRemove: true }
-        }
-        let splitname = [file.name, '']
-        if (file.name.split && !file.url) {
-          let splits = file.name.split('.')
-          if (splits.length > 1) {
-            splitname[0] = splits.slice(0, -1).join('.')
-            splitname[1] = splits[splits.length - 1]
-          }
-        }
-        return {
-          id: file.id,
-          url: file.url,
-          isFolder: false,
-          name: splitname[0],
-          ext: splitname[1],
-          owner: this.ownerNames[file.own],
-          size: file.size && humanReadableSize(file.size),
-          sizeInt: file.size,
-          date: file.date && humanReadableTime(file.date.upload),
-          dateInt: file.date ? Date.parse(file.date.upload) : 0,
-          preview: file.preview,
-          _showDetails: (file._showDetails || false)
-        }
-      }).filter(f => !f.filterRemove)
-    },
-    folders () {
-      if (!this.gid) {
-        return this.$store.state.folder.user
-      } else {
-        return this.$store.state.folder.group[this.gid]
-      }
-    },
-    favoriteFolder () {
-      return (this.$store.state.folder.user['_favorites_'] || [])
     },
     folderRows () {
       var rows = []
@@ -257,9 +120,6 @@ export default {
         }
       }
       return rows
-    },
-    rows () {
-      return [ ...this.folderRows, ...this.fileRows ]
     },
     promptUpload () {
       if (this.src) {
@@ -294,7 +154,7 @@ export default {
         return acc || row._showDetails
       }, false)
     },
-    ...mapGetters(['isAuthenticated', 'fileMap', 'activeGroup'])
+    ...mapGetters(['isAuthenticated', 'ownedFiles', 'sharedFiles', 'recentFiles', 'folders', 'activeFolders'])
   },
   methods: {
     refresh () {

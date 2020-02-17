@@ -189,4 +189,21 @@ body {
 .teamselect {
   max-width: 18%;
 }
+.empty {
+  text-align: center;
+  margin-top: 10%;
+  button {
+    background-color: white;
+    border-radius: 10px;
+    border: 0px;
+    width: 160px;
+    height: 80px;
+    color: rgb(46, 46, 46);
+  }
+
+  button:hover {
+    background-color: rgb(150, 182, 252);
+    color: rgb(46, 46, 46);
+  }
+}
 </style>

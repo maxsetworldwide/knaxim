@@ -4,12 +4,14 @@ import { AFTER_LOGIN, REFRESH_GROUPS, CREATE_GROUP } from './actions.type'
 import {
   SET_GROUP,
   ACTIVATE_GROUP,
-  PROCESS_SERVER_STATE
+  PROCESS_SERVER_STATE,
+  GROUP_LOADING
 } from './mutations.type'
 
 const state = {
   active: null,
-  options: {}
+  options: {},
+  loading: 0
 }
 
 const actions = {
@@ -17,6 +19,7 @@ const actions = {
     context.dispatch(REFRESH_GROUPS)
   },
   async [REFRESH_GROUPS] (context) {
+    context.commit(GROUP_LOADING, 1)
     let data = await GroupService.associated({}).then(res => res.data)
     if (data.own) {
       data.own.forEach(t => {
@@ -28,10 +31,13 @@ const actions = {
         context.commit(SET_GROUP, t)
       })
     }
+    context.commit(GROUP_LOADING, -1)
   },
   async [CREATE_GROUP] (context, { name }) {
+    context.commit(GROUP_LOADING, 1)
     await GroupService.create({ name })
     await context.dispatch(REFRESH_GROUPS)
+    context.commit(GROUP_LOADING, -1)
   }
 }
 
@@ -44,6 +50,9 @@ const mutations = {
   },
   [PROCESS_SERVER_STATE] ({ commit }, { groups }) {
     groups.values().forEach(v => commit(SET_GROUP, v))
+  },
+  [GROUP_LOADING] (state, delta) {
+    state.loading += delta
   }
 }
 
@@ -62,6 +71,9 @@ const getters = {
         name: options[id]
       }
     })
+  },
+  groupLoading ({ loading }) {
+    return loading > 0
   }
 }
 
