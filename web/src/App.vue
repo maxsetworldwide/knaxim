@@ -58,7 +58,13 @@
           <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <router-view />
+              <div v-if="!isAuthenticated" class="empty">
+                <h1>You aren't logged in!</h1>
+                <b-button @click="showAuth">
+                  <h3>Login</h3>
+                </b-button>
+              </div>
+              <router-view v-else/>
             </div>
           </b-col>
 
@@ -102,6 +108,9 @@ export default {
     }
   },
   methods: {
+    showAuth () {
+      this.$router.push('/login')
+    },
     // Used by ErrorControl to display specific errors: login, ...
     makeToast (msg, append = false) {
       this.$bvToast.toast(msg, {

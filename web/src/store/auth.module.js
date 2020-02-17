@@ -48,7 +48,6 @@ const actions = {
           context.commit(SET_ERROR, data)
           reject(data)
         } else {
-          context.dispatch(GET_USER, {})
           context.dispatch(AFTER_LOGIN, {})
           resolve(data)
         }

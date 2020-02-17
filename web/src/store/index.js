@@ -12,7 +12,7 @@ import owner from './owner.module'
 import group from './group.module'
 
 import UserService from '@/service/user'
-import { LOAD_SERVER, HANDLE_SERVER_STATE, PROCESS_SERVER_STATE } from './actions.type'
+import { LOAD_SERVER, HANDLE_SERVER_STATE, PROCESS_SERVER_STATE, AFTER_LOGIN } from './actions.type'
 
 Vue.use(Vuex)
 
@@ -54,6 +54,9 @@ export default new Vuex.Store({
       let res = await UserService.completeProfile()
       dispatch(HANDLE_SERVER_STATE, res.data)
       commit(PROCESS_SERVER_STATE, res.data)
+    },
+    [AFTER_LOGIN] ({ dispatch }) {
+      dispatch(LOAD_SERVER)
     }
   }
 })

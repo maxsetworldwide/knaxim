@@ -1,14 +1,8 @@
 <template>
   <!-- prompt Login -->
-  <div v-if="!isAuthenticated" class="empty">
-    <h1>You aren't logged in!</h1>
-    <b-button @click="showAuth">
-      <h3>Login</h3>
-    </b-button>
-  </div>
 
   <!-- No files exist -->
-  <div v-else-if="promptUpload && !loading" class="empty">
+  <div v-if="promptUpload && !loading" class="empty">
     <h1>No files!</h1>
     <b-button v-b-modal="'file-list-upload'">
       <h3>Add file?</h3>
@@ -405,9 +399,7 @@ export default {
         this.loading = false
       })
     },
-    showAuth () {
-      this.$router.push('/login')
-    },
+
     sortCompare (a, b, key) {
       if (key === 'date') {
         return a.dateInt - b.dateInt
