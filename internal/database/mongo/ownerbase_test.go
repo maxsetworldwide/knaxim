@@ -14,7 +14,7 @@ func TestOwnerbase(t *testing.T) {
 	db := new(Database)
 	*db = *configuration.DB
 	db.DBName = "TestOwners"
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	if err := db.Init(ctx, true); err != nil {
 		t.Fatal("Inable to init database", err)
@@ -178,6 +178,21 @@ func TestOwnerbase(t *testing.T) {
 		}
 		if current.(database.GroupI).GetName() != newowner.GetName() {
 			t.Fatalf("update had no effect: %+#v", current)
+		}
+	})
+
+	t.Run("Reset", func(t *testing.T) {
+		key, err := ob.GetResetKey(data[0].GetID())
+		if err != nil {
+			t.Fatal("unable to get reset key: ", err)
+		}
+		t.Log("key: ", key)
+		oid, err := ob.CheckResetKey(key)
+		if err != nil {
+			t.Fatal("unable to check reset key")
+		}
+		if !oid.Equal(data[0].GetID()) {
+			t.Fatal("incorrect returned Owner ID: ", oid)
 		}
 	})
 }
