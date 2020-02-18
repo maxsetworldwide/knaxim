@@ -1,5 +1,5 @@
 import FileService from '@/service/file'
-import { CREATE_FILE } from './actions.type'
+import { LOAD_SERVER, CREATE_FILE, DELETE_FILES } from './actions.type'
 import {
   FILE_LOADING,
   SET_FILE,
@@ -22,7 +22,22 @@ const actions = {
     context.commit(FILE_LOADING, 1)
     return FileService.create(params)
       .then(res => res.data)
-      .finally(() => { context.commit(FILE_LOADING, -1) })
+      .finally(() => {
+        context.dispatch(LOAD_SERVER)
+        context.commit(FILE_LOADING, -1)
+      })
+  },
+  [DELETE_FILES] ({ commit, dispatch }, { ids }) {
+    commit(FILE_LOADING, 1)
+    return Promise.allSettled(
+      ids.map(
+        id => FileService.erase({ fid: id })
+      )
+    )
+      .finally(() => {
+        dispatch(LOAD_SERVER)
+        commit(FILE_LOADING, -1)
+      })
   }
 }
 
