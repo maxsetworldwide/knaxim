@@ -11,8 +11,8 @@
   </div>
 
   <div v-else>
-    <p v-if="folderFilters.length > 0">
-      Open Folders: <span v-for="fold in folderFilters" :key="fold">{{ fold }} <span @click="closeFolder(fold)" class="removeFolder">X</span> </span>
+    <p v-if="activeFolders.length > 0">
+      Open Folders: <span v-for="fold in activeFolders" :key="fold">{{ fold }} <span @click="closeFolder(fold)" class="removeFolder">X</span> </span>
     </p>
      <file-table
         :files="fileids"
@@ -70,8 +70,7 @@ export default {
   },
   data () {
     return {
-      checked: [], // Only manipulated via onCheck method
-      folderFilters: []
+      checked: [] // Only manipulated via onCheck method
     }
   },
   created () {
@@ -112,7 +111,7 @@ export default {
       return rows
     },
     promptUpload () {
-      if (this.src) {
+      if (this.src || this.activeGroup) {
         return false
       }
       return this.files.length === 0
@@ -141,7 +140,7 @@ export default {
         this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
           fid,
           name: '_favorites_',
-          group: (this.activeGroup.id || undefined)
+          group: this.activeGroup ? this.activeGroup.id : undefined
         })
       })
     },
@@ -155,7 +154,7 @@ export default {
       this.checked.forEach((fid) => {
         this.$store.dispatch(
           PUT_FILE_FOLDER,
-          { fid, name, group: (this.activeGroup.id || undefined) }
+          { fid, name, group: (this.activeGroup ? this.activeGroup.id : undefined) }
         )
       })
     }

@@ -132,8 +132,10 @@ const actions = {
         }).catch(({ response }) => {
           if (response && response.message) {
             context.commit(SET_ERROR, response.message)
+            reject(new Error(response.message))
           } else {
             context.commit(SET_ERROR, 'unable to get user')
+            reject(new Error('unable to get user'))
           }
         })
     })).finally(() => context.commit(AUTH_LOADING, -1))

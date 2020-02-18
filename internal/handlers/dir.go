@@ -133,7 +133,11 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	filematches, _, err := tagbase.GetFiles([]tag.Tag{tagfilter})
 	if err != nil {
-		panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
+		if err == database.ErrNoResults {
+			w.WriteHeader(204)
+		} else {
+			panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
+		}
 	}
 
 	w.Set("name", strings.ToLower(tagfilter.Word))

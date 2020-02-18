@@ -47,7 +47,7 @@
     <span v-else class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
   </template>
   <template v-slot:cell(expand)="row">
-    <svg @click.stop="openPreview(row)">
+    <svg v-if="!row.item.isFolder" @click.stop="openPreview(row)">
       <use href="../assets/app.svg#expand-tri" class="triangle"/>
     </svg>
   </template>
@@ -124,10 +124,10 @@ export default {
         return this.selected
       },
       set (newValue) {
-        if (!newValue && this.checked.length > 0) {
+        if (!newValue && this.selected) {
           this.unselectAll()
         }
-        if (newValue && this.checked.length === 0) {
+        if (newValue && !this.selected) {
           this.selectAll()
         }
       }

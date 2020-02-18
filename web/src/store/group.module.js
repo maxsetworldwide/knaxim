@@ -75,14 +75,14 @@ const getters = {
     if (!state.active) return null
     return {
       id: state.active,
-      name: state.options[state.active]
+      name: state.names[state.active]
     }
   },
-  availableGroups ({ options }) {
-    return (options ? options.keys() : []).map(id => {
+  availableGroups ({ ids, names }) {
+    return ids.map(id => {
       return {
         id,
-        name: options[id]
+        name: names[id]
       }
     })
   },
