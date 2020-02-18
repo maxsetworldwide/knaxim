@@ -1,17 +1,19 @@
 <template>
   <b-col cols="2">
     <div class="app-info">
-      <div
-          class="header-search-list w-75 ml-auto">
+      <div class="header-search-list w-75 ml-auto">
         <!-- Search History Items  -->
-        <router-link v-for="item in searchMatches"
-           :key="item.id"
-           class="w-100"
-           :to="`/file/` + item.id">
-           <div class="divider">
-             {{ item.name }}
+        <b-link v-for="item in expandedSearchMatches"
+          :key="item.id"
+          class="w-100"
+          :class="{ 'active-item': item.isActive }"
+          :disabled="!!item.isActive"
+          :to="`/file/` + item.id"
+        >
+          <div class="divider">
+            {{ item.name }}
           </div>
-        </router-link>
+        </b-link>
       </div>
     </div>
   </b-col>
@@ -31,7 +33,15 @@ export default {
   computed: {
     ...mapGetters([
       'searchMatches'
-    ])
+    ]),
+    expandedSearchMatches () {
+      return this.searchMatches.map((item) => {
+        return {
+          ...item,
+          isActive: item.id === this.$route.params.id
+        }
+      })
+    }
   }
 }
 </script>
@@ -42,6 +52,9 @@ export default {
   .divider {
     border-bottom: 2px solid gray;
     padding-top: 5px;
+  }
+  .active-item {
+    color: black;
   }
 }
 

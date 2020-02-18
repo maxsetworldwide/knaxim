@@ -294,6 +294,9 @@ func initcoll(c map[string]string) map[string]string {
 	if _, ok := c["reset"]; !ok {
 		c["reset"] = "reset"
 	}
+	if _, ok := c["view"]; !ok {
+		c["view"] = "view"
+	}
 	return c
 }
 
@@ -357,6 +360,13 @@ func (d *Database) Tag(c context.Context) database.Tagbase {
 
 func (d *Database) Acronym(c context.Context) database.Acronymbase {
 	n := new(Acronymbase)
+	n.Database = *d
+	n.initclient(c)
+	return n
+}
+
+func (d *Database) View(c context.Context) database.Viewbase {
+	n := new(Viewbase)
 	n.Database = *d
 	n.initclient(c)
 	return n

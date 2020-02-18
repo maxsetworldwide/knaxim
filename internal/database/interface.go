@@ -18,6 +18,7 @@ const (
 	CONTENT
 	TAG
 	ACRONYM
+	VIEW
 )
 
 var (
@@ -40,6 +41,7 @@ type Database interface {
 	Content(context.Context) Contentbase
 	Tag(context.Context) Tagbase
 	Acronym(context.Context) Acronymbase
+	View(context.Context) Viewbase
 	Close(context.Context) error
 	GetContext() context.Context
 }
@@ -104,4 +106,10 @@ type Acronymbase interface {
 	Database
 	Put(string, string) error
 	Get(string) ([]string, error)
+}
+
+type Viewbase interface {
+	Database
+	Insert(*ViewStore) error
+	Get(filehash.StoreID) (*ViewStore, error)
 }

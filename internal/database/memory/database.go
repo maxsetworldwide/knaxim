@@ -25,6 +25,7 @@ type Database struct {
 	Lines     map[string][]database.ContentLine // key filehash.StoreID.String()
 	TagFiles  map[string]map[string]tag.Tag     // key filehash.FileID.String() => word string => tag
 	TagStores map[string]map[string]tag.Tag     // key filehash.StoreID.String() => word string => tag
+	Views     map[string]*database.ViewStore    // key filehash.StoreID.String()
 	Acronyms  map[string][]string
 }
 
@@ -46,6 +47,7 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	db.Lines = make(map[string][]database.ContentLine)
 	db.TagFiles = make(map[string]map[string]tag.Tag)
 	db.TagStores = make(map[string]map[string]tag.Tag)
+	db.Views = make(map[string]*database.ViewStore)
 	db.Acronyms = make(map[string][]string)
 	return nil
 }
@@ -140,6 +142,19 @@ func (db *Database) Acronym(c context.Context) database.Acronymbase {
 	countLock.Lock()
 	defer countLock.Unlock()
 	out := &Acronymbase{
+		Database: *db,
+	}
+	out.ctx = c
+	connectionCount += 1
+	return out
+}
+
+func (db *Database) View(c context.Context) database.Viewbase {
+	lock.Lock()
+	defer lock.Unlock()
+	countLock.Lock()
+	defer countLock.Unlock()
+	out := &Viewbase{
 		Database: *db,
 	}
 	out.ctx = c

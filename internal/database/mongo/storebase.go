@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -64,55 +63,6 @@ func (db *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
 	return *out, nil
 }
 
-type contentchunk struct {
-	ID    filehash.StoreID `bson:"id"`
-	Index uint32           `bson:"idx"`
-	Data  []byte           `bson:"data"`
-}
-
-const chunksize = 15 << 20
-
-func chunksort(list []*contentchunk) []*contentchunk {
-	pos := 0
-	for pos < len(list) {
-		target := int(list[pos].Index)
-		if target == pos {
-			pos++
-		} else {
-			if target == int(list[target].Index) {
-				panic(errors.New("Improper chunk list"))
-			}
-			list[pos], list[target] = list[target], list[pos]
-		}
-	}
-	return list
-}
-
-func appendchunks(list []*contentchunk) []byte {
-	out := make([]byte, 0, (len(list)-1)*chunksize+len(list[len(list)-1].Data))
-	for _, chunk := range list {
-		out = append(out, chunk.Data...)
-	}
-	return out
-}
-
-func filterchunks(list []*contentchunk) [][]*contentchunk {
-	out := make([][]*contentchunk, 0)
-	for _, ch := range list {
-		added := false
-		for i, outlist := range out {
-			if ch.ID.Equal(outlist[0].ID) {
-				out[i] = append(outlist, ch)
-				added = true
-			}
-		}
-		if !added {
-			out = append(out, []*contentchunk{ch})
-		}
-	}
-	return out
-}
-
 func (db *Storebase) Insert(fs *database.FileStore) error {
 	{
 		result, e := db.client.Database(db.DBName).Collection(db.CollNames["store"]).UpdateOne(
@@ -131,20 +81,7 @@ func (db *Storebase) Insert(fs *database.FileStore) error {
 		}
 	}
 	{
-		var chunks []interface{}
-		var i uint32
-		for start := 0; start < len(fs.Content); start += chunksize {
-			end := start + chunksize
-			if end > len(fs.Content) {
-				end = len(fs.Content)
-			}
-			chunks = append(chunks, contentchunk{
-				ID:    fs.ID,
-				Index: i,
-				Data:  fs.Content[start:end],
-			})
-			i++
-		}
+		chunks := chunkify(fs.ID, fs.Content)
 		_, e := db.client.Database(db.DBName).Collection(db.CollNames["chunk"]).InsertMany(
 			db.ctx,
 			chunks,

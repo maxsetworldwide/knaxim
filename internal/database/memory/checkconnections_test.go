@@ -8,7 +8,7 @@ import (
 var testingComplete = &sync.WaitGroup{}
 
 func init() {
-	testingComplete.Add(6)
+	testingComplete.Add(7)
 }
 
 func TestConnections(t *testing.T) {

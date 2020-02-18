@@ -9,19 +9,29 @@ const FileService = {
   },
 
   search ({ fid, start, end, find }) {
-    return ApiService.query(`file/${fid}/search/${start}/${end}`, { find }).catch(error => {
+    return ApiService.query(`file/${fid}/search/${start}/${end}`, {
+      find
+    }).catch(error => {
       throw new Error(`FileService ${error}`)
     })
   },
 
   create ({ file, folder, group }) {
-    return ApiService.put(`file`, { group: group, file: file, dir: folder }).catch(error => {
+    return ApiService.put(`file`, {
+      group: group,
+      file: file,
+      dir: folder
+    }).catch(error => {
       throw new Error(`FileService ${error}`)
     })
   },
 
   webpage ({ url, group, folder }) {
-    return ApiService.put(`file/webpage`, { url: url, group: group, dir: folder }).catch(error => {
+    return ApiService.put(`file/webpage`, {
+      url: url,
+      group: group,
+      dir: folder
+    }).catch(error => {
       throw new Error(`FileService ${error}`)
     })
   },
@@ -42,6 +52,10 @@ const FileService = {
     return Vue.axios.defaults.baseURL + `/file/${fid}/download`
   },
 
+  viewURL ({ fid }) {
+    return Vue.axios.defaults.baseURL + `/file/${fid}/view`
+  },
+
   erase ({ fid }) {
     return ApiService.delete(`file/${fid}`).catch(error => {
       throw new Error(`FileService ${error}`)
@@ -49,10 +63,11 @@ const FileService = {
   },
 
   list ({ shared, gid }) {
-    return ApiService.query(`record${shared ? '/view' : ''}`, { group: gid })
-      .catch(error => {
-        throw new Error(`FilesService->list: ${error}`)
-      })
+    return ApiService.query(`record${shared ? '/view' : ''}`, {
+      group: gid
+    }).catch(error => {
+      throw new Error(`FilesService->list: ${error}`)
+    })
   }
 }
 

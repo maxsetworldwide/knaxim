@@ -8,7 +8,7 @@
   </div>
 
   <!-- No files exist -->
-  <div v-else-if="promptUpload" class="empty">
+  <div v-else-if="promptUpload && !loading" class="empty">
     <h1>No files!</h1>
     <b-button v-b-modal="'file-list-upload'">
       <h3>Add file?</h3>

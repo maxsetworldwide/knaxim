@@ -27,6 +27,7 @@
 		"start": "2s",
 		"restart_time": "40m"
 	},
+	"gotenpath": "http://gotenberg:3000",
 	"total_free_space": 52428800,
 	"AdminKey": "b9!5v789DEp$5Yqw@9h",
 	"GuestUser": {
