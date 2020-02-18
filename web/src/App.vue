@@ -65,7 +65,7 @@
                     <h3>Login</h3>
                   </b-button>
                 </div>
-                <auth ref="auth"></auth>
+                <auth ref="auth" :passkey="resetkey"></auth>
               </div>
               <router-view v-else/>
             </div>
@@ -109,12 +109,18 @@ export default {
     return {
       appInfoDisplay: null,
       context: 'My Cloud',
-      auth: false
+      auth: false,
+      resetkey: ''
     }
   },
   methods: {
     showAuth () {
-      this.$refs.auth.openLogin()
+      if (this.$route.name === 'reset') {
+        this.resetkey = this.$route.params.passkey || ''
+        this.$refs.auth.openReset()
+      } else {
+        this.$refs.auth.openLogin()
+      }
     },
     // Used by ErrorControl to display specific errors: login, ...
     makeToast (msg, append = false) {

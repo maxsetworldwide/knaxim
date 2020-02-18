@@ -48,12 +48,12 @@ export default {
       this.$refs['reg'].hide()
     },
     reqLogin () {
-      this.$router.push('/login')
+      this.openLogin()
       this.$refs['request'].hide()
     },
     resLogin () {
-      this.$router.push('/login')
       this.$refs['reset'].hide()
+      this.$route.push('/')
     },
     openReg () {
       this.$refs['reg'].show()
