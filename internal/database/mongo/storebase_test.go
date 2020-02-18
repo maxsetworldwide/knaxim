@@ -17,7 +17,7 @@ func TestStorebase(t *testing.T) {
 		db := new(Database)
 		*db = *configuration.DB
 		db.DBName = "TestStore"
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
 		if err := db.Init(ctx, true); err != nil {
 			t.Fatal("Unable to init database", err)

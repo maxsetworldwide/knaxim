@@ -1,12 +1,10 @@
 package mongo
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"os"
 	"testing"
-	"time"
 )
 
 var configuration = struct {
@@ -31,14 +29,15 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestDatabaseInit(t *testing.T) {
-	t.Parallel()
-	db := new(Database)
-	*db = *configuration.DB
-	db.DBName = "TestInit"
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	if err := db.Init(ctx, true); err != nil {
-		t.Error("Unable to init database", err)
-	}
-}
+// test reemved because it is redundant
+// func TestDatabaseInit(t *testing.T) {
+// 	t.Parallel()
+// 	db := new(Database)
+// 	*db = *configuration.DB
+// 	db.DBName = "TestInit"
+// 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+// 	defer cancel()
+// 	if err := db.Init(ctx, true); err != nil {
+// 		t.Error("Unable to init database", err)
+// 	}
+// }

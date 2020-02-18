@@ -31,6 +31,7 @@ The methods show() and hide() are intended to be public methods for the parent.
       <b-form-group v-else>
         <b-button type="submit" class="shadow-sm">Login</b-button>
         <b-button @click="register" class="shadow-sm">Create Account</b-button>
+        <b-button @click="request" class="shadow-sm">Forgot Password</b-button>
       </b-form-group>
     </b-form>
   </b-modal>
@@ -91,6 +92,9 @@ export default {
     },
     onClose () {
       this.$emit('close')
+    },
+    request () {
+      this.$emit('request')
     }
   },
   watch: {
