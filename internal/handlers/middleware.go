@@ -127,6 +127,10 @@ func ConnectDatabase(next http.Handler) http.Handler {
 		defer tagbase.Close(r.Context())
 		r = r.WithContext(context.WithValue(r.Context(), database.TAG, tagbase))
 
+		viewbase := filebase.View(nil)
+		defer viewbase.Close(r.Context())
+		r = r.WithContext(context.WithValue(r.Context(), database.VIEW, viewbase))
+
 		acronymbase := filebase.Acronym(nil)
 		defer acronymbase.Close(r.Context())
 		r = r.WithContext(context.WithValue(r.Context(), database.ACRONYM, acronymbase))

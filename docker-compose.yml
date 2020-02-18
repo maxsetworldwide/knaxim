@@ -32,6 +32,17 @@ services:
       - "9998:9998"
     networks:
       - app-plane
+  gotenberg:
+    # May need to scale: https://thecodingmachine.github.io/gotenberg/#scalability.strategies.scaling
+    image: thecodingmachine/gotenberg:latest # Should version be latest or 6?
+    # Is port entry needed?
+    ports:
+      - "3000:3000"
+    networks:
+      - app-plane
+    environment:
+      - DEFAULT_WAIT_TIMEOUT=240
+      - MAXIMUM_WAIT_TIMEOUT=240
 
 volumes:
   web:

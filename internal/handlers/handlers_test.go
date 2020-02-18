@@ -1,3 +1,8 @@
+/*
+this test requires Gotenberg and Tika to be running, and the TIKA_PATH and
+GOTENBERG_PATH env variables to both be set to the correct URLs of the services
+*/
+
 package handlers
 
 import (
@@ -8,12 +13,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
+	"git.maxset.io/web/knaxim/internal/database/process"
 	"github.com/gorilla/mux"
 )
 
@@ -59,14 +66,11 @@ var testFiles = []testFile{
 		content: "this is the first test file.",
 	},
 	testFile{
-		file: &database.WebFile{
-			File: database.File{
-				Name: "second.html",
-			},
-			URL: "localhost/second.txt",
+		file: &database.File{
+			Name: "second.txt",
 		},
-		ctype:   "text/html",
-		content: "<p>This is the second file.</p>",
+		ctype:   "text/plain",
+		content: "This is the second file.",
 	},
 }
 
@@ -90,6 +94,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+// TODO: move config stuff to separate function
 func populateDB() (err error) {
 	setupctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
@@ -97,8 +102,16 @@ func populateDB() (err error) {
 	if err = config.DB.Init(setupctx, true); err != nil {
 		return
 	}
-	config.V.Tika.Port = "9998"
-	config.V.Tika.Path = "localhost:" + config.V.Tika.Port
+	tikapath := os.Getenv("TIKA_PATH")
+	if len(tikapath) == 0 {
+		tikapath = "http://localhost:9998"
+	}
+	gotenpath := os.Getenv("GOTENBERG_PATH")
+	if len(gotenpath) == 0 {
+		gotenpath = "http://localhost:3000"
+	}
+	config.T.Path = tikapath
+	config.V.GotenPath = gotenpath
 	userbase := config.DB.Owner(setupctx)
 	defer userbase.Close(setupctx)
 	for i, userdata := range testUsers["users"] {
@@ -115,6 +128,16 @@ func populateDB() (err error) {
 			v.Own = user
 		case *database.WebFile:
 			v.Own = user
+		}
+	}
+	for i, file := range testFiles {
+		testFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
+		if err != nil {
+			return
+		}
+		err = processContent(setupctx, nil, testFiles[i].file, testFiles[i].store)
+		if err != nil {
+			return
 		}
 	}
 
