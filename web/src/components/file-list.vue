@@ -79,18 +79,28 @@ export default {
   },
   computed: {
     files () {
+      let trashFolder = this.folders['_trash_'] || []
+      function filterTrash (ids) {
+        return ids.filter(id => {
+          return trashFolder.reduce((a, i) => {
+            return a && i !== id
+          }, true)
+        })
+      }
       if (this.src === 'recents') {
-        return this.recentFiles || []
+        return filterTrash(this.recentFiles || [])
       } else if (this.src === 'favorites') {
-        return this.folders['_favorites_'] || []
+        return filterTrash(this.folders['_favorites_'] || [])
       } else if (this.src === 'shared') {
-        return this.sharedFiles
+        return filterTrash(this.sharedFiles)
       } else if (this.src === 'owned') {
-        return this.ownedFiles
+        return filterTrash(this.ownedFiles)
+      } else if (this.src === 'trash') {
+        return trashFolder
       }
       // console.log(this.ownedFiles)
       // console.log(this.sharedFiles)
-      return [...this.ownedFiles, ...this.sharedFiles]
+      return filterTrash([...this.ownedFiles, ...this.sharedFiles])
     },
     fileids () {
       return this.files.filter(id => {
@@ -102,7 +112,7 @@ export default {
     folderRows () {
       let rows = []
       for (let name in this.folders) {
-        if (name !== '_favorites_' && this.activeFolders.reduce((acc, active) => {
+        if (name !== '_favorites_' && name !== '_trash_' && this.activeFolders.reduce((acc, active) => {
           return acc && active !== name
         }, true)) {
           rows.push(name)
