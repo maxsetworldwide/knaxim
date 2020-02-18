@@ -48,8 +48,8 @@ const getters = {
   ownerNames (state) {
     return state.names
   },
-  ownerLoading (state, delta) {
-    state.loading += delta
+  ownerLoading (state) {
+    return state.loading > 0
   }
 }
 

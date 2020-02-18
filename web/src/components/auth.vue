@@ -14,7 +14,6 @@ call this component's openLogin() method to open the login modal
 <script>
 import LoginModal from '@/components/modals/login-modal'
 import RegistrationModal from '@/components/modals/registration-modal'
-import { FILES_LIST } from '@/store/actions.type'
 
 export default {
   name: 'auth',
@@ -32,14 +31,14 @@ export default {
       this.$refs['login'].show()
     },
     pushLogin () {
-      this.$router.push('/login')
+      this.openLogin()
       this.$refs['reg'].hide()
     },
     openReg () {
       this.$refs['reg'].show()
     },
     pushReg () {
-      this.$router.push('/register')
+      this.openReg()
       this.$refs['login'].hide()
     },
     regSuccess (username) {
@@ -47,28 +46,28 @@ export default {
       this.openLogin()
     },
     loginSuccess () {
-      this.$store.dispatch(FILES_LIST)
+      // this.$store.dispatch(FILES_LIST)
     },
     loginClose () {
-      if (this.$route.name === 'login') {
-        this.$router.push({ name: 'home' })
-      }
+      // if (this.$route.name === 'login') {
+      //   this.$router.push({ name: 'home' })
+      // }
     }
   },
   mounted () {
-    if (this.$route.name === 'login') {
-      this.openLogin()
-    } else if (this.$route.name === 'register') {
-      this.openReg()
-    }
+    // if (this.$route.name === 'login') {
+    //   this.openLogin()
+    // } else if (this.$route.name === 'register') {
+    //   this.openReg()
+    // }
   },
   watch: {
     $route (to, from) {
-      if (to.name === 'login') {
-        this.openLogin()
-      } else if (to.name === 'register') {
-        this.openReg()
-      }
+      // if (to.name === 'login') {
+      //   this.openLogin()
+      // } else if (to.name === 'register') {
+      //   this.openReg()
+      // }
     }
   }
 }

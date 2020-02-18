@@ -5,6 +5,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 )
@@ -160,25 +161,30 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	info.User.Roles = user.GetRoles()
 	info.User.Data.Total, err = ownerbase.GetTotalSpace(user.GetID())
 	if err != nil {
+		util.VerboseRequest(r, "error getting total space.")
 		panic(err)
 	}
 	if info.User.Data.Current, err = ownerbase.GetSpace(user.GetID()); err != nil {
+		util.VerboseRequest(r, "error getting current space.")
 		panic(err)
 	}
 	if owned, members, err := ownerbase.GetGroups(user.GetID()); err == nil {
 		for _, o := range owned {
 			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+				util.VerboseRequest(r, "error adding group")
 				panic(err)
 			}
 			info.User.Groups.Own = append(info.User.Groups.Own, o.GetID().String())
 		}
 		for _, m := range members {
 			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+				util.VerboseRequest(r, "error adding member group")
 				panic(err)
 			}
 			info.User.Groups.Member = append(info.User.Groups.Member, m.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "error getting groups")
 		panic(err)
 	}
 	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]string{user.GetID().String(): dirflag}}); err == nil {
@@ -186,6 +192,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 			info.User.Dirs = append(info.User.Dirs, t.Word)
 		}
 	} else {
+		util.VerboseRequest(r, "error searching tag data")
 		panic(err)
 	}
 	if owned, err := filebase.GetOwned(user.GetID()); err == nil {
@@ -194,6 +201,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 			info.User.Files.Own = append(info.User.Files.Own, o.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "unable to find owned files")
 		panic(err)
 	}
 	if viewable, err := filebase.GetPermKey(user.GetID(), "view"); err == nil {
@@ -202,6 +210,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 			info.User.Files.View = append(info.User.Files.View, v.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "unable to find Perm Key")
 		panic(err)
 	}
 	if public, err := filebase.GetPermKey(database.Public.GetID(), "view"); err == nil {

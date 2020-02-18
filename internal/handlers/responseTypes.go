@@ -5,6 +5,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/util"
 )
 
 type FileInfo struct {
@@ -109,9 +110,11 @@ func BuildUserInfo(r *http.Request, u database.UserI) UserInfo {
 		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 		var err error
 		if ui.Data.Current, err = userbase.GetSpace(u.GetID()); err != nil {
+			util.VerboseRequest(r, "unable to get current files")
 			panic(err)
 		}
 		if ui.Data.Total, err = userbase.GetTotalSpace(u.GetID()); err != nil {
+			util.VerboseRequest(r, "unable to get total files")
 			panic(err)
 		}
 	}

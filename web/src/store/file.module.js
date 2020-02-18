@@ -36,13 +36,13 @@ const mutations = {
   [PROCESS_SERVER_STATE] (state, server) {
     state.fileSet = server.files
     state.public = server.public
-    state.user.owned = server.user.files.own
-    state.user.shared = server.user.files.view
+    state.user.owned = server.user.files.own || []
+    state.user.shared = server.user.files.view || []
     state.groups = {}
     for (let key in server.groups) {
       state.groups[key] = {
-        owned: server.groups[key].files.own,
-        shared: server.groups[key].files.view
+        owned: server.groups[key].files.own || [],
+        shared: server.groups[key].files.view || []
       }
     }
   }
@@ -53,7 +53,9 @@ const getters = {
     return state.loading > 0
   },
   populateFiles (state) {
-    return id => {
+    return function (id) {
+      // console.log('id')
+      // console.log(id)
       if (typeof id === 'string') {
         return state.fileSet[id]
       }

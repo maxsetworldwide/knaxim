@@ -38,3 +38,10 @@ export const ACTIVATE_GROUP = 'activateGroup'
 
 export const FILE_LOADING = 'fileLoading'
 export const PROCESS_SERVER_STATE = 'PROCESS_SERVER_STATE'
+
+export const ACTIVATE_FOLDER = 'activateFolder'
+export const DEACTIVATE_FOLDER = 'deactivateFolder'
+
+export const AUTH_LOADING = 'authLoading'
+export const GROUP_LOADING = 'groupLoading'
+export const OWNER_LOADING = 'ownerLoading'

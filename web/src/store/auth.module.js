@@ -22,7 +22,7 @@ const state = {
 
 const getters = {
   currentUser (state) {
-    return state.user
+    return state.user || {}
   },
   isAuthenticated (state) {
     return !!state.user

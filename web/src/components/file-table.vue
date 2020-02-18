@@ -63,21 +63,21 @@
 import fileIcon from '@/components/file-icon'
 import { mapGetters, mapActions } from 'vuex'
 import { LOAD_OWNER } from '@/store/actions.type'
-import { EventBus, humanReadableSize, humanReadableTime} from '@/plugins/utils'
+import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
 export default {
   name: 'file-table',
   components: {
     fileIcon
-  }
+  },
   props: {
     files: {
       type: Array,
-      default: []
+      default: () => []
     },
     folders: {
       type: Array,
-      default: []
+      default: () => []
     },
     busy: Boolean
   },
@@ -146,8 +146,9 @@ export default {
       })
     },
     fileRows () {
+      // console.log(this.populateFiles)
       return this.populateFiles(this.files).filter(f => f).map(file => {
-        this[LOAD_OWNER]({ id: file.id })
+        this[LOAD_OWNER]({ id: file.owner })
         let splitname = [file.name, '']
         if (file.name.split && !file.url) {
           let splits = file.name.split('.')
@@ -166,7 +167,7 @@ export default {
           size: file.size && humanReadableSize(file.size),
           sizeInt: file.size,
           date: file.date && humanReadableTime(this.date.upload),
-          dateInt: file.date ? Date.parse(file.date.upload) :  0,
+          dateInt: file.date ? Date.parse(file.date.upload) : 0,
           preview: file.preview,
           _showDetails: (file._showDetails || false)
         }
@@ -177,7 +178,7 @@ export default {
         return acc || row._showDetails
       }, false)
     },
-    ...mapGetters(['ownerNames'])
+    ...mapGetters(['ownerNames', 'populateFiles'])
   },
   methods: {
     expandALL () {
@@ -210,13 +211,13 @@ export default {
         return null
       }
     },
-    openFolder(name) {
+    openFolder (name) {
       this.$emit('open-folder', name)
     },
-    open(id) {
+    open (id) {
       this.$emit('open', id)
-    }
-    ...mapGetters(['populateFiles']),
+    },
+    // ...mapGetters(['populateFiles']),
     ...mapActions([LOAD_OWNER])
   }
 }

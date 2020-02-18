@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 
 import auth from './auth.module'
 import file from './file.module'
-import files from './files.module'
+// import files from './files.module'
 import search from './search.module'
 import acronyms from './acronyms.module'
 import recents from './recents.module'
@@ -12,7 +12,8 @@ import owner from './owner.module'
 import group from './group.module'
 
 import UserService from '@/service/user'
-import { LOAD_SERVER, HANDLE_SERVER_STATE, PROCESS_SERVER_STATE, AFTER_LOGIN } from './actions.type'
+import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
+import { PROCESS_SERVER_STATE } from './mutations.type'
 
 Vue.use(Vuex)
 
@@ -23,7 +24,7 @@ export default new Vuex.Store({
   modules: {
     auth,
     file,
-    files,
+    // files,
     search,
     acronyms,
     recents,

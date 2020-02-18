@@ -10,7 +10,8 @@ import {
 
 const state = {
   active: null,
-  options: {},
+  ids: [],
+  names: {},
   loading: 0
 }
 
@@ -43,13 +44,16 @@ const actions = {
 
 const mutations = {
   [SET_GROUP] (state, { id, name }) {
-    Vue.set(state.options, id, name)
+    if (state.ids.reduce((a, i) => { return a && i !== id }, true)) { state.ids.push(id) }
+    Vue.set(state.names, id, name)
   },
   [ACTIVATE_GROUP] (state, { id }) {
     state.active = id
   },
   [PROCESS_SERVER_STATE] ({ commit }, { groups }) {
-    groups.values().forEach(v => commit(SET_GROUP, v))
+    for (let gid in groups) {
+      commit(SET_GROUP, groups[gid])
+    }
   },
   [GROUP_LOADING] (state, delta) {
     state.loading += delta
@@ -65,7 +69,7 @@ const getters = {
     }
   },
   availableGroups ({ options }) {
-    return options.keys().map(id => {
+    return (options ? options.keys() : []).map(id => {
       return {
         id,
         name: options[id]

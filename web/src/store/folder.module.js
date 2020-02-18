@@ -41,7 +41,7 @@ const actions = {
   async [PUT_FILE_FOLDER] (context, { fid, name, group }) {
     context.commit(FOLDER_LOADING, 1)
     FolderService.add({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).then(() => {
+      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).finally(() => {
         context.commit(FOLDER_LOADING, -1)
       })
     })
@@ -49,16 +49,16 @@ const actions = {
   async [REMOVE_FILE_FOLDER] (context, { fid, name, group }) {
     context.commit(FOLDER_LOADING, 1)
     FolderService.remove({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).then(() => {
+      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).finally(() => {
         context.commit(FOLDER_LOADING, -1)
       })
     })
   },
   async [HANDLE_SERVER_STATE] ({ commit, dispatch }, { user, groups }) {
     commit(FOLDER_LOADING, 1)
-    let proms = user.folders.map(name => dispatch(LOAD_FOLDER, { name }))
+    let proms = (user.folders || []).map(name => dispatch(LOAD_FOLDER, { name }))
     for (let gid in groups) {
-      proms.push(...groups[gid].folders.map(name => dispatch(LOAD_FOLDER, { name, group: gid })))
+      proms.push(...(groups[gid].folders || []).map(name => dispatch(LOAD_FOLDER, { name, group: gid })))
     }
     await Promise.all(proms)
     commit(FOLDER_LOADING, -1)

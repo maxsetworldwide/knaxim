@@ -58,11 +58,14 @@
           <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <div v-if="!isAuthenticated" class="empty">
-                <h1>You aren't logged in!</h1>
-                <b-button @click="showAuth">
-                  <h3>Login</h3>
-                </b-button>
+              <div v-if="!isAuthenticated">
+                <div class="empty">
+                  <h1>You aren't logged in!</h1>
+                  <b-button @click="showAuth">
+                    <h3>Login</h3>
+                  </b-button>
+                </div>
+                <auth ref="auth"></auth>
               </div>
               <router-view v-else/>
             </div>
@@ -97,6 +100,7 @@ import NavBasic from '@/components/nav-basic'
 import StorageInfo from '@/components/storage-info'
 import HeaderSearchHistory from '@/components/header-search-history'
 
+import Auth from '@/components/auth'
 import ErrorControl from '@/components/error-control'
 
 export default {
@@ -104,12 +108,13 @@ export default {
   data () {
     return {
       appInfoDisplay: null,
-      context: 'My Cloud'
+      context: 'My Cloud',
+      auth: false
     }
   },
   methods: {
     showAuth () {
-      this.$router.push('/login')
+      this.$refs.auth.openLogin()
     },
     // Used by ErrorControl to display specific errors: login, ...
     makeToast (msg, append = false) {
@@ -147,6 +152,7 @@ export default {
     StorageInfo,
     HeaderSearchHistory,
 
+    Auth,
     ErrorControl
   }
 }
