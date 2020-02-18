@@ -21,24 +21,34 @@ const actions = {
   },
   async [REFRESH_GROUPS] (context) {
     context.commit(GROUP_LOADING, 1)
-    let data = await GroupService.associated({}).then(res => res.data)
-    if (data.own) {
-      data.own.forEach(t => {
-        context.commit(SET_GROUP, t)
-      })
+    try {
+      let data = await GroupService.associated({}).then(res => res.data)
+      if (data.own) {
+        data.own.forEach(t => {
+          context.commit(SET_GROUP, t)
+        })
+      }
+      if (data.member) {
+        data.member.forEach(t => {
+          context.commit(SET_GROUP, t)
+        })
+      }
+    } catch {
+      // TODO: process error
+    } finally {
+      context.commit(GROUP_LOADING, -1)
     }
-    if (data.member) {
-      data.member.forEach(t => {
-        context.commit(SET_GROUP, t)
-      })
-    }
-    context.commit(GROUP_LOADING, -1)
   },
   async [CREATE_GROUP] (context, { name }) {
     context.commit(GROUP_LOADING, 1)
-    await GroupService.create({ name })
-    await context.dispatch(REFRESH_GROUPS)
-    context.commit(GROUP_LOADING, -1)
+    try {
+      await GroupService.create({ name })
+      await context.dispatch(REFRESH_GROUPS)
+    } catch {
+      // TODO: handle error
+    } finally {
+      context.commit(GROUP_LOADING, -1)
+    }
   }
 }
 

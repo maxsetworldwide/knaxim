@@ -64,15 +64,17 @@ func buildGP(g database.GroupI, isOwned bool, gown, gm, d, fo, fv []string) grou
 }
 
 type fileProfile struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Type    string   `json:"type"`
-	Owner   string   `json:"owner"`
-	IsOwned bool     `json:"isOwned"`
-	Viewers []string `json:"viewers"`
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Type    string            `json:"type"`
+	Owner   string            `json:"owner"`
+	IsOwned bool              `json:"isOwned"`
+	Date    database.FileTime `json:"date"`
+	Size    int64             `json:"size"`
+	Viewers []string          `json:"viewers"`
 }
 
-func buildFP(r database.FileI, isOwned bool) fileProfile {
+func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
 	var out fileProfile
 	out.ID = r.GetID().String()
 	out.Name = r.GetName()
@@ -86,6 +88,8 @@ func buildFP(r database.FileI, isOwned bool) fileProfile {
 	} else {
 		out.Type = "file"
 	}
+	out.Date = r.GetDate()
+	out.Size = size
 	return out
 }
 
@@ -122,7 +126,7 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if owned, err := filebase.GetOwned(g.GetID()); err == nil {
 			for _, o := range owned {
-				cp.addRecord(current_user, o)
+				cp.addRecord(current_user, o, filebase)
 				fo = append(fo, o.GetID().String())
 			}
 		} else {
@@ -130,7 +134,7 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if viewable, err := filebase.GetPermKey(g.GetID(), "view"); err == nil {
 			for _, v := range viewable {
-				cp.addRecord(current_user, v)
+				cp.addRecord(current_user, v, filebase)
 				fv = append(fv, v.GetID().String())
 			}
 		}
@@ -139,10 +143,16 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 	return nil
 }
 
-func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI) {
+func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI, db database.Database) error {
 	if _, ok := cp.Records[r.GetID().String()]; !ok {
-		cp.Records[r.GetID().String()] = buildFP(r, r.GetOwner().Match(u))
+		sb := db.Store(nil)
+		fs, err := sb.Get(r.GetID().StoreID)
+		if err != nil {
+			return err
+		}
+		cp.Records[r.GetID().String()] = buildFP(r, r.GetOwner().Match(u), fs.FileSize)
 	}
+	return nil
 }
 
 func completeUserInfo(out http.ResponseWriter, r *http.Request) {
@@ -197,7 +207,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	if owned, err := filebase.GetOwned(user.GetID()); err == nil {
 		for _, o := range owned {
-			info.addRecord(user, o)
+			info.addRecord(user, o, filebase)
 			info.User.Files.Own = append(info.User.Files.Own, o.GetID().String())
 		}
 	} else {
@@ -206,7 +216,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	if viewable, err := filebase.GetPermKey(user.GetID(), "view"); err == nil {
 		for _, v := range viewable {
-			info.addRecord(user, v)
+			info.addRecord(user, v, filebase)
 			info.User.Files.View = append(info.User.Files.View, v.GetID().String())
 		}
 	} else {
@@ -215,7 +225,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	if public, err := filebase.GetPermKey(database.Public.GetID(), "view"); err == nil {
 		for _, p := range public {
-			info.addRecord(user, p)
+			info.addRecord(user, p, filebase)
 			info.Public = append(info.Public, p.GetID().String())
 		}
 	}

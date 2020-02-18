@@ -10,6 +10,7 @@ import recents from './recents.module'
 import folder from './folder.module'
 import owner from './owner.module'
 import group from './group.module'
+import preview from './preview.module'
 
 import UserService from '@/service/user'
 import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
@@ -30,7 +31,8 @@ export default new Vuex.Store({
     recents,
     folder,
     owner,
-    group
+    group,
+    preview
   },
   // TODO: Extract all the search functionality into a module!
   state: {
@@ -59,9 +61,13 @@ export default new Vuex.Store({
 
   actions: {
     async [LOAD_SERVER] ({ commit, dispatch }) {
-      let res = await UserService.completeProfile()
-      dispatch(HANDLE_SERVER_STATE, res.data)
-      commit(PROCESS_SERVER_STATE, res.data)
+      try {
+        let res = await UserService.completeProfile()
+        dispatch(HANDLE_SERVER_STATE, res.data)
+        commit(PROCESS_SERVER_STATE, res.data)
+      } catch {
+        // TODO: handle error
+      }
     },
     [AFTER_LOGIN] ({ dispatch }) {
       dispatch(LOAD_SERVER)

@@ -26,3 +26,5 @@ export const CREATE_GROUP = 'createGroup'
 
 export const LOAD_SERVER = 'loadServer'
 export const HANDLE_SERVER_STATE = 'handleServerState'
+
+export const LOAD_PREVIEW = 'loadPreview'

@@ -45,3 +45,7 @@ export const DEACTIVATE_FOLDER = 'deactivateFolder'
 export const AUTH_LOADING = 'authLoading'
 export const GROUP_LOADING = 'groupLoading'
 export const OWNER_LOADING = 'ownerLoading'
+export const LOADING_ACRONYMS = 'loadingAcronyms'
+
+export const LOADING_PREVIEW = 'loadingPreview'
+export const SET_PREVIEW = 'setPreview'

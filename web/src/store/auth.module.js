@@ -130,7 +130,11 @@ const actions = {
             resolve(data)
           }
         }).catch(({ response }) => {
-          context.commit(SET_ERROR, response.data.errors)
+          if (response && response.message) {
+            context.commit(SET_ERROR, response.message)
+          } else {
+            context.commit(SET_ERROR, 'unable to get user')
+          }
         })
     })).finally(() => context.commit(AUTH_LOADING, -1))
   }

@@ -18,9 +18,9 @@
     >
   </template>
   <template v-slot:head(expand)="col">
-    <svg @click.stop="expandAll">
+    <!-- <svg @click.stop="expandAll">
       <use href="../assets/app.svg#expand-tri" class="triangle"/>
-    </svg>
+    </svg> -->
   </template>
   <template v-slot:table-busy>
     <div class="text-center">
@@ -47,12 +47,13 @@
     <span v-else class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
   </template>
   <template v-slot:cell(expand)="row">
-    <svg v-if="row.item.preview" @click.stop="row.toggleDetails">
+    <svg @click.stop="openPreview(row)">
       <use href="../assets/app.svg#expand-tri" class="triangle"/>
     </svg>
   </template>
   <template v-slot:row-details="row">
-    <span>{{ row.item.preview }}</span>
+    <b-spinner v-if="filePreview[row.item.id].loading" class="align-middle"></b-spinner>
+    <span v-else>{{ filePreview[row.item.id].lines ? filePreview[row.item.id].lines.join(' ') : '' }}</span>
   </template>
   <template v-slot:cell(action)="data">
     <file-icon :extention="(data.item.ext || '')" :folder="data.item.isFolder" :webpage="!!data.item.url"/>
@@ -62,7 +63,7 @@
 <script>
 import fileIcon from '@/components/file-icon'
 import { mapGetters, mapActions } from 'vuex'
-import { LOAD_OWNER } from '@/store/actions.type'
+import { LOAD_OWNER, LOAD_PREVIEW } from '@/store/actions.type'
 import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
 export default {
@@ -163,12 +164,11 @@ export default {
           isFolder: false,
           name: splitname[0],
           ext: splitname[1],
-          owner: this.ownerNames[file.own],
+          owner: this.ownerNames[file.owner],
           size: file.size && humanReadableSize(file.size),
           sizeInt: file.size,
-          date: file.date && humanReadableTime(this.date.upload),
+          date: file.date && humanReadableTime(file.date.upload),
           dateInt: file.date ? Date.parse(file.date.upload) : 0,
-          preview: file.preview,
           _showDetails: (file._showDetails || false)
         }
       })
@@ -178,9 +178,13 @@ export default {
         return acc || row._showDetails
       }, false)
     },
-    ...mapGetters(['ownerNames', 'populateFiles'])
+    ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview'])
   },
   methods: {
+    openPreview (row) {
+      row.toggleDetails()
+      this[LOAD_PREVIEW](row.item)
+    },
     expandALL () {
       const expand = !this.anyRowExpanded
       this.fileRows.forEach((file) => {
@@ -218,7 +222,7 @@ export default {
       this.$emit('open', id)
     },
     // ...mapGetters(['populateFiles']),
-    ...mapActions([LOAD_OWNER])
+    ...mapActions([LOAD_OWNER, LOAD_PREVIEW])
   }
 }
 </script>

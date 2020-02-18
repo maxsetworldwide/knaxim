@@ -101,6 +101,7 @@ type FileI interface {
 	SetID(filehash.FileID)
 	GetName() string
 	SetName(n string)
+	GetDate() FileTime
 	Copy() FileI
 }
 
@@ -134,6 +135,10 @@ func (f *File) GetName() string {
 
 func (f *File) SetName(n string) {
 	f.Name = n
+}
+
+func (f *File) GetDate() FileTime {
+	return f.Date
 }
 
 func (f *File) Copy() FileI {

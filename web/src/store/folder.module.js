@@ -13,45 +13,54 @@ const state = {
 const actions = {
   async [LOAD_FOLDERS] (context, { group, overwrite }) {
     context.commit(FOLDER_LOADING, 1)
-    var names = await FolderService.list({ group }).then(({ data }) => {
-      return data.folders
-    })
-    if (!names) {
-      names = []
+    try {
+      var names = await FolderService.list({ group }).then(({ data }) => {
+        return data.folders
+      })
+      if (!names) {
+        names = []
+      }
+
+      await Promise.all(names.map((name) => {
+        return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
+      }))
+    } catch {
+      // TODO: handler err
     }
-    await Promise.all(names.map((name) => {
-      return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
-    }))
     context.commit(FOLDER_LOADING, -1)
   },
   async [LOAD_FOLDER] (context, { name, group, overwrite }) {
     if (overwrite || context.getters.getFolder({ name, group }).length < 1) {
       context.commit(FOLDER_LOADING, 1)
-      var response = await FolderService.info({ name, group })
-      name = response.data.name || name
-      var files = response.data.files || []
-      context.commit(SET_FOLDER, {
-        group,
-        name,
-        files
-      })
+      try {
+        var response = await FolderService.info({ name, group })
+        name = response.data.name || name
+        var files = response.data.files || []
+        context.commit(SET_FOLDER, {
+          group,
+          name,
+          files
+        })
+      } catch {
+        // TODO: handle Error
+      }
       context.commit(FOLDER_LOADING, -1)
     }
   },
   async [PUT_FILE_FOLDER] (context, { fid, name, group }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.add({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).finally(() => {
-        context.commit(FOLDER_LOADING, -1)
-      })
+    FolderService.add({ fid, name, group }).then(async () => {
+      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+    }).finally(() => {
+      context.commit(FOLDER_LOADING, -1)
     })
   },
   async [REMOVE_FILE_FOLDER] (context, { fid, name, group }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.remove({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).finally(() => {
-        context.commit(FOLDER_LOADING, -1)
-      })
+    FolderService.remove({ fid, name, group }).then(async () => {
+      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+    }).finally(() => {
+      context.commit(FOLDER_LOADING, -1)
     })
   },
   async [HANDLE_SERVER_STATE] ({ commit, dispatch }, { user, groups }) {
@@ -60,7 +69,11 @@ const actions = {
     for (let gid in groups) {
       proms.push(...(groups[gid].folders || []).map(name => dispatch(LOAD_FOLDER, { name, group: gid })))
     }
-    await Promise.all(proms)
+    try {
+      await Promise.all(proms)
+    } catch {
+      // TODO: handle Error
+    }
     commit(FOLDER_LOADING, -1)
   }
 }
