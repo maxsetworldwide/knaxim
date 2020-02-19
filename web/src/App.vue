@@ -94,6 +94,7 @@ import HeaderSettings from '@/components/header-settings'
 // Sub Header
 import TeamSelect from '@/components/team-select'
 import { mapGetters } from 'vuex'
+import { GET_USER, LOAD_SERVER } from '@/store/actions.type'
 
 // Side Nav
 import NavBasic from '@/components/nav-basic'
@@ -112,6 +113,11 @@ export default {
       auth: false,
       resetkey: ''
     }
+  },
+  created () {
+    this.$store.dispatch(GET_USER).then(() => {
+      this.$store.dispatch(LOAD_SERVER)
+    })
   },
   methods: {
     showAuth () {
