@@ -150,14 +150,8 @@ export default {
       // console.log(this.populateFiles)
       return this.populateFiles(this.files).filter(f => f).map(file => {
         this[LOAD_OWNER]({ id: file.owner })
-        let splitname = [file.name, '']
-        if (file.name.split && !file.url) {
-          let splits = file.name.split('.')
-          if (splits.length > 1) {
-            splitname[0] = splits.slice(0, -1).join('.')
-            splitname[1] = splits[splits.length - 1]
-          }
-        }
+        let matches = file.name.match(/(?:^(.*)\.([^/.]{1,8})$)|(.*)/)
+        let splitname = [matches[1] || matches[0], matches[2] || '']
         return {
           id: file.id,
           url: file.url,
