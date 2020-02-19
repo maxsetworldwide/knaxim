@@ -207,7 +207,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		sb := config.DB.Store(ctx)
 		err := sb.UpdateMeta(fs)
 		if err != nil {
-			util.VerboseRequest(r, "Unable to Update Processing Error: %s", err.Error())
+			util.Verbose("Unable to Update Processing Error: %s", err.Error())
 		}
 		sb.Close(ctx)
 	}()
@@ -254,7 +254,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	var file database.FileI
 	var timescale time.Duration
 	var fctx context.Context
-	if resp.Header.Get("Content-Type") == "text/html" {
+	if process.MapContentType(resp.Header.Get("Content-Type")) == process.URL {
 
 		res, err := process.NewFileConverter(config.V.GotenPath).ConvertURL(URL.String())
 		if err != nil {
@@ -276,7 +276,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		var cancel context.CancelFunc
 		fctx, cancel = context.WithTimeout(context.Background(), timescale)
 		defer cancel()
-		file := &database.WebFile{
+		file = &database.WebFile{
 			File: database.File{
 				Permission: database.Permission{
 					Own: owner,
@@ -306,7 +306,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		var cancel context.CancelFunc
 		fctx, cancel = context.WithTimeout(context.Background(), timescale)
 		defer cancel()
-		file := &database.WebFile{
+		file = &database.WebFile{
 			File: database.File{
 				Permission: database.Permission{
 					Own: owner,
@@ -322,7 +322,25 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		}
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go processContent(pctx, cncl, file, fs)
+	go func() {
+		if err := processContent(pctx, cncl, file, fs); err != nil {
+			util.VerboseRequest(r, "Processing Error: %s", err.Error())
+			fs.Perr = &database.ProcessingError{
+				Status:  242,
+				Message: err.Error(),
+			}
+		} else {
+			fs.Perr = nil
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		sb := config.DB.Store(ctx)
+		err := sb.UpdateMeta(fs)
+		if err != nil {
+			util.Verbose("Unable to Update Processing Error: %s", err.Error())
+		}
+		sb.Close(ctx)
+	}()
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
 			Word: r.FormValue("dir"),
