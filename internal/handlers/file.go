@@ -97,21 +97,17 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file databas
 	return <-gotenbergErr
 }
 
-func extensionFromName(name string) string {
-	return strings.ToLower(name[strings.LastIndex(name, "."):])
-}
-
 func createView(ctx context.Context, db database.Database, file database.FileI, fs *database.FileStore, out chan error) {
 	name := file.GetName()
 	var result []byte
-	ext := extensionFromName(name)
-	extConst, ok := process.ExtMap[ext]
+	extConst, ok := process.ExtMap[fs.ContentType]
 	if !ok || extConst == process.PDF {
 		// no conversions available. do not put a view in the db. retrieval of this
 		// view should return 404 or 302 or 303 to indicate that sentences should be used
 		// OR is PDF
 		// do not store a copy in the viewbase
 		// have the /view api just return the store by checking the name
+		out <- nil
 		return
 	}
 	buf := &bytes.Buffer{}
@@ -248,17 +244,28 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad URL", r.FormValue("url"), "Unable to Parse"))
 	}
-	res, err := getter.Get(URL.String())
+
+	resp, err := getter.Get(URL.String())
 	if err != nil {
 		panic(srverror.New(err, 400, "Unable to Get Address", r.FormValue("url"), URL.String()))
 	}
-	if res.ContentLength > -1 && res.ContentLength > config.V.FileLimit {
-		panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
-	}
 
+	var fs *database.FileStore
+	var file database.FileI
 	var timescale time.Duration
-	if res.ContentLength > -1 {
-		timescale = time.Duration((res.ContentLength / 1024) * config.V.FileTimeoutRate)
+	var fctx context.Context
+	if resp.Header.Get("Content-Type") == "text/html" {
+
+		res, err := process.NewFileConverter(config.V.GotenPath).ConvertURL(URL.String())
+		if err != nil {
+			panic(srverror.New(err, 400, "Unable to Get Address", "gotenburg", r.FormValue("url"), URL.String()))
+		}
+
+		if int64(len(res)) > config.V.FileLimit {
+			panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
+		}
+
+		timescale = time.Duration(int64(len(res)/1024) * config.V.FileTimeoutRate)
 		if timescale > config.V.MaxFileTimeout.Duration {
 			timescale = config.V.MaxFileTimeout.Duration
 		}
@@ -266,24 +273,53 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			timescale = config.V.MinFileTimeout.Duration
 		}
 
-	} else {
-		timescale = config.V.MaxFileTimeout.Duration
-	}
-	fctx, cancel := context.WithTimeout(context.Background(), timescale)
-	defer cancel()
-	file := &database.WebFile{
-		File: database.File{
-			Permission: database.Permission{
-				Own: owner,
+		var cancel context.CancelFunc
+		fctx, cancel = context.WithTimeout(context.Background(), timescale)
+		defer cancel()
+		file := &database.WebFile{
+			File: database.File{
+				Permission: database.Permission{
+					Own: owner,
+				},
+				Name: URL.String(),
+				Date: database.FileTime{Upload: time.Now()},
 			},
-			Name: URL.String(),
-			Date: database.FileTime{Upload: time.Now()},
-		},
-		URL: URL.String(),
-	}
-	fs, err := process.InjestFile(fctx, file, res.Header.Get("Content-Type"), res.Body, config.DB)
-	if err != nil {
-		panic(err)
+			URL: URL.String(),
+		}
+		fs, err = process.InjestFile(fctx, file, "application/pdf", bytes.NewReader(res), config.DB)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		if resp.ContentLength > config.V.FileLimit {
+			panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
+		}
+
+		timescale = time.Duration((resp.ContentLength / 1024) * config.V.FileTimeoutRate)
+		if timescale > config.V.MaxFileTimeout.Duration {
+			timescale = config.V.MaxFileTimeout.Duration
+		}
+		if timescale < config.V.MinFileTimeout.Duration {
+			timescale = config.V.MinFileTimeout.Duration
+		}
+
+		var cancel context.CancelFunc
+		fctx, cancel = context.WithTimeout(context.Background(), timescale)
+		defer cancel()
+		file := &database.WebFile{
+			File: database.File{
+				Permission: database.Permission{
+					Own: owner,
+				},
+				Name: URL.String(),
+				Date: database.FileTime{Upload: time.Now()},
+			},
+			URL: URL.String(),
+		}
+		fs, err = process.InjestFile(fctx, file, resp.Header.Get("Content-Type"), resp.Body, config.DB)
+		if err != nil {
+			panic(err)
+		}
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
 	go processContent(pctx, cncl, file, fs)
@@ -515,14 +551,14 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "sendView user does not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
-	ext := extensionFromName(rec.GetName())
+	fs, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
+	if err != nil {
+		panic(err)
+	}
+	ext := fs.ContentType
 	var rdr io.Reader
-	if ext == ".pdf" {
-		store, err := r.Context().Value(database.STORE).(database.Storebase).Get(fid.StoreID)
-		if err != nil {
-			panic(err)
-		}
-		rdr, err = store.Reader()
+	if process.ExtMap[ext] == process.PDF {
+		rdr, err = fs.Reader()
 		if err != nil {
 			panic(err)
 		}
