@@ -188,13 +188,14 @@ func userInfo(out http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(srverror.New(err, 400, "Unable to Decode UserID"))
 		}
+		util.VerboseRequest(r, "getting owner id: %+v", oid)
 		target, err := userbase.Get(oid)
 		if err != nil {
 			panic(err)
 		}
 		var ok bool
 		if user, ok = target.(database.UserI); !ok {
-			panic(srverror.Basic(404, "ID Not Found"))
+			panic(srverror.Basic(404, "ID is not a user"))
 		}
 	}
 

@@ -18,7 +18,6 @@ import LoginModal from '@/components/modals/login-modal'
 import RegistrationModal from '@/components/modals/registration-modal'
 import RequestPasswordModal from '@/components/modals/request-password-modal'
 import ResetPasswordModal from '@/components/modals/reset-password-modal'
-import { FILES_LIST } from '@/store/actions.type'
 
 export default {
   name: 'auth',
@@ -44,22 +43,22 @@ export default {
       this.$refs['login'].show()
     },
     pushLogin () {
-      this.$router.push('/login')
+      this.openLogin()
       this.$refs['reg'].hide()
     },
     reqLogin () {
-      this.$router.push('/login')
+      this.openLogin()
       this.$refs['request'].hide()
     },
     resLogin () {
-      this.$router.push('/login')
       this.$refs['reset'].hide()
+      this.$route.push('/')
     },
     openReg () {
       this.$refs['reg'].show()
     },
     pushReg () {
-      this.$router.push('/register')
+      this.openReg()
       this.$refs['login'].hide()
     },
     pushRequest () {
@@ -71,12 +70,14 @@ export default {
       this.openLogin()
     },
     loginSuccess () {
-      this.$store.dispatch(FILES_LIST)
+      this.loginClose()
+      // this.$store.dispatch(FILES_LIST)
     },
     loginClose () {
-      if (this.$route.name === 'login') {
-        this.$router.push({ name: 'home' })
-      }
+      this.$refs['login'].hide()
+      // if (this.$route.name === 'login') {
+      //   this.$router.push({ name: 'home' })
+      // }
     },
     openRequest () {
       this.$refs['request'].show()
@@ -86,27 +87,19 @@ export default {
     }
   },
   mounted () {
-    if (this.$route.name === 'login') {
-      this.openLogin()
-    } else if (this.$route.name === 'register') {
-      this.openReg()
-    } else if (this.$route.name === 'request') {
-      this.openRequest()
-    } else if (this.$route.name === 'reset') {
-      this.openReset()
-    }
+    // if (this.$route.name === 'login') {
+    //   this.openLogin()
+    // } else if (this.$route.name === 'register') {
+    //   this.openReg()
+    // }
   },
   watch: {
     $route (to, from) {
-      if (to.name === 'login') {
-        this.openLogin()
-      } else if (to.name === 'register') {
-        this.openReg()
-      } else if (to.name === 'request') {
-        this.openRequest()
-      } else if (to.name === 'reset') {
-        this.openReset()
-      }
+      // if (to.name === 'login') {
+      //   this.openLogin()
+      // } else if (to.name === 'register') {
+      //   this.openReg()
+      // }
     }
   }
 }

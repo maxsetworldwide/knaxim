@@ -104,11 +104,6 @@ func (oid *OwnerID) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// func (oid OwnerID) MarshalBSON() ([]byte, error) {
-// 	content := oid.String()
-// 	return bson.Marshal(content)
-// }
-
 func (oid OwnerID) Equal(oth OwnerID) bool {
 	if oid.Type != oth.Type {
 		return false

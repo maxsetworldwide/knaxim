@@ -13,7 +13,7 @@ import {
 
 const state = {
   files: [],
-  isLoading: false,
+  loading: 0,
   slicesLoading: false,
   selected: '',
   history: [],
@@ -102,7 +102,7 @@ const actions = {
 const mutations = {
   [FILES_SEARCH_START] (state) {
     state.files = []
-    state.isLoading = true
+    state.loading += 1
   },
   [UPDATE_SEARCH_HISTORY] (state, { find }) {
     state.selected = find
@@ -131,7 +131,7 @@ const mutations = {
   },
   [FILES_SEARCH_END] (state) {
     state.slicesLoading = false
-    state.isLoading = false
+    state.loading -= 1
   },
   cancelSearch (state, newfunc) {
     if (state.cancelSearch) {
@@ -150,6 +150,9 @@ const getters = {
   },
   searchHistory (state) {
     return state.history
+  },
+  searchLoading (state) {
+    return state.loading > 0
   }
 }
 

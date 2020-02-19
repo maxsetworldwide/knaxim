@@ -1,61 +1,103 @@
 import Vue from 'vue'
 import FolderService from '@/service/folder'
-import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from './actions.type'
-import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE } from './mutations.type'
+import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE, LOAD_SERVER } from './actions.type'
+import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from './mutations.type'
 
 const state = {
   user: {}, // map filename to list of fileids
   loading: 0, // when greater then 0 folders are being loaded
-  group: {} // map[group id]map[filename][]fileid
+  group: {}, // map[group id]map[filename][]fileid
+  active: []
 }
 
 const actions = {
   async [LOAD_FOLDERS] (context, { group, overwrite }) {
     context.commit(FOLDER_LOADING, 1)
-    var names = await FolderService.list({ group }).then(({ data }) => {
-      return data.folders
-    })
-    if (!names) {
-      names = []
+    try {
+      var names = await FolderService.list({ group }).then(({ data }) => {
+        return data.folders
+      })
+      if (!names) {
+        names = []
+      }
+
+      await Promise.all(names.map((name) => {
+        return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
+      }))
+    } catch {
+      // TODO: handler err
     }
-    await Promise.all(names.map((name) => {
-      return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
-    }))
     context.commit(FOLDER_LOADING, -1)
   },
   async [LOAD_FOLDER] (context, { name, group, overwrite }) {
     if (overwrite || context.getters.getFolder({ name, group }).length < 1) {
       context.commit(FOLDER_LOADING, 1)
-      var response = await FolderService.info({ name, group })
-      name = response.data.name || name
-      var files = response.data.files || []
-      context.commit(SET_FOLDER, {
-        group,
-        name,
-        files
-      })
+      try {
+        var response = await FolderService.info({ name, group })
+        name = response.data.name || name
+        var files = response.data.files || []
+        context.commit(SET_FOLDER, {
+          group,
+          name,
+          files
+        })
+      } catch {
+        // TODO: handle Error
+      }
       context.commit(FOLDER_LOADING, -1)
     }
   },
-  async [PUT_FILE_FOLDER] (context, { fid, name, group }) {
+  async [PUT_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.add({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).then(() => {
-        context.commit(FOLDER_LOADING, -1)
-      })
+    FolderService.add({ fid, name, group }).then(async () => {
+      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+    }).finally(() => {
+      if (!preventReload) {
+        context.dispatch(LOAD_SERVER)
+      }
+      context.commit(FOLDER_LOADING, -1)
     })
   },
-  async [REMOVE_FILE_FOLDER] (context, { fid, name, group }) {
+  async [REMOVE_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.remove({ fid, name, group }).then(() => {
-      context.dispatch(LOAD_FOLDER, { group, name, overwrite: true }).then(() => {
-        context.commit(FOLDER_LOADING, -1)
-      })
+    FolderService.remove({ fid, name, group }).then(async () => {
+      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+    }).finally(() => {
+      if (!preventReload) {
+        context.dispatch(LOAD_SERVER)
+      }
+      context.commit(FOLDER_LOADING, -1)
     })
+  },
+  async [HANDLE_SERVER_STATE] ({ commit, dispatch }, { user, groups }) {
+    commit(FOLDER_LOADING, 1)
+    let proms = (user.folders || []).map(name => dispatch(LOAD_FOLDER, { name }))
+    for (let gid in groups) {
+      proms.push(...(groups[gid].folders || []).map(name => dispatch(LOAD_FOLDER, { name, group: gid })))
+    }
+    try {
+      await Promise.all(proms)
+    } catch {
+      // TODO: handle Error
+    }
+    commit(FOLDER_LOADING, -1)
   }
 }
 
 const mutations = {
+  [ACTIVATE_GROUP] (context) {
+    context.active = []
+  },
+  [ACTIVATE_FOLDER] (context, name) {
+    let newactive = context.active.filter(val => {
+      return val !== name
+    })
+    newactive.unshift(name)
+    context.active = newactive
+  },
+  [DEACTIVATE_FOLDER] (context, name) {
+    context.active = context.active.filter(val => val !== name)
+  },
   [FOLDER_LOADING] (context, delta) {
     context.loading += delta
   },
@@ -106,33 +148,28 @@ const mutations = {
 }
 
 const getters = {
-  userFolders (state) {
-    if (!state.user) {
-      return []
+  folders (state, getters) {
+    if (!getters.activeGroup) {
+      return state.user
     }
-    return state.user.keys()
+    return state.group[getters.activeGroup]
   },
-  groupFolders (state) {
-    return ({ group }) => {
-      if (!group) {
-        return []
-      }
-      if (!state.group[group]) {
-        return []
-      }
-      return state.group[group].keys()
-    }
-  },
-  getFolder (state) {
-    return ({ group, name }) => {
-      if (!group) {
+  getFolder (state, getters) {
+    return (name) => {
+      if (!getters.activeGroup) {
         return state.user[name] || []
       }
-      if (!state.group[group]) {
+      if (!state.group[getters.activeGroup]) {
         return []
       }
-      return state.group[group][name] || []
+      return state.group[getters.activeGroup][name] || []
     }
+  },
+  activeFolders ({ active }) {
+    return active
+  },
+  folderLoading ({ loading }) {
+    return loading > 0
   }
 }
 

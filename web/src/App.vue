@@ -58,7 +58,16 @@
           <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <router-view />
+              <div v-if="!isAuthenticated">
+                <div class="empty">
+                  <h1>You aren't logged in!</h1>
+                  <b-button @click="showAuth">
+                    <h3>Login</h3>
+                  </b-button>
+                </div>
+                <auth ref="auth" :passkey="resetkey"></auth>
+              </div>
+              <router-view v-else/>
             </div>
           </b-col>
 
@@ -85,12 +94,14 @@ import HeaderSettings from '@/components/header-settings'
 // Sub Header
 import TeamSelect from '@/components/team-select'
 import { mapGetters } from 'vuex'
+import { GET_USER, LOAD_SERVER } from '@/store/actions.type'
 
 // Side Nav
 import NavBasic from '@/components/nav-basic'
 import StorageInfo from '@/components/storage-info'
 import HeaderSearchHistory from '@/components/header-search-history'
 
+import Auth from '@/components/auth'
 import ErrorControl from '@/components/error-control'
 
 export default {
@@ -98,10 +109,25 @@ export default {
   data () {
     return {
       appInfoDisplay: null,
-      context: 'My Cloud'
+      context: 'My Cloud',
+      auth: false,
+      resetkey: ''
     }
   },
+  created () {
+    this.$store.dispatch(GET_USER).then(() => {
+      this.$store.dispatch(LOAD_SERVER)
+    })
+  },
   methods: {
+    showAuth () {
+      if (this.$route.name === 'reset') {
+        this.resetkey = this.$route.params.passkey || ''
+        this.$refs.auth.openReset()
+      } else {
+        this.$refs.auth.openLogin()
+      }
+    },
     // Used by ErrorControl to display specific errors: login, ...
     makeToast (msg, append = false) {
       this.$bvToast.toast(msg, {
@@ -138,6 +164,7 @@ export default {
     StorageInfo,
     HeaderSearchHistory,
 
+    Auth,
     ErrorControl
   }
 }
@@ -179,5 +206,22 @@ body {
 }
 .teamselect {
   max-width: 18%;
+}
+.empty {
+  text-align: center;
+  margin-top: 10%;
+  button {
+    background-color: white;
+    border-radius: 10px;
+    border: 0px;
+    width: 160px;
+    height: 80px;
+    color: rgb(46, 46, 46);
+  }
+
+  button:hover {
+    background-color: rgb(150, 182, 252);
+    color: rgb(46, 46, 46);
+  }
 }
 </style>

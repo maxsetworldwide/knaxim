@@ -35,8 +35,7 @@ const routes = [
   }, {
     path: '/reset/:passkey',
     name: 'reset',
-    component: Auth,
-    props: true
+    component: Auth
   }, {
     path: '/profile/newpassword',
     name: 'changepass',
