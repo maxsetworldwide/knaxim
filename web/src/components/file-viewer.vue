@@ -19,7 +19,7 @@
 import TextViewer from '@/components/text-viewer'
 import PDFDoc from '@/components/pdf/pdf-doc'
 import { TOUCH } from '@/store/mutations.type'
-import FileService from '@/service/file'
+import { GET_FILE } from '@/store/actions.type'
 
 export default {
   name: 'file-viewer',
@@ -53,10 +53,10 @@ export default {
     refresh () {
       // Add fileID to Recents
       this.$store.commit(TOUCH, this.id)
-      FileService.info({ fid: this.id }).then(({ data }) => {
+      this.$store.dispatch(GET_FILE, this).then(data => {
         const {
           count,
-          file: { name }
+          name
         } = data
         this.name = name
         this.sentenceCount = count

@@ -18,7 +18,6 @@ import LoginModal from '@/components/modals/login-modal'
 import RegistrationModal from '@/components/modals/registration-modal'
 import RequestPasswordModal from '@/components/modals/request-password-modal'
 import ResetPasswordModal from '@/components/modals/reset-password-modal'
-import { FILES_LIST } from '@/store/actions.type'
 
 export default {
   name: 'auth',

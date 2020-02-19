@@ -297,14 +297,14 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNotFound
+			return nil, nil, database.ErrNoResults
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4.1", "unable to get aggregate tags")
 	}
 	var results []tagAggReturn
 	if err := cursor.All(tb.ctx, &results); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNotFound
+			return nil, nil, database.ErrNoResults
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4", "unable to decode data")
 	}

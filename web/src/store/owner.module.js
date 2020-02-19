@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import UserService from '@/service/user'
 import GroupService from '@/service/group'
-import { LOAD_OWNER } from './actions.type'
+import { LOAD_OWNER, LOOKUP_OWNER } from './actions.type'
 import { SET_OWNER_NAME, PROCESS_SERVER_STATE, OWNER_LOADING } from './mutations.type'
 
 const state = {
@@ -26,6 +26,45 @@ const actions = {
     } else {
       return context.state.names[id]
     }
+  },
+  async [LOOKUP_OWNER] ({ commit, state }, { name, overwrite = false }) {
+    let foundid = null
+    if (!overwrite) {
+      for (let id in state.names) {
+        if (state.names[id] === name) {
+          foundid = id
+          break
+        }
+      }
+    }
+    if (overwrite || !foundid) {
+      commit(OWNER_LOADING, 1)
+      try {
+        let lookedup = await Promise.allSettled([
+          UserService.lookup({ name }).then(res => res.data.id),
+          GroupService.lookup({ name }).then(res => res.data.id)
+        ])
+        for (let result in lookedup) {
+          if (result.status === 'fulfilled') {
+            foundid = result.value
+            break
+          }
+        }
+        if (foundid) {
+          commit(SET_OWNER_NAME, {
+            id: foundid,
+            name
+          })
+        } else {
+          throw new Error(`unable to find owner: ${name}`)
+        }
+      } catch {
+        // TODO: Handle Error
+      } finally {
+        commit(OWNER_LOADING, -1)
+      }
+    }
+    return foundid
   }
 }
 

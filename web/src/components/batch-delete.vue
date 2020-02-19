@@ -1,6 +1,5 @@
 <script>
-import FileService from '@/service/file'
-import { PUT_FILE_FOLDER } from '@/store/actions.type'
+import { PUT_FILE_FOLDER, LOAD_SERVER, DELETE_FILES } from '@/store/actions.type'
 
 export default {
   name: 'batch-delete',
@@ -33,11 +32,7 @@ export default {
         if (this.permanent) {
           let error = []
           try {
-            await Promise.all(this.files.map(async file => {
-              await FileService.erase({ fid: file.id }).catch(() => {
-                error.push(file)
-              })
-            }))
+            await this.$store.dispatch(DELETE_FILES, { ids: files })
           } catch {}
 
           if (!error.length) {
@@ -47,8 +42,10 @@ export default {
           let noerror = true
           try {
             await Promise.all(this.files.map(async file => {
-              await this.$store.dispatch(PUT_FILE_FOLDER, { fid: file.id, name: '_trash_' })
-            }))
+              await this.$store.dispatch(PUT_FILE_FOLDER, { fid: file.id, name: '_trash_', preventReload: true })
+            })).finally(() => {
+              this.$store.dispatch(LOAD_SERVER)
+            })
           } catch {
             noerror = false
           }

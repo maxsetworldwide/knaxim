@@ -1,5 +1,5 @@
 import FileService from '@/service/file'
-import { LOAD_SERVER, CREATE_FILE, DELETE_FILES } from './actions.type'
+import { LOAD_SERVER, CREATE_FILE, DELETE_FILES, GET_FILE } from './actions.type'
 import {
   FILE_LOADING,
   SET_FILE,
@@ -18,12 +18,32 @@ const state = {
 }
 
 const actions = {
+  async [GET_FILE] ({ commit, state }, { id, overwrite = false }) {
+    if (overwrite || !state.fileSet[id]) {
+      commit(FILE_LOADING, 1)
+      try {
+        let file = await FileService.info({ fid: id }).then(res => {
+          return {
+            size: res.data.size || 0,
+            count: res.data.count || 0,
+            ...res.data.file
+          }
+        })
+        commit(SET_FILE, file)
+      } catch {
+        // TODO: Handle Error
+      } finally {
+        commit(FILE_LOADING, -1)
+      }
+    }
+    return state.fileSet[id]
+  },
   [CREATE_FILE] (context, params) {
     context.commit(FILE_LOADING, 1)
     return FileService.create(params)
       .then(res => res.data)
+      .finally(() => context.dispatch(LOAD_SERVER))
       .finally(() => {
-        context.dispatch(LOAD_SERVER)
         context.commit(FILE_LOADING, -1)
       })
   },
@@ -34,6 +54,9 @@ const actions = {
         id => FileService.erase({ fid: id })
       )
     )
+      .finally(() => {
+        dispatch(LOAD_SERVER)
+      })
       .finally(() => {
         dispatch(LOAD_SERVER)
         commit(FILE_LOADING, -1)

@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import GroupService from '@/service/group'
-import { AFTER_LOGIN, REFRESH_GROUPS, CREATE_GROUP } from './actions.type'
+import { AFTER_LOGIN, REFRESH_GROUPS, CREATE_GROUP, LOAD_SERVER, ADD_MEMBER, REMOVE_MEMBER } from './actions.type'
 import {
   SET_GROUP,
   ACTIVATE_GROUP,
@@ -12,6 +12,8 @@ const state = {
   active: null,
   ids: [],
   names: {},
+  members: {},
+  owners: {},
   loading: 0
 }
 
@@ -43,19 +45,55 @@ const actions = {
     context.commit(GROUP_LOADING, 1)
     try {
       await GroupService.create({ name })
-      await context.dispatch(REFRESH_GROUPS)
+      await context.dispatch(LOAD_SERVER)
     } catch {
       // TODO: handle error
     } finally {
       context.commit(GROUP_LOADING, -1)
     }
+  },
+  async [ADD_MEMBER] ({ commit, dispatch, state }, { gid, newMember }) {
+    if (!gid) {
+      gid = state.active
+    }
+    commit(GROUP_LOADING, 1)
+    try {
+      await GroupService.add({
+        gid,
+        target: newMember
+      })
+      dispatch(LOAD_SERVER)
+    } catch {
+      // TODO: Handle Error
+    } finally {
+      commit(GROUP_LOADING, -1)
+    }
+  },
+  async [REMOVE_MEMBER] ({ commit, dispatch, state }, { gid, newMember }) {
+    if (!gid) {
+      gid = state.active
+    }
+    commit(GROUP_LOADING, 1)
+    try {
+      await GroupService.remove({
+        gid,
+        target: newMember
+      })
+      dispatch(LOAD_SERVER)
+    } catch {
+      // TODO: Handle Error
+    } finally {
+      commit(GROUP_LOADING, -1)
+    }
   }
 }
 
 const mutations = {
-  [SET_GROUP] (state, { id, name }) {
+  [SET_GROUP] (state, { id, name, owner, members }) {
     if (state.ids.reduce((a, i) => { return a && i !== id }, true)) { state.ids.push(id) }
-    Vue.set(state.names, id, name)
+    Vue.set(state.names, id, name || '')
+    Vue.set(state.members, id, members || [])
+    Vue.set(state.owners, id, owner || '')
   },
   [ACTIVATE_GROUP] (state, { id }) {
     state.active = id
@@ -71,18 +109,22 @@ const mutations = {
 }
 
 const getters = {
-  activeGroup (state) {
-    if (!state.active) return null
+  activeGroup ({ active, names, members, owners }) {
+    if (!active) return null
     return {
-      id: state.active,
-      name: state.names[state.active]
+      id: active,
+      name: names[active],
+      members: members[active],
+      owners: owners[active]
     }
   },
-  availableGroups ({ ids, names }) {
+  availableGroups ({ ids, names, members, owners }) {
     return ids.map(id => {
       return {
         id,
-        name: names[id]
+        name: names[id],
+        members: members[id],
+        owner: owners[id]
       }
     })
   },

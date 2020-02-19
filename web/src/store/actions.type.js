@@ -8,6 +8,8 @@ export const FILE_SLICES = 'getFileSlices'
 export const FILE_SEARCH = 'searchFile'
 export const LOAD_FILE_MATCHES = 'loadFileMatches'
 export const CREATE_FILE = 'createFile'
+export const DELETE_FILES = 'deleteFiles'
+export const GET_FILE = 'getFile'
 
 export const FILES_LIST = 'getFileList'
 export const FILES_SEARCH = 'searchFiles'
@@ -20,9 +22,12 @@ export const PUT_FILE_FOLDER = 'putFileFolder'
 export const REMOVE_FILE_FOLDER = 'removeFileFolder'
 
 export const LOAD_OWNER = 'loadOwner'
+export const LOOKUP_OWNER = 'lookupOwner'
 
 export const REFRESH_GROUPS = 'refreshGroups'
 export const CREATE_GROUP = 'createGroup'
+export const ADD_MEMBER = 'addMember'
+export const REMOVE_MEMBER = 'removeMember'
 
 export const LOAD_SERVER = 'loadServer'
 export const HANDLE_SERVER_STATE = 'handleServerState'

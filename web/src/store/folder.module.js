@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import FolderService from '@/service/folder'
-import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE } from './actions.type'
+import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE, LOAD_SERVER } from './actions.type'
 import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from './mutations.type'
 
 const state = {
@@ -47,19 +47,25 @@ const actions = {
       context.commit(FOLDER_LOADING, -1)
     }
   },
-  async [PUT_FILE_FOLDER] (context, { fid, name, group }) {
+  async [PUT_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
     FolderService.add({ fid, name, group }).then(async () => {
       await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
     }).finally(() => {
+      if (!preventReload) {
+        context.dispatch(LOAD_SERVER)
+      }
       context.commit(FOLDER_LOADING, -1)
     })
   },
-  async [REMOVE_FILE_FOLDER] (context, { fid, name, group }) {
+  async [REMOVE_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
     FolderService.remove({ fid, name, group }).then(async () => {
       await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
     }).finally(() => {
+      if (!preventReload) {
+        context.dispatch(LOAD_SERVER)
+      }
       context.commit(FOLDER_LOADING, -1)
     })
   },
