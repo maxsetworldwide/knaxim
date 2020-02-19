@@ -44,7 +44,7 @@ export default {
     ...mapGetters({
       loading: 'authLoading'
     })
-  }
+  },
   methods: {
     close () {
       this.$emit('close')
