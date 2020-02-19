@@ -48,8 +48,6 @@ const actions = {
       })
   },
   [DELETE_FILES] ({ commit, dispatch }, { ids }) {
-    console.log('deleteing files')
-    console.log(ids)
     commit(FILE_LOADING, 1)
     return Promise.allSettled(
       (ids || []).map(

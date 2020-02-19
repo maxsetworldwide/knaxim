@@ -33,8 +33,8 @@ export default {
           let error = []
           try {
             await this.$store.dispatch(DELETE_FILES, { ids: this.files.map(f => f.id) })
-          } catch (err) {
-            console.log(err)
+          } catch {
+            // TODO: Handle Error
           }
 
           if (!error.length) {
