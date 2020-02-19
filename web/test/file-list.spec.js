@@ -25,7 +25,9 @@ let actions = {
 let store = new Vuex.Store({
   actions,
   getters: {
-    activeFolders: []
+    activeFolders () {
+      return []
+    }
   }
 })
 
