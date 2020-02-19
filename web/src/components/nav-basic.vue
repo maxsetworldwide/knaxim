@@ -47,7 +47,8 @@
       </b-nav-item>
 
       <b-nav-item class="mb-1"
-          to="/list/trash">
+          to="/list/trash"
+          v-if=!groupMode>
         <svg>
           <use href="../assets/app.svg#bin" />
         </svg>
