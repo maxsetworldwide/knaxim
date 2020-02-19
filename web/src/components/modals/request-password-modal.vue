@@ -24,7 +24,8 @@
   </b-modal>
 </template>
 <script>
-import UserService from '@/service/user'
+import { mapGetters, mapActions } from 'vuex'
+import { SEND_RESET_REQUEST } from '@/store/actions.type'
 
 export default {
   name: 'request-password-modal',
@@ -36,10 +37,14 @@ export default {
   },
   data () {
     return {
-      name: '',
-      loading: false
+      name: ''
     }
   },
+  computed: {
+    ...mapGetters({
+      loading: 'authLoading'
+    })
+  }
   methods: {
     close () {
       this.$emit('close')
@@ -49,11 +54,8 @@ export default {
         return
       }
       this.loading = true
-      UserService.requestReset({ name: this.name }).then(res => {
+      this[SEND_RESET_REQUEST]({ name: this.name }).then(() => {
         this.toLogin()
-        this.loading = false
-      }).catch(() => {
-        this.loading = false
       })
     },
     toLogin () {
@@ -66,6 +68,7 @@ export default {
       this.name = ''
       this.$refs['modal'].hide()
     }
-  }
+  },
+  ...mapActions([SEND_RESET_REQUEST])
 }
 </script>

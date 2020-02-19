@@ -41,7 +41,8 @@ global events:
 </template>
 
 <script>
-import FileService from '@/service/file'
+import { mapGetters, mapActions } from 'vuex'
+import { CREATE_WEB_FILE } from '@/store/actions.type'
 import { EventBus } from '@/plugins/utils'
 
 export default {
@@ -54,8 +55,7 @@ export default {
   },
   data () {
     return {
-      input: '',
-      loading: false
+      input: ''
     }
   },
   methods: {
@@ -64,25 +64,26 @@ export default {
         return
       }
       this.loading = true
-      await FileService.webpage({ url: this.input }).then((res) => {
-        this.loading = false
-        if (res.data.message) {
-          // console.log('url modal:', res.data.message)
-        } else {
-          this.$emit('upload')
-          EventBus.$emit('url-upload')
-          this.$refs['modal'].hide()
-        }
+      await this.send({ url: this.input }).then(() => {
+        this.$emit('upload')
+        EventBus.$emit('url-upload')
+        this.$refs['modal'].hide()
       })
     },
     onClose () {
       this.$emit('close')
-    }
+    },
+    ...mapActions({
+      send: CREATE_WEB_FILE
+    })
   },
   computed: {
     validInput () {
       return this.input.indexOf('http') === 0 && this.input.indexOf('.') > 0
-    }
+    },
+    ...mapGetters({
+      loading: 'fileLoading'
+    })
   }
 }
 </script>

@@ -4,7 +4,10 @@ import {
   AFTER_LOGIN,
   LOGOUT,
   REGISTER,
-  GET_USER
+  GET_USER,
+  CHANGE_PASSWORD,
+  SEND_RESET_REQUEST,
+  RESET_PASSWORD
 } from './actions.type'
 import {
   SET_USER,
@@ -110,6 +113,21 @@ const actions = {
         reject(response)
       })
     })).finally(() => context.commit(AUTH_LOADING, -1))
+  },
+
+  [CHANGE_PASSWORD] ({ commit }, { oldpass, newpass }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.changePassword({ oldpass, newpass }).finally(() => commit(AUTH_LOADING, -1))
+  },
+
+  [SEND_RESET_REQUEST] ({ commit }, { name }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.requestReset({ name }).finally(() => commit(AUTH_LOADING, -1))
+  },
+
+  [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.resetPass({ passkey, newpass }).finally(() => commit(AUTH_LOADING, -1))
   },
 
   /**
