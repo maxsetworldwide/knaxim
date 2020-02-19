@@ -48,9 +48,11 @@ const actions = {
       })
   },
   [DELETE_FILES] ({ commit, dispatch }, { ids }) {
+    console.log('deleteing files')
+    console.log(ids)
     commit(FILE_LOADING, 1)
     return Promise.allSettled(
-      ids.map(
+      (ids || []).map(
         id => FileService.erase({ fid: id })
       )
     )
@@ -58,7 +60,6 @@ const actions = {
         dispatch(LOAD_SERVER)
       })
       .finally(() => {
-        dispatch(LOAD_SERVER)
         commit(FILE_LOADING, -1)
       })
   }

@@ -24,7 +24,7 @@ export default {
   },
 
   methods: {
-    async delete (files) {
+    async delete () {
       if (await this.$bvModal.msgBoxConfirm(this.createMsgBody(), {
         modalClass: 'modal-msg',
         title: this.permanent ? 'The Following Files Will Be Deleted' : 'The Following Files Will Be Moved to Trash'
@@ -32,8 +32,10 @@ export default {
         if (this.permanent) {
           let error = []
           try {
-            await this.$store.dispatch(DELETE_FILES, { ids: files })
-          } catch {}
+            await this.$store.dispatch(DELETE_FILES, { ids: this.files.map(f => f.id) })
+          } catch (err) {
+            console.log(err)
+          }
 
           if (!error.length) {
             this.$emit('delete-files')
@@ -59,9 +61,9 @@ export default {
     createMsgBody () {
       const h = this.$createElement
       return h('b-list-group', [
-        h('b-list-group-item', 'Filename, Owner, Date'), ...this.files.map((file) => {
+        h('b-list-group-item', 'Filename, Upload Date'), ...this.files.map((file) => {
           return h('b-list-group-item',
-            `${file.name}, ${file.own}, ${file.date.upload}`)
+            `${file.name}, ${file.date.upload}`)
         })
       ])
     }
