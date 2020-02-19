@@ -33,6 +33,7 @@
               ref="pages"
               @matches="handleMatches"
               @visible="handleVisible"
+              @viewport="handleViewport"
             />
           </div>
         </b-col>
@@ -89,6 +90,16 @@ export default {
       }
       return result
     }
+    // defaultViewport () {
+    // if (!this.pages.length) {
+    // return {
+    // width: 0,
+    // height: 0
+    // }
+    // }
+    // let vp = this.pages[0].getViewport({ scale: this.scale })
+    // return this.pages[0].getViewport({ scale: this.scale })
+    // }
   },
   methods: {
     increaseScale () {
@@ -96,6 +107,11 @@ export default {
     },
     decreaseScale () {
       this.scale = Math.max(this.scale - 0.3, 0.1)
+    },
+    pageHeightScale (vp) {
+      let pixelRatio = window.devicePixelRatio || 1
+      console.log('vp:', vp)
+      return this.$el.clientWidth * pixelRatio * (1.5 / vp.width)
     },
     pageInput (pageNumber) {
       if (
@@ -127,9 +143,11 @@ export default {
     handleVisible (num) {
       this.currPage = num
     },
+    handleViewport (vp) {
+      this.scale = this.pageHeightScale(vp)
+    },
     fetchPdf () {
       FileService.info({ fid: this.fileID }).then(({ data }) => {
-        console.log(data)
         this.name = data.file.name
       })
       pdfjs
