@@ -47,6 +47,7 @@
     <batch-delete
       v-if="!singleFile"
       :files="checkedFiles"
+      :permanent="permanentDelete"
       #default="{ inputEvents }"
       v-on:delete-files="$emit('delete-files')"
     >
@@ -97,6 +98,21 @@ export default {
     },
     downloadPdf () {
       this.$emit('download-pdf')
+    }
+  },
+  computed: {
+    trashFolder () {
+      return this.$store.state.folder.user['_trash_'] || []
+    },
+    permanentDelete () {
+      return this.checkedFiles.reduce((acc, file) => {
+        return (
+          acc &&
+          this.trashFolder.reduce((a, id) => {
+            return a || id === file.id
+          }, false)
+        )
+      }, true)
     }
   }
 }

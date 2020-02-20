@@ -464,6 +464,7 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 		w = jsw.Internal
 	}
 	var owner database.Owner
+	// shouldn't need to check for group
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
 	} else {
@@ -496,6 +497,7 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 
 func sendView(w http.ResponseWriter, r *http.Request) {
 	var owner database.Owner
+	// shouldn't need to check for group
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(database.Owner)
 	} else {

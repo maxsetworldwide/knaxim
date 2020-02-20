@@ -1,6 +1,9 @@
 package memory
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -168,4 +171,33 @@ func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
 		return 50 << 20, nil
 	}
 	return 0, nil
+}
+
+func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
+	newkey := make([]byte, 32)
+	_, err = rand.Read(newkey)
+	if err != nil {
+		return "", srverror.New(err, 500, "Server Error", "Unable to generate new password reset key")
+	}
+	str := base64.RawURLEncoding.EncodeToString(newkey)
+	ob.Owners.Reset[str] = id
+	return str, nil
+}
+
+func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err error) {
+	id, assigned := ob.Owners.Reset[keystr]
+	if !assigned {
+		return id, database.ErrNotFound
+	}
+	return
+}
+
+func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
+	for k, v := range ob.Owners.Reset {
+		if v.Equal(id) {
+			delete(ob.Owners.Reset, k)
+			break
+		}
+	}
+	return nil
 }

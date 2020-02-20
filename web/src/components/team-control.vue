@@ -1,15 +1,10 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
-import { CREATE_GROUP } from '@/store/actions.type'
-import GroupService from '@/service/group'
-import UserService from '@/service/user'
+import { CREATE_GROUP, LOAD_OWNER, ADD_MEMBER, REMOVE_MEMBER, LOOKUP_OWNER } from '@/store/actions.type'
 
 export default {
   name: 'team-control',
   components: {},
-  created () {
-    this.loadMembers()
-  },
   props: {
     selected: {
       type: Array,
@@ -20,123 +15,50 @@ export default {
   },
   data () {
     return {
-      owner: {
-        id: '',
-        name: ''
-      },
-      members: [],
-      loading: false,
       processing: false
     }
   },
   computed: {
-    ...mapGetters(['activeGroup'])
+    members () {
+      if (this.activeGroup) {
+        return this.activeGroup.members.map(id => {
+          this[LOAD_OWNER]({ id })
+          return {
+            id,
+            name: this.ownerNames[id] || 'loading...'
+          }
+        })
+      }
+      return []
+    },
+    owner () {
+      if (this.activeGroup) {
+        this[LOAD_OWNER]({ id: this.activeGroup.owner })
+        return {
+          id: this.activeGroup.owner || '',
+          name: this.ownerNames[this.activeGroup.owner] || 'loading...'
+        }
+      }
+      return {
+        id: '',
+        name: ''
+      }
+    },
+    loading () {
+      return this.ownerLoading || this.groupLoading
+    },
+    ...mapGetters(['activeGroup', 'ownerNames', 'ownerLoading', 'groupLoading'])
   },
   methods: {
-    ...mapActions([CREATE_GROUP]),
+    ...mapActions([CREATE_GROUP, ADD_MEMBER, REMOVE_MEMBER, LOOKUP_OWNER, LOAD_OWNER]),
     removeGroup () {},
-    addMember (targetname) {
-      UserService.lookup({ name: targetname })
-        .then(res => res.data)
-        .then(data => {
-          if (data.id) {
-            GroupService.add({
-              gid: this.activeGroup.id,
-              target: data.id
-            }).then(() => this.loadMembers())
-          }
-        })
-      GroupService.lookup({ name: targetname })
-        .then(res => res.data)
-        .then(data => {
-          if (data.id) {
-            GroupService.add({
-              gid: this.activeGroup.id,
-              target: data.id
-            }).then(() => this.loadMembers())
-          }
-        })
+    addTeamMember (targetname) {
+      this[LOOKUP_OWNER]({ name: targetname }).then(id => {
+        this[ADD_MEMBER]({ newMember: id })
+      })
     },
-    removeMember (target) {
-      GroupService.remove({ gid: this.activeGroup.id, target }).then(() =>
-        this.loadMembers()
-      )
-    },
-    loadMembers () {
-      if (this.activeGroup) {
-        this.loading = true
-        this.members = []
-        let newmembers = this.members
-        let vm = this
-        GroupService.info({ gid: this.activeGroup.id })
-          .then(res => res.data)
-          .then(data => {
-            let ownerid = data.owner
-            let memberGettingProms = []
-            if (data.members || data.owner) {
-              ;[data.owner, ...(data.members || [])].forEach(memberid => {
-                if (memberid) {
-                  memberGettingProms.push(
-                    new Promise((resolve, reject) => {
-                      let gp = GroupService.info({ gid: memberid })
-                        .then(res => res.data)
-                        .then(data => {
-                          if (data && data.id && data.name) {
-                            if (data.id === ownerid) {
-                              vm.owner = data
-                            } else {
-                              newmembers.push(data)
-                            }
-                            resolve(true)
-                          }
-                        })
-                      let up = UserService.info({ id: memberid })
-                        .then(res => res.data)
-                        .then(data => {
-                          if (data && data.id && data.name) {
-                            if (data.id === ownerid) {
-                              vm.owner = data
-                            } else {
-                              newmembers.push(data)
-                            }
-                            resolve(true)
-                          }
-                        })
-                      let inversegp = new Promise(resolve => {
-                        gp.catch(() => {
-                          resolve(false)
-                        })
-                      })
-                      let inverseup = new Promise(resolve => {
-                        up.catch(() => {
-                          resolve(false)
-                        })
-                      })
-                      Promise.all([inversegp, inverseup]).then(() =>
-                        reject(new Error(`invalid id: ${memberid}`))
-                      )
-                    })
-                  )
-                }
-              })
-            }
-            Promise.all(memberGettingProms)
-              .then(() => {
-                this.loading = false
-                return true
-              })
-              .catch(() => {
-                this.loading = false
-              })
-          })
-      }
-    }
-  },
-  watch: {
-    activeGroup (n, o) {
-      if (n !== o) {
-        this.loadMembers()
-      }
+    removeTeamMember (target) {
+      this[REMOVE_MEMBER]({ newMember: target })
     }
   },
 
@@ -146,8 +68,8 @@ export default {
       members: this.members,
       createTeam: this[CREATE_GROUP],
       removeTeam: this.removeGroup,
-      addMember: this.addMember,
-      removeMember: this.removeMember
+      addMember: this.addTeamMember,
+      removeMember: this.removeTeamMember
     })
   }
 }

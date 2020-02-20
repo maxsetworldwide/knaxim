@@ -23,7 +23,12 @@ let actions = {
 }
 
 let store = new Vuex.Store({
-  actions
+  actions,
+  getters: {
+    activeFolders () {
+      return []
+    }
+  }
 })
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -37,8 +42,8 @@ let store = new Vuex.Store({
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(FileList, {
-    stubs: ['b-table', 'upload-modal', 'file-list-batch', 'folder-modal', 'share-modal',
-      'file-icon'],
+    stubs: ['b-table', 'b-tooltip', 'upload-modal', 'file-list-batch', 'folder-modal', 'share-modal',
+      'file-icon', 'file-table'],
     store,
     localVue,
     watch: {

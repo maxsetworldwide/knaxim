@@ -1,5 +1,5 @@
 <script>
-import FileService from '@/service/file'
+import { PUT_FILE_FOLDER, LOAD_SERVER, DELETE_FILES } from '@/store/actions.type'
 
 export default {
   name: 'batch-delete',
@@ -7,7 +7,8 @@ export default {
     files: {
       type: Array,
       required: true
-    }
+    },
+    permanent: Boolean
   },
   // TODO: The html for the delete list of files and its modal would go nicely
   // in a <template> with a slot; how do I pass inputEvents to the scoped slot.
@@ -23,22 +24,36 @@ export default {
   },
 
   methods: {
-    async delete (files) {
+    async delete () {
       if (await this.$bvModal.msgBoxConfirm(this.createMsgBody(), {
         modalClass: 'modal-msg',
-        title: 'The Following Files Will Be Deleted'
+        title: this.permanent ? 'The Following Files Will Be Deleted' : 'The Following Files Will Be Moved to Trash'
       })) {
-        let error = []
-        this.files.forEach(async file => {
-          await FileService.erase({ fid: file.id }).catch(() => {
-            error.push(file)
-          })
-        })
+        if (this.permanent) {
+          let error = []
+          try {
+            await this.$store.dispatch(DELETE_FILES, { ids: this.files.map(f => f.id) })
+          } catch {
+            // TODO: Handle Error
+          }
 
-        if (!error.length) {
-          this.$emit('delete-files')
+          if (!error.length) {
+            this.$emit('delete-files')
+          }
         } else {
-          // console.log(`Error: some files not deleted.`)
+          let noerror = true
+          try {
+            await Promise.all(this.files.map(async file => {
+              await this.$store.dispatch(PUT_FILE_FOLDER, { fid: file.id, name: '_trash_', preventReload: true })
+            })).finally(() => {
+              this.$store.dispatch(LOAD_SERVER)
+            })
+          } catch {
+            noerror = false
+          }
+          if (noerror) {
+            this.$emit('delete-files')
+          }
         }
       }
     },
@@ -46,9 +61,9 @@ export default {
     createMsgBody () {
       const h = this.$createElement
       return h('b-list-group', [
-        h('b-list-group-item', 'Filename, Owner, Date'), ...this.files.map((file) => {
+        h('b-list-group-item', 'Filename, Upload Date'), ...this.files.map((file) => {
           return h('b-list-group-item',
-            `${file.name}, ${file.own}, ${file.date.upload}`)
+            `${file.name}, ${file.date.upload}`)
         })
       ])
     }

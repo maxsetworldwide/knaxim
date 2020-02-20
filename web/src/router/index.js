@@ -29,6 +29,14 @@ const routes = [
     name: 'register',
     component: Auth
   }, {
+    path: '/request',
+    name: 'request',
+    component: Auth
+  }, {
+    path: '/reset/:passkey',
+    name: 'reset',
+    component: Auth
+  }, {
     path: '/profile/newpassword',
     name: 'changepass',
     component: Profile

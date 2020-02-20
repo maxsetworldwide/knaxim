@@ -21,7 +21,7 @@ func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error
 	defer lock.RUnlock()
 	out, ok := vb.Views[id.String()]
 	if !ok {
-		out = nil
+		return nil, database.ErrNotFound
 	}
 	return
 }

@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import FileListBatch from '@/components/file-list-batch'
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -10,9 +10,31 @@ import FileListBatch from '@/components/file-list-batch'
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
 
+import Vuex from 'vuex'
+
+const localVue = createLocalVue()
+localVue.use(Vuex)
+
+let store = new Vuex.Store({
+  getters: {
+    isAuthenticated () {
+      return true
+    }
+  },
+  state: {
+    folder: {
+      user: {
+        '_trash_': []
+      }
+    }
+  }
+})
+
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(FileListBatch, {
     stubs: ['batch-delete', 'b-dropdown-item', 'b-dropdown-divider', 'b-dropdown'],
+    localVue,
+    store,
     propsData: {
       checkedFiles: [{
         id: 'id-abc-123',

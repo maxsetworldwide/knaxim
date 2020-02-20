@@ -5,6 +5,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 )
@@ -16,7 +17,7 @@ type userProfile struct {
 		Own    []string `json:"own"`
 		Member []string `json:"member"`
 	} `json:"groups"`
-	Dirs  []string `json:"dirs"`
+	Dirs  []string `json:"folders"`
 	Files struct {
 		Own  []string `json:"own"`
 		View []string `json:"view"`
@@ -38,7 +39,7 @@ type groupProfile struct {
 		Own    []string `json:"own"`
 		Member []string `json:"member"`
 	} `json:"groups"`
-	Dirs  []string `json:"dirs"`
+	Dirs  []string `json:"folders"`
 	Files struct {
 		Own  []string `json:"own"`
 		View []string `json:"view"`
@@ -63,15 +64,17 @@ func buildGP(g database.GroupI, isOwned bool, gown, gm, d, fo, fv []string) grou
 }
 
 type fileProfile struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Type    string   `json:"type"`
-	Owner   string   `json:"owner"`
-	IsOwned bool     `json:"isOwned"`
-	Viewers []string `json:"viewers"`
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Type    string            `json:"type"`
+	Owner   string            `json:"owner"`
+	IsOwned bool              `json:"isOwned"`
+	Date    database.FileTime `json:"date"`
+	Size    int64             `json:"size"`
+	Viewers []string          `json:"viewers"`
 }
 
-func buildFP(r database.FileI, isOwned bool) fileProfile {
+func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
 	var out fileProfile
 	out.ID = r.GetID().String()
 	out.Name = r.GetName()
@@ -85,6 +88,8 @@ func buildFP(r database.FileI, isOwned bool) fileProfile {
 	} else {
 		out.Type = "file"
 	}
+	out.Date = r.GetDate()
+	out.Size = size
 	return out
 }
 
@@ -121,7 +126,7 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if owned, err := filebase.GetOwned(g.GetID()); err == nil {
 			for _, o := range owned {
-				cp.addRecord(current_user, o)
+				cp.addRecord(current_user, o, filebase)
 				fo = append(fo, o.GetID().String())
 			}
 		} else {
@@ -129,7 +134,7 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if viewable, err := filebase.GetPermKey(g.GetID(), "view"); err == nil {
 			for _, v := range viewable {
-				cp.addRecord(current_user, v)
+				cp.addRecord(current_user, v, filebase)
 				fv = append(fv, v.GetID().String())
 			}
 		}
@@ -138,10 +143,16 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 	return nil
 }
 
-func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI) {
+func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI, db database.Database) error {
 	if _, ok := cp.Records[r.GetID().String()]; !ok {
-		cp.Records[r.GetID().String()] = buildFP(r, r.GetOwner().Match(u))
+		sb := db.Store(nil)
+		fs, err := sb.Get(r.GetID().StoreID)
+		if err != nil {
+			return err
+		}
+		cp.Records[r.GetID().String()] = buildFP(r, r.GetOwner().Match(u), fs.FileSize)
 	}
+	return nil
 }
 
 func completeUserInfo(out http.ResponseWriter, r *http.Request) {
@@ -160,25 +171,30 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	info.User.Roles = user.GetRoles()
 	info.User.Data.Total, err = ownerbase.GetTotalSpace(user.GetID())
 	if err != nil {
+		util.VerboseRequest(r, "error getting total space.")
 		panic(err)
 	}
 	if info.User.Data.Current, err = ownerbase.GetSpace(user.GetID()); err != nil {
+		util.VerboseRequest(r, "error getting current space.")
 		panic(err)
 	}
 	if owned, members, err := ownerbase.GetGroups(user.GetID()); err == nil {
 		for _, o := range owned {
 			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+				util.VerboseRequest(r, "error adding group")
 				panic(err)
 			}
 			info.User.Groups.Own = append(info.User.Groups.Own, o.GetID().String())
 		}
 		for _, m := range members {
 			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+				util.VerboseRequest(r, "error adding member group")
 				panic(err)
 			}
 			info.User.Groups.Member = append(info.User.Groups.Member, m.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "error getting groups")
 		panic(err)
 	}
 	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]string{user.GetID().String(): dirflag}}); err == nil {
@@ -186,30 +202,36 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 			info.User.Dirs = append(info.User.Dirs, t.Word)
 		}
 	} else {
+		util.VerboseRequest(r, "error searching tag data")
 		panic(err)
 	}
 	if owned, err := filebase.GetOwned(user.GetID()); err == nil {
 		for _, o := range owned {
-			info.addRecord(user, o)
+			info.addRecord(user, o, filebase)
 			info.User.Files.Own = append(info.User.Files.Own, o.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "unable to find owned files")
 		panic(err)
 	}
 	if viewable, err := filebase.GetPermKey(user.GetID(), "view"); err == nil {
 		for _, v := range viewable {
-			info.addRecord(user, v)
+			info.addRecord(user, v, filebase)
 			info.User.Files.View = append(info.User.Files.View, v.GetID().String())
 		}
 	} else {
+		util.VerboseRequest(r, "unable to find Perm Key")
 		panic(err)
 	}
 	if public, err := filebase.GetPermKey(database.Public.GetID(), "view"); err == nil {
 		for _, p := range public {
-			info.addRecord(user, p)
+			info.addRecord(user, p, filebase)
 			info.Public = append(info.Public, p.GetID().String())
 		}
 	}
 
-	w.Set("user", info)
+	w.Set("user", info.User)
+	w.Set("public", info.Public)
+	w.Set("groups", info.Groups)
+	w.Set("files", info.Records)
 }

@@ -22,7 +22,7 @@ func chunkify(ID filehash.StoreID, content []byte) []interface{} {
 		if end > len(content) {
 			end = len(content)
 		}
-		chunks = append(chunks, contentchunk{
+		chunks = append(chunks, &contentchunk{
 			ID:    ID,
 			Index: i,
 			Data:  content[start:end],
@@ -64,6 +64,7 @@ func filterchunks(list []*contentchunk) [][]*contentchunk {
 			if ch.ID.Equal(outlist[0].ID) {
 				out[i] = append(outlist, ch)
 				added = true
+				break
 			}
 		}
 		if !added {
