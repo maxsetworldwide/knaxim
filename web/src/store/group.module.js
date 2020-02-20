@@ -5,7 +5,8 @@ import {
   SET_GROUP,
   ACTIVATE_GROUP,
   PROCESS_SERVER_STATE,
-  GROUP_LOADING
+  GROUP_LOADING,
+  PUSH_ERROR
 } from './mutations.type'
 
 const state = {
@@ -35,8 +36,8 @@ const actions = {
           context.commit(SET_GROUP, t)
         })
       }
-    } catch {
-      // TODO: process error
+    } catch (err) {
+      context.commit(PUSH_ERROR, err)
     } finally {
       context.commit(GROUP_LOADING, -1)
     }
@@ -46,8 +47,8 @@ const actions = {
     try {
       await GroupService.create({ name })
       await context.dispatch(LOAD_SERVER)
-    } catch {
-      // TODO: handle error
+    } catch (err) {
+      context.commit(PUSH_ERROR, err)
     } finally {
       context.commit(GROUP_LOADING, -1)
     }
@@ -63,8 +64,8 @@ const actions = {
         target: newMember
       })
       dispatch(LOAD_SERVER)
-    } catch {
-      // TODO: Handle Error
+    } catch (err) {
+      commit(PUSH_ERROR, err)
     } finally {
       commit(GROUP_LOADING, -1)
     }
@@ -80,8 +81,8 @@ const actions = {
         target: newMember
       })
       dispatch(LOAD_SERVER)
-    } catch {
-      // TODO: Handle Error
+    } catch (err) {
+      commit(PUSH_ERROR, err)
     } finally {
       commit(GROUP_LOADING, -1)
     }

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import { LOAD_OWNER, LOOKUP_OWNER } from './actions.type'
-import { SET_OWNER_NAME, PROCESS_SERVER_STATE, OWNER_LOADING } from './mutations.type'
+import { SET_OWNER_NAME, PROCESS_SERVER_STATE, OWNER_LOADING, PUSH_ERROR } from './mutations.type'
 
 const state = {
   names: {}, // map[ownerid]string
@@ -18,7 +18,11 @@ const actions = {
       try {
         response = await UserService.info({ id })
       } catch {
-        response = await GroupService.info({ id })
+        try {
+          response = await GroupService.info({ id })
+        } catch {
+          context.commit(PUSH_ERROR, 'User or Team does not exist')
+        }
       }
       context.commit(SET_OWNER_NAME, { id, name: response.data.name })
       context.commit(OWNER_LOADING, -1)
@@ -58,8 +62,8 @@ const actions = {
         } else {
           throw new Error(`unable to find owner: ${name}`)
         }
-      } catch {
-        // TODO: Handle Error
+      } catch (e) {
+        commit(PUSH_ERROR, e)
       } finally {
         commit(OWNER_LOADING, -1)
       }

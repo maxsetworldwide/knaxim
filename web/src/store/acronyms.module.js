@@ -2,7 +2,8 @@ import AcronymService from '@/service/acronym'
 import { ACRONYMS } from './actions.type'
 import {
   SET_ACRONYMS,
-  LOADING_ACRONYMS
+  LOADING_ACRONYMS,
+  PUSH_ERROR
 } from './mutations.type'
 
 const state = {
@@ -25,15 +26,14 @@ const actions = {
       state.commit(SET_ACRONYMS, { acronyms: [] })
       return
     }
-    return new Promise(resolve => {
-      state.commit(LOADING_ACRONYMS, 1)
-
-      AcronymService.get({ acronym }).then(data => {
-        const { matched } = data.data || []
-        state.commit(SET_ACRONYMS, { acronyms: matched })
-        resolve(data.matched)
-      }).finally(() => state.commit(LOADING_ACRONYMS, -1))
+    state.commit(LOADING_ACRONYMS, 1)
+    return AcronymService.get({ acronym }).then(data => {
+      const { matched } = data.data || []
+      state.commit(SET_ACRONYMS, { acronyms: matched })
+      return matched
     })
+      .catch(err => state.commit(PUSH_ERROR, err))
+      .finally(() => state.commit(LOADING_ACRONYMS, -1))
   }
 }
 

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import FolderService from '@/service/folder'
 import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE, LOAD_SERVER } from './actions.type'
-import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from './mutations.type'
+import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER, PUSH_ERROR } from './mutations.type'
 
 const state = {
   user: {}, // map filename to list of fileids
@@ -24,8 +24,8 @@ const actions = {
       await Promise.all(names.map((name) => {
         return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
       }))
-    } catch {
-      // TODO: handler err
+    } catch (err) {
+      context.commit(PUSH_ERROR, err)
     }
     context.commit(FOLDER_LOADING, -1)
   },
@@ -41,33 +41,39 @@ const actions = {
           name,
           files
         })
-      } catch {
-        // TODO: handle Error
+      } catch (err) {
+        context.commit(PUSH_ERROR, err)
       }
       context.commit(FOLDER_LOADING, -1)
     }
   },
   async [PUT_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.add({ fid, name, group }).then(async () => {
-      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
-    }).finally(() => {
-      if (!preventReload) {
-        context.dispatch(LOAD_SERVER)
-      }
-      context.commit(FOLDER_LOADING, -1)
-    })
+    return FolderService.add({ fid, name, group })
+      .then(async () => {
+        await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+      })
+      .catch(err => context.commit(PUSH_ERROR, err))
+      .finally(() => {
+        if (!preventReload) {
+          context.dispatch(LOAD_SERVER)
+        }
+        context.commit(FOLDER_LOADING, -1)
+      })
   },
   async [REMOVE_FILE_FOLDER] (context, { fid, name, group, preventReload = false }) {
     context.commit(FOLDER_LOADING, 1)
-    FolderService.remove({ fid, name, group }).then(async () => {
-      await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
-    }).finally(() => {
-      if (!preventReload) {
-        context.dispatch(LOAD_SERVER)
-      }
-      context.commit(FOLDER_LOADING, -1)
-    })
+    return FolderService.remove({ fid, name, group })
+      .then(async () => {
+        await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
+      })
+      .catch(err => context.commit(PUSH_ERROR, err))
+      .finally(() => {
+        if (!preventReload) {
+          context.dispatch(LOAD_SERVER)
+        }
+        context.commit(FOLDER_LOADING, -1)
+      })
   },
   async [HANDLE_SERVER_STATE] ({ commit, dispatch }, { user, groups }) {
     commit(FOLDER_LOADING, 1)
@@ -77,8 +83,8 @@ const actions = {
     }
     try {
       await Promise.all(proms)
-    } catch {
-      // TODO: handle Error
+    } catch (err) {
+      commit(PUSH_ERROR, err)
     }
     commit(FOLDER_LOADING, -1)
   }
