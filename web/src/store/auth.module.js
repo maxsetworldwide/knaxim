@@ -130,13 +130,13 @@ const actions = {
    *
    * @return {Promise}
    */
-  [GET_USER] (context) {
+  [GET_USER] (context, { quiet } = { quiet: true }) {
     context.commit(AUTH_LOADING, 1)
     return (new Promise((resolve, reject) => {
       UserService.info({})
         .then(({ data }) => {
           if (data.message === 'login') {
-            context.commit(PUSH_ERROR, data.message)
+            quiet || context.commit(PUSH_ERROR, data.message)
             reject(data)
           } else {
             context.commit(SET_USER, data)
@@ -144,10 +144,10 @@ const actions = {
           }
         }).catch(({ response }) => {
           if (response && response.message) {
-            context.commit(PUSH_ERROR, response.message)
+            quiet || context.commit(PUSH_ERROR, response.message)
             reject(new Error(response.message))
           } else {
-            context.commit(PUSH_ERROR, 'Unable to find user account')
+            quiet || context.commit(PUSH_ERROR, 'Unable to find user account')
             reject(new Error('unable to get user'))
           }
         })
