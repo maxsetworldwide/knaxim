@@ -29,7 +29,8 @@
   </b-modal>
 </template>
 <script>
-import UserService from '@/service/user'
+import { mapGetters, mapActions } from 'vuex'
+import { RESET_PASSWORD } from '@/store/actions.type'
 
 export default {
   name: 'reset-password-modal',
@@ -47,8 +48,7 @@ export default {
   data () {
     return {
       newpass: '',
-      passConf: '',
-      loading: false
+      passConf: ''
     }
   },
   methods: {
@@ -68,13 +68,13 @@ export default {
         return
       }
       this.loading = true
-      UserService.resetPass({ passkey: this.passkey, newpass: this.newpass }).then(res => {
-        this.loading = false
+      this.reset({ passkey: this.passkey, newpass: this.newpass }).then(() => {
         this.close()
-      }).catch(() => {
-        this.loading = false
       })
-    }
+    },
+    ...mapActions({
+      reset: RESET_PASSWORD
+    })
   },
   computed: {
     validateForm () {
@@ -94,7 +94,10 @@ export default {
         return null
       }
       return this.newpass === this.passConf
-    }
+    },
+    ...mapGetters({
+      loading: 'authLoading'
+    })
   }
 }
 </script>
