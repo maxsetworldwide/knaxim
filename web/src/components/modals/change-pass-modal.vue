@@ -83,12 +83,12 @@ export default {
       if (!this.validateForm) {
         return
       }
-      this[CHANGE_PASSWORD](this).then(() => {
+      this.send({ oldpass: this.oldpass, newpass: this.newpass }).then(() => {
         this.fail = false
         this.$emit('changed')
         this.hide()
       }, () => {
-        this.fail = false
+        this.fail = true
       }).finally(() => {
         this.oldpass = ''
         this.newpass = ''
@@ -106,8 +106,9 @@ export default {
     },
     hide () {
       this.$refs['modal'].hide()
-    }
-  },
-  ...mapActions([CHANGE_PASSWORD])
+    },
+    ...mapActions({ send: CHANGE_PASSWORD })
+  }
+
 }
 </script>
