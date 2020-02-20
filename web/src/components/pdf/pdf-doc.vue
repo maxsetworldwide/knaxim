@@ -10,7 +10,7 @@
         :currPage="currPage"
         :maxPages="pages.length"
         :id="fileID"
-        :name="name"
+        :name="getFileName"
         @scale-increase="increaseScale"
         @scale-decrease="decreaseScale"
         @fit-height="fitToHeight"
@@ -53,6 +53,8 @@ import PdfResultList from './pdf-result-list'
 import PdfToolbar from './pdf-toolbar'
 
 import FileService from '@/service/file'
+import { GET_FILE } from '@/store/actions.type'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'pdf-doc',
@@ -91,7 +93,14 @@ export default {
         })
       }
       return result
-    }
+    },
+    getFileName () {
+      this.fetchFile({ id: this.fileID })
+      const file = this.populateFiles(this.fileID)
+      if (!file) return ''
+      return file.name
+    },
+    ...mapGetters(['populateFiles'])
   },
   methods: {
     increaseScale () {
@@ -139,9 +148,6 @@ export default {
       this.currPage = num
     },
     fetchPdf () {
-      FileService.info({ fid: this.fileID }).then(({ data }) => {
-        this.name = data.file.name
-      })
       pdfjs
         .getDocument(this.url)
         .promise.then(pdf => {
@@ -151,7 +157,10 @@ export default {
           this.$emit('no-view')
           // console.log(err)
         })
-    }
+    },
+    ...mapActions({
+      fetchFile: GET_FILE
+    })
   },
   watch: {
     pdf (pdf) {
