@@ -19,7 +19,7 @@
 	"db_type": "mongo",
 	"db":{
 		"uri": "mongodb://localhost:27017",
-		"db": "KnaximTest"
+		"db": "Knaxim"
 	},
 	"db_clear": true,
 	"tika": {
