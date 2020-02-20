@@ -11,6 +11,7 @@ import folder from './folder.module'
 import owner from './owner.module'
 import group from './group.module'
 import preview from './preview.module'
+import error from './error.module'
 
 import UserService from '@/service/user'
 import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
@@ -25,14 +26,14 @@ export default new Vuex.Store({
   modules: {
     auth,
     file,
-    // files,
     search,
     acronyms,
     recents,
     folder,
     owner,
     group,
-    preview
+    preview,
+    error
   },
   // TODO: Extract all the search functionality into a module!
   state: {

@@ -14,7 +14,8 @@ import {
   PURGE_AUTH,
   SET_ERROR,
   PROCESS_SERVER_STATE,
-  AUTH_LOADING
+  AUTH_LOADING,
+  PUSH_ERROR
 } from './mutations.type'
 
 const state = {

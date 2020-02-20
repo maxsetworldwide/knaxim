@@ -52,3 +52,5 @@ export const SET_PREVIEW = 'setPreview'
 
 export const PUSH_ERROR = 'pushError'
 export const POP_ERROR = 'popError'
+export const ADD_ERROR_LOOP = 'addErrorLoop'
+export const RESET_ERROR = 'resetError'

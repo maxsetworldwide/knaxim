@@ -35,6 +35,7 @@ export const HANDLE_SERVER_STATE = 'handleServerState'
 export const LOAD_PREVIEW = 'loadPreview'
 
 export const GET_ERROR = 'getError'
+export const ERROR_LOOP = 'errorLoop'
 
 export const CHANGE_PASSWORD = 'changePassword'
 export const SEND_RESET_REQUEST = 'sendResetRequest'
