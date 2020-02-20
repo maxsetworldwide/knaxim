@@ -108,7 +108,7 @@ func main() {
 	if len(config.V.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()
 		staticrouter.Use(muxhandlers.CompressHandler)
-		staticrouter.NewRoute().Handler(http.FileServer(http.Dir(config.V.StaticPath)))
+		staticrouter.NewRoute().Handler(config.StaticHandler)
 	}
 	//change to safe close with server with time out values
 	config.V.Server.Handler = mainR

@@ -71,6 +71,7 @@ type fileProfile struct {
 	IsOwned bool              `json:"isOwned"`
 	Date    database.FileTime `json:"date"`
 	Size    int64             `json:"size"`
+	URL     string            `json:"url,omitempty"`
 	Viewers []string          `json:"viewers"`
 }
 
@@ -90,6 +91,9 @@ func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
 	}
 	out.Date = r.GetDate()
 	out.Size = size
+	if wf, ok := r.(*database.WebFile); ok {
+		out.URL = wf.URL
+	}
 	return out
 }
 

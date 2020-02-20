@@ -1,6 +1,7 @@
 {
 	"address": "localhost:8080",
 	"static": "/public",
+	"index": "/index.html",
 	"server":{
 		"Addr": "0.0.0.0:80",
 		"ReadHeaderTimeout": 2000000000

@@ -21,6 +21,7 @@ events:
     <b-form @submit.prevent="register">
       <b-form-group>
         <b-form-input autofocus v-model="email" placeholder="Email" :state="validEmail"/>
+        <b-form-invalid-feedback force-show v-if="fail">invalid email, or username already in use</b-form-invalid-feedback>
         <b-form-group>
           <b-form-input v-model="username" placeholder="Username" :state="validUser"/>
           <b-form-invalid-feedback>
@@ -75,6 +76,7 @@ export default {
       loading: false,
       takenNames: [],
       success: false,
+      fail: false,
       acceptedTerms: 'not_accepted'
     }
   },
@@ -95,6 +97,7 @@ export default {
         if (res.message === 'Name Already Taken') {
           this.takenNames.push(this.username)
         }
+        this.fail = true
       })
     },
     show () {

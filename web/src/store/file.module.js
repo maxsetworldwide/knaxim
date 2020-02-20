@@ -1,5 +1,11 @@
 import FileService from '@/service/file'
-import { LOAD_SERVER, CREATE_FILE, DELETE_FILES, GET_FILE } from './actions.type'
+import {
+  LOAD_SERVER,
+  CREATE_FILE,
+  DELETE_FILES,
+  GET_FILE,
+  CREATE_WEB_FILE
+} from './actions.type'
 import {
   FILE_LOADING,
   SET_FILE,
@@ -46,6 +52,13 @@ const actions = {
       .finally(() => {
         context.commit(FILE_LOADING, -1)
       })
+  },
+  [CREATE_WEB_FILE] ({ commit, dispatch }, { url, group, folder }) {
+    commit(FILE_LOADING, 1)
+    return FileService.webpage({ url, group, folder })
+      .then(res => res.data)
+      .finally(() => dispatch(LOAD_SERVER))
+      .finally(() => commit(FILE_LOADING, -1))
   },
   [DELETE_FILES] ({ commit, dispatch }, { ids }) {
     commit(FILE_LOADING, 1)

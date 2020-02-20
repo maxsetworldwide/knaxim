@@ -35,3 +35,9 @@ export const HANDLE_SERVER_STATE = 'handleServerState'
 export const LOAD_PREVIEW = 'loadPreview'
 
 export const GET_ERROR = 'getError'
+
+export const CHANGE_PASSWORD = 'changePassword'
+export const SEND_RESET_REQUEST = 'sendResetRequest'
+export const RESET_PASSWORD = 'resetPassword'
+
+export const CREATE_WEB_FILE = 'createWebFile'

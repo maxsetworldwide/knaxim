@@ -32,7 +32,7 @@ export default {
   },
   methods: {
     login () {
-      this.$router.push('/login')
+      this.$emit('login')
     },
     changePass () {
       this.$router.push('/profile/newpassword')

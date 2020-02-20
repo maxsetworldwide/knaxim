@@ -3,7 +3,7 @@ Long term eventually this should be the root component for adjusting user profil
 -->
 <template>
   <div>
-    <change-pass-modal ref="changepass" id="change-password" @changed="home"/>
+    <change-pass-modal ref="changepass" id="change-password" @changed="home" @close="home" @login="home"/>
   </div>
 </template>
 <script>

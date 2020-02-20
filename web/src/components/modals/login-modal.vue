@@ -38,6 +38,7 @@ The methods show() and hide() are intended to be public methods for the parent.
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { LOGIN } from '@/store/actions.type'
 
 export default {
@@ -56,14 +57,16 @@ export default {
     return {
       username: '',
       password: '',
-      loading: false,
       fail: false
     }
   },
   computed: {
     feedback () {
       return 'Invalid username or password'
-    }
+    },
+    ...mapGetters({
+      loading: 'authLoading'
+    })
   },
   methods: {
     login () {
@@ -71,10 +74,8 @@ export default {
       this.$store.dispatch(LOGIN, { login: this.username, password: this.password }
       ).then((res) => {
         this.$emit('login')
-        this.loading = false
         this.$refs['modal'].hide()
       }).catch((res) => {
-        this.loading = false
         this.fail = true
       })
     },

@@ -60,6 +60,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 type Configuration struct {
 	Address         string
 	StaticPath      string          `json:"static"`
+	IndexPath       string          `json:"index"`
 	Server          *http.Server    `json:"server"`
 	Cert            *Ssl            `json:"cert"`
 	GracefulTimeout Duration        `json:"close_time"`

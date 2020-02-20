@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import LoginModal from '@/components/modals/login-modal'
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -10,9 +10,27 @@ import LoginModal from '@/components/modals/login-modal'
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
 
+import Vuex from 'vuex'
+
+const localVue = createLocalVue()
+localVue.use(Vuex)
+
+let store = new Vuex.Store({
+  getters: {
+    isAuthenticated () {
+      return true
+    },
+    authLoading () {
+      return false
+    }
+  }
+})
+
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(LoginModal, {
     stubs: ['b-modal', 'b-img', 'b-form', 'b-form-input', 'b-button', 'b-form-group'],
+    localVue,
+    store,
     propsData: {
       id: 'id-abc-123',
       ...options.props
