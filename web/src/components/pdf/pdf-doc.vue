@@ -20,6 +20,7 @@
       <b-row class="h-100 pdf-row" align-h="start">
         <b-col cols="2">
           <pdf-result-list
+            v-if="matchList.length > 0"
             class="h-100 result-list"
             :matchList="matchList"
             @select="onMatchSelect"

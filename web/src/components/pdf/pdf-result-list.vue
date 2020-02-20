@@ -11,23 +11,22 @@ events:
             given matchList that the selection corresponded to
 -->
 <template>
-  <b-list-group class="list h-100">
+  <b-list-group class="list h-100 w-100">
     <h5 class="text-center">Matches:</h5>
     <b-list-group-item
       flush
       button
-      class="py-1 item"
+      class="py-1 item result-text"
       @click.stop.prevent="handleClick(match)"
       v-for="(match, index) in matchList"
       :key="index"
     >
-      <span class="result-text">{{ shortenedSentence(match.sentenceText) }}</span>
+      <span>Pg.{{ match.page }}:{{ match.sentenceText }}</span>
     </b-list-group-item>
   </b-list-group>
 </template>
 
 <script>
-const PREVIEW_LENGTH = 18
 export default {
   name: 'pdf-result-list',
   props: {
@@ -35,42 +34,34 @@ export default {
   },
   methods: {
     handleClick (match) {
-      // console.log(match)
       this.$emit('select', match)
-    },
-    shortenedSentence (sentence) {
-      const type = typeof sentence
-      if (type === 'string') {
-        return sentence.substring(0, PREVIEW_LENGTH) + '...'
-      } else {
-        // console.log('sentence not string: ', sentence, 'type: ', type)
-        return ''
-      }
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
-
 .item {
   background-color: $app-bg1;
-  -o-transition:.5s;
-  -ms-transition:.5s;
-  -moz-transition:.5s;
-  -webkit-transition:.5s;
-  transition:.5s;
+  -o-transition: 0.5s;
+  -ms-transition: 0.5s;
+  -moz-transition: 0.5s;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
   &:hover {
     background-color: $app-clr2;
   }
 }
 
 .result-text {
-  font-size: .8rem;
+  font-size: 0.8rem;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .list {
   overflow: auto;
 }
-
 </style>
