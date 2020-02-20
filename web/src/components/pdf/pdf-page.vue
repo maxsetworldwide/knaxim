@@ -354,7 +354,12 @@ export default {
         )
         let span = this.textSpans[this.matches[matchIdx].start.span]
         matchContexts.push({
-          sentenceText,
+          sentence: {
+            text: sentenceText,
+            start: sentence.start,
+            end: sentence.end
+          },
+          match,
           span
         })
       }

@@ -10,13 +10,15 @@ props:
 events:
   'scale-increase': scale increase button was pressed
   'scale-decrease': scale decrease button was pressed
+  'fit-height': fit to height button was pressed
+  'fit-width': fit to width button was pressed
   'page-input', pageNumber: a page number was input and has been confirmed to
                   be a valid page input
 
 -->
 <template>
   <b-row>
-    <b-col offset-md="5" cols="1">
+    <b-col offset-md="1" cols="1">
       <b-button @click="increaseScale">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
@@ -30,6 +32,19 @@ events:
         </svg>
       </b-button>
     </b-col>
+    <b-col cols="1">
+      <b-button @click="fitWidth">
+        <b-icon-arrow-left-right scale="1.4" />
+      </b-button>
+    </b-col>
+    <b-col cols="1">
+      <b-button @click="fitHeight">
+        <b-icon-arrow-up-down scale="1.4" />
+      </b-button>
+    </b-col>
+    <b-col cols="4">
+      <h4 class="title text-center">{{ name }}</h4>
+    </b-col>
     <b-col cols="2">
       <input
         :value="currPage"
@@ -41,7 +56,7 @@ events:
       <span> / {{ maxPages }}</span>
     </b-col>
 
-    <b-col offset-md="2" cols="1">
+    <b-col cols="1">
       <file-list-batch
         fileSelected
         singleFile
@@ -50,6 +65,8 @@ events:
         @favorite="adjustFavorite"
         @add-folder="showFolderModal"
         @share-file="showShareModal"
+        @download-orig="downloadOrig"
+        @download-pdf="downloadPdf"
       />
       <folder-modal
         ref="folderModal"
@@ -70,6 +87,7 @@ events:
 import FileListBatch from '@/components/file-list-batch'
 import FolderModal from '@/components/modals/folder-modal'
 import ShareModal from '@/components/modals/share-modal'
+import FileService from '@/service/file'
 import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 
@@ -83,7 +101,8 @@ export default {
   props: {
     currPage: Number,
     maxPages: Number,
-    id: String
+    id: String,
+    name: String
   },
   data () {
     return {
@@ -119,6 +138,12 @@ export default {
     decreaseScale () {
       this.$emit('scale-decrease')
     },
+    fitHeight () {
+      this.$emit('fit-height')
+    },
+    fitWidth () {
+      this.$emit('fit-width')
+    },
     onPageInput (event) {
       const pageNumber = parseInt(event.target.value, 10)
       if (isNaN(pageNumber) || pageNumber < 1) return
@@ -143,6 +168,12 @@ export default {
         name,
         group: this.activeGroup ? this.activeGroup.id : undefined
       })
+    },
+    downloadOrig () {
+      window.location.href = FileService.downloadURL({ fid: this.id })
+    },
+    downloadPdf () {
+      window.location.href = FileService.viewURL({ fid: this.id })
     }
   },
   watch: {
@@ -176,5 +207,12 @@ svg {
 
 input {
   width: 50%;
+}
+
+.title {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

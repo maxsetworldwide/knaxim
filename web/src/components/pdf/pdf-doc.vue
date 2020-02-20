@@ -10,13 +10,17 @@
         :currPage="currPage"
         :maxPages="pages.length"
         :id="fileID"
+        :name="getFileName"
         @scale-increase="increaseScale"
         @scale-decrease="decreaseScale"
+        @fit-height="fitToHeight"
+        @fit-width="fitToWidth"
         @page-input="pageInput"
       />
       <b-row class="h-100 pdf-row" align-h="start">
         <b-col cols="2">
           <pdf-result-list
+            v-if="matchList.length > 0"
             class="h-100 result-list"
             :matchList="matchList"
             @select="onMatchSelect"
@@ -49,6 +53,8 @@ import PdfResultList from './pdf-result-list'
 import PdfToolbar from './pdf-toolbar'
 
 import FileService from '@/service/file'
+import { GET_FILE } from '@/store/actions.type'
+import { mapActions, mapGetters } from 'vuex'
 
 export default {
   name: 'pdf-doc',
@@ -64,9 +70,10 @@ export default {
   data () {
     return {
       pdf: null,
+      name: '',
       pages: [],
       currPage: 1,
-      scale: 1.25,
+      scale: 3,
       scrollTop: 0,
       clientHeight: 0,
       matchContexts: {}
@@ -86,7 +93,14 @@ export default {
         })
       }
       return result
-    }
+    },
+    getFileName () {
+      this.fetchFile({ id: this.fileID })
+      const file = this.populateFiles(this.fileID)
+      if (!file) return ''
+      return file.name
+    },
+    ...mapGetters(['populateFiles'])
   },
   methods: {
     increaseScale () {
@@ -94,6 +108,14 @@ export default {
     },
     decreaseScale () {
       this.scale = Math.max(this.scale - 0.3, 0.1)
+    },
+    fitToWidth () {
+      const pixelRatio = window.devicePixelRatio || 1
+      this.scale = (this.$el.clientWidth * pixelRatio) / 800
+    },
+    fitToHeight () {
+      const pixelRatio = window.devicePixelRatio || 1
+      this.scale = (this.$el.clientHeight * pixelRatio) / 800
     },
     pageInput (pageNumber) {
       if (
@@ -124,7 +146,21 @@ export default {
     },
     handleVisible (num) {
       this.currPage = num
-    }
+    },
+    fetchPdf () {
+      pdfjs
+        .getDocument(this.url)
+        .promise.then(pdf => {
+          this.pdf = pdf
+        })
+        .catch(() => {
+          this.$emit('no-view')
+          // console.log(err)
+        })
+    },
+    ...mapActions({
+      fetchFile: GET_FILE
+    })
   },
   watch: {
     pdf (pdf) {
@@ -136,33 +172,18 @@ export default {
       Promise.all(promises)
         .then(pages => {
           this.pages = pages
+          this.fitToWidth()
         })
         .catch(() => {
           // console.log(err)
         })
     },
     fileID () {
-      pdfjs
-        .getDocument(this.url)
-        .promise.then(pdf => {
-          this.pdf = pdf
-        })
-        .catch(() => {
-          this.$emit('no-view')
-          // console.log(err)
-        })
+      this.fetchPdf()
     }
   },
   created () {
-    pdfjs
-      .getDocument(this.url)
-      .promise.then(pdf => {
-        this.pdf = pdf
-      })
-      .catch(() => {
-        this.$emit('no-view')
-        // console.log(err)
-      })
+    this.fetchPdf()
   },
   mounted () {
     this.updateScrollBounds()
