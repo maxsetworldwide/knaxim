@@ -21,7 +21,7 @@ events:
       v-for="(match, index) in matchList"
       :key="index"
     >
-      <span>Pg.{{ match.page }}:{{ match.sentenceText }}</span>
+      <span>Pg.{{ parseInt(match.page) + 1 }}:{{ match.sentenceText }}</span>
     </b-list-group-item>
   </b-list-group>
 </template>
