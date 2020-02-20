@@ -13,6 +13,8 @@
         :name="name"
         @scale-increase="increaseScale"
         @scale-decrease="decreaseScale"
+        @fit-height="fitToHeight"
+        @fit-width="fitToWidth"
         @page-input="pageInput"
       />
       <b-row class="h-100 pdf-row" align-h="start">
@@ -33,7 +35,6 @@
               ref="pages"
               @matches="handleMatches"
               @visible="handleVisible"
-              @viewport="handleViewport"
             />
           </div>
         </b-col>
@@ -90,16 +91,6 @@ export default {
       }
       return result
     }
-    // defaultViewport () {
-    // if (!this.pages.length) {
-    // return {
-    // width: 0,
-    // height: 0
-    // }
-    // }
-    // let vp = this.pages[0].getViewport({ scale: this.scale })
-    // return this.pages[0].getViewport({ scale: this.scale })
-    // }
   },
   methods: {
     increaseScale () {
@@ -108,10 +99,13 @@ export default {
     decreaseScale () {
       this.scale = Math.max(this.scale - 0.3, 0.1)
     },
-    pageHeightScale (vp) {
-      let pixelRatio = window.devicePixelRatio || 1
-      console.log('vp:', vp)
-      return this.$el.clientWidth * pixelRatio * (1.5 / vp.width)
+    fitToWidth () {
+      const pixelRatio = window.devicePixelRatio || 1
+      this.scale = (this.$el.clientWidth * pixelRatio) / 800
+    },
+    fitToHeight () {
+      const pixelRatio = window.devicePixelRatio || 1
+      this.scale = (this.$el.clientHeight * pixelRatio) / 800
     },
     pageInput (pageNumber) {
       if (
@@ -143,9 +137,6 @@ export default {
     handleVisible (num) {
       this.currPage = num
     },
-    handleViewport (vp) {
-      this.scale = this.pageHeightScale(vp)
-    },
     fetchPdf () {
       FileService.info({ fid: this.fileID }).then(({ data }) => {
         this.name = data.file.name
@@ -171,6 +162,7 @@ export default {
       Promise.all(promises)
         .then(pages => {
           this.pages = pages
+          this.fitToWidth()
         })
         .catch(() => {
           // console.log(err)

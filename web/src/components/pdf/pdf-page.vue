@@ -627,7 +627,6 @@ export default {
     this.viewport = this.page.getViewport({
       scale: this.scale / this.pixelRatio
     })
-    this.$emit('viewport', this.viewport)
   },
   mounted () {
     this.updateElementBounds()
