@@ -9,6 +9,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/mongo"
+	"git.maxset.io/web/knaxim/internal/handlers/spa"
 	"github.com/google/go-tika/tika"
 )
 
@@ -26,6 +27,8 @@ var T struct {
 	Server *tika.Server
 }
 
+var StaticHandler spa.SpaHandler
+
 // ParseConfig loads configuration file and populates global vars
 func ParseConfig(path string) error {
 	fp, err := os.Open(path)
@@ -41,6 +44,8 @@ func ParseConfig(path string) error {
 	} else if V.FileLimit < 0 {
 		V.FileLimit = math.MaxInt64
 	}
+	StaticHandler.StaticPath = V.StaticPath
+	StaticHandler.IndexPath = V.IndexPath
 	switch V.DatabaseType {
 	case "mongo":
 		DB = new(mongo.Database)
