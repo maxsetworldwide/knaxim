@@ -1,6 +1,7 @@
 {
 	"address": "localhost:8005",
-	"static": ".",
+	"static": "web/dist",
+	"index": "/index.html",
 	"server":{
 		"Addr": "0.0.0.0:8005",
 		"ReadHeaderTimeout": 2000000000
