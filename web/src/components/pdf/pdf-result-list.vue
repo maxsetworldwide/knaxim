@@ -52,7 +52,6 @@ export default {
         substringEnd
       )
       const result = `Pg.${parseInt(match.page) + 1}:${context}`
-      console.log('pre:', result)
       return result
     },
     matchPhrase (match) {
@@ -62,7 +61,6 @@ export default {
       const substringStart = matchStart - sentenceStart
       const substringEnd = matchEnd - sentenceStart
       const result = match.sentence.text.substring(substringStart, substringEnd)
-      console.log('phrase:', result)
       return result
     },
     postMatchContext (match) {
@@ -70,7 +68,6 @@ export default {
       const sentenceStart = match.sentence.start.global
       const substringStart = matchEnd - sentenceStart
       const result = match.sentence.text.substring(substringStart)
-      console.log('post:', result)
       return result
     }
   }
