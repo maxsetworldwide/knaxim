@@ -52,7 +52,7 @@ export default {
     },
     resLogin () {
       this.$refs['reset'].hide()
-      this.$route.push('/')
+      this.$refs.login.show()
     },
     openReg () {
       this.$refs['reg'].show()
@@ -62,7 +62,7 @@ export default {
       this.$refs['login'].hide()
     },
     pushRequest () {
-      this.$router.push('/request')
+      this.$refs.request.show()
       this.$refs['login'].hide()
     },
     regSuccess (username) {

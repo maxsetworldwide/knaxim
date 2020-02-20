@@ -99,7 +99,7 @@ export default {
       this.$refs['modal'].show()
     },
     toLogin () {
-      this.$router.push('/login')
+      this.$emit('login')
     },
     onClose () {
       this.$emit('close')
