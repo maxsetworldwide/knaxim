@@ -13,7 +13,7 @@
   "dependencies": {
     "axios": "0.19.0",
     "bootstrap": "4.3.1",
-    "bootstrap-vue": "2.1.0",
+    "bootstrap-vue": "2.5.0",
     "core-js": "3.3.2",
     "lodash": "4.17.15",
     "pdfjs-dist": "2.2.228",

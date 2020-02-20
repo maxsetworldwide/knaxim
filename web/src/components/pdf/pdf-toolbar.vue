@@ -10,13 +10,15 @@ props:
 events:
   'scale-increase': scale increase button was pressed
   'scale-decrease': scale decrease button was pressed
+  'fit-height': fit to height button was pressed
+  'fit-width': fit to width button was pressed
   'page-input', pageNumber: a page number was input and has been confirmed to
                   be a valid page input
 
 -->
 <template>
   <b-row>
-    <b-col offset-md="3" cols="1">
+    <b-col offset-md="1" cols="1">
       <b-button @click="increaseScale">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
@@ -28,6 +30,16 @@ events:
         <svg>
           <use href="@/assets/app.svg#zoom-out"></use>
         </svg>
+      </b-button>
+    </b-col>
+    <b-col cols="1">
+      <b-button @click="fitWidth">
+        <b-icon-arrow-left-right scale="1.4" />
+      </b-button>
+    </b-col>
+    <b-col cols="1">
+      <b-button @click="fitHeight">
+        <b-icon-arrow-up-down scale="1.4" />
       </b-button>
     </b-col>
     <b-col cols="4">
@@ -125,6 +137,12 @@ export default {
     },
     decreaseScale () {
       this.$emit('scale-decrease')
+    },
+    fitHeight () {
+      this.$emit('fit-height')
+    },
+    fitWidth () {
+      this.$emit('fit-width')
     },
     onPageInput (event) {
       const pageNumber = parseInt(event.target.value, 10)

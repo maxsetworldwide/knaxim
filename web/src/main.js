@@ -5,7 +5,7 @@ import router from './router'
 import store from './store'
 
 // 3rd party vendors
-import BootstrapVue from 'bootstrap-vue'
+import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
 
 // local resources
 import ApiService from './service/api'
@@ -14,6 +14,7 @@ import './scss/custom.scss'
 
 Vue.config.productionTip = false
 Vue.use(BootstrapVue)
+Vue.use(BootstrapVueIcons)
 
 ApiService.init()
 
