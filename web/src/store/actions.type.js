@@ -33,3 +33,5 @@ export const LOAD_SERVER = 'loadServer'
 export const HANDLE_SERVER_STATE = 'handleServerState'
 
 export const LOAD_PREVIEW = 'loadPreview'
+
+export const GET_ERROR = 'getError'
