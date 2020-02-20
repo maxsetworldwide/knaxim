@@ -4,7 +4,10 @@ import {
   AFTER_LOGIN,
   LOGOUT,
   REGISTER,
-  GET_USER
+  GET_USER,
+  CHANGE_PASSWORD,
+  SEND_RESET_REQUEST,
+  RESET_PASSWORD
 } from './actions.type'
 import {
   SET_USER,
@@ -42,26 +45,27 @@ const actions = {
    * @param {string} credentials.password  Password
    * @return {Promise}
    */
-  [LOGIN] (context, credentials) {
-    context.commit(PURGE_AUTH)
-    context.commit(AUTH_LOADING, 1)
-    return (new Promise((resolve, reject) => {
-      UserService.login({
-        name: credentials.login,
-        pass: credentials.password
-      }).then(({ data }) => {
-        if (data.message === 'Not Found') {
-          context.commit(SET_ERROR, data)
-          reject(data)
-        } else {
-          context.dispatch(AFTER_LOGIN, {})
-          resolve(data)
-        }
-      }).catch(({ response }) => {
-        context.commit(SET_ERROR, response.data)
-        reject(response)
+  async [LOGIN] ({ commit, dispatch }, { login, password }) {
+    commit(PURGE_AUTH)
+    commit(AUTH_LOADING, 1)
+    let out = null
+    try {
+      let res = await UserService.login({
+        name: login,
+        pass: password
       })
-    })).finally(() => context.commit(AUTH_LOADING, -1))
+      if (res.data.message === 'Not Found') {
+        throw new Error('Failed to login')
+      }
+      dispatch(AFTER_LOGIN)
+      out = res.data
+    } catch (err) {
+      // TODO: handle Error
+      throw err
+    } finally {
+      commit(AUTH_LOADING, -1)
+    }
+    return out
   },
 
   /**
@@ -91,25 +95,29 @@ const actions = {
    * @param {string} credentials.password  Password
    * @return {Promise}
    */
-  [REGISTER] (context, credentials) {
-    context.commit(AUTH_LOADING, 1)
-    return (new Promise((resolve, reject) => {
-      UserService.create({
-        email: credentials.email,
-        name: credentials.login,
-        password: credentials.password
-      }).then(({ data }) => {
-        if (data.message === 'Name Already Taken' || data.message === 'Bad Request') {
-          context.commit(SET_ERROR, data.message)
-          reject(data)
-        } else {
-          resolve(data)
-        }
-      }).catch(({ response }) => {
-        context.commit(SET_ERROR, response.data.errors)
-        reject(response)
-      })
-    })).finally(() => context.commit(AUTH_LOADING, -1))
+  [REGISTER] ({ commit }, { email, login, password }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.create({
+      email,
+      name: login,
+      password
+    }).then(({ data }) => data)
+      .finally(() => commit(AUTH_LOADING, -1))
+  },
+
+  [CHANGE_PASSWORD] ({ commit, dispatch }, { oldpass, newpass }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.changePassword({ oldpass, newpass }).then(() => dispatch(LOGOUT)).finally(() => commit(AUTH_LOADING, -1))
+  },
+
+  [SEND_RESET_REQUEST] ({ commit }, { name }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.requestReset({ name }).finally(() => commit(AUTH_LOADING, -1))
+  },
+
+  [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
+    commit(AUTH_LOADING, 1)
+    return UserService.resetPass({ passkey, newpass }).finally(() => commit(AUTH_LOADING, -1))
   },
 
   /**

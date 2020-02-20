@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-import Auth from '@/components/auth'
 import FileList from '../components/file-list'
 // import TextView from '../components/text-viewer'
 import FileView from '../components/file-viewer.vue'
@@ -21,21 +20,12 @@ const routes = [
       sideview: MemberList
     }
   }, {
-    path: '/login',
-    name: 'login',
-    component: Auth
-  }, {
-    path: '/register',
-    name: 'register',
-    component: Auth
-  }, {
-    path: '/request',
-    name: 'request',
-    component: Auth
-  }, {
     path: '/reset/:passkey',
     name: 'reset',
-    component: Auth
+    components: {
+      default: FileList,
+      sideview: MemberList
+    }
   }, {
     path: '/profile/newpassword',
     name: 'changepass',

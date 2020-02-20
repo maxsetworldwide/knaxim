@@ -17,7 +17,7 @@
            <header-search />
 
            <!-- Settings Nav -->
-           <header-settings />
+           <header-settings @login="showLogin"/>
           </b-collapse>
         </b-navbar>
       </b-col>
@@ -54,6 +54,7 @@
           </b-col>
         </b-row>
 
+        <auth ref="auth" :passkey="resetkey"></auth>
         <b-row class="">
           <!-- Main Content -->
           <b-col class="p-0">
@@ -65,7 +66,6 @@
                     <h3>Login</h3>
                   </b-button>
                 </div>
-                <auth ref="auth" :passkey="resetkey"></auth>
               </div>
               <router-view v-else/>
             </div>
@@ -110,19 +110,19 @@ export default {
     return {
       appInfoDisplay: null,
       context: 'My Cloud',
-      auth: false,
-      resetkey: ''
+      auth: false
     }
   },
   created () {
     this.$store.dispatch(GET_USER).then(() => {
       this.$store.dispatch(LOAD_SERVER)
+    }).catch(() => {
+      this.showAuth()
     })
   },
   methods: {
     showAuth () {
       if (this.$route.name === 'reset') {
-        this.resetkey = this.$route.params.passkey || ''
         this.$refs.auth.openReset()
       } else {
         this.$refs.auth.openLogin()
@@ -144,10 +144,17 @@ export default {
       } else {
         this.$router.push(`/team/${id}`)
       }
+    },
+
+    showLogin () {
+      this.$refs.auth.openLogin()
     }
   },
 
   computed: {
+    resetkey () {
+      return this.$route.params ? this.$route.params.passkey || '' : ''
+    },
     ...mapGetters(['isAuthenticated', 'currentUser'])
   },
 

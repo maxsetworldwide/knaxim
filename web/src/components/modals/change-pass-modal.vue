@@ -31,8 +31,8 @@
   </b-modal>
 </template>
 <script>
-import { mapGetters } from 'vuex'
-import UserService from '@/service/user'
+import { mapGetters, mapActions } from 'vuex'
+import { CHANGE_PASSWORD } from '@/store/actions.type'
 
 export default {
   name: 'change-pass-modal',
@@ -47,7 +47,6 @@ export default {
       oldpass: '',
       newpass: '',
       newpassconfirm: '',
-      loading: false,
       fail: false
     }
   },
@@ -74,39 +73,42 @@ export default {
     validateForm () {
       return this.matchPassword && this.validPassword && this.oldpass.length > 5
     },
-    ...mapGetters(['isAuthenticated'])
+    ...mapGetters(['isAuthenticated']),
+    ...mapGetters({
+      loading: 'authLoading'
+    })
   },
   methods: {
     changepass () {
       if (!this.validateForm) {
         return
       }
-      this.loading = true
-      UserService.changePassword({ oldpass: this.oldpass, newpass: this.newpass }).then(res => {
-        this.loading = false
+      this.send({ oldpass: this.oldpass, newpass: this.newpass }).then(() => {
         this.fail = false
         this.$emit('changed')
         this.hide()
       }, () => {
-        this.loading = false
         this.fail = true
+      }).finally(() => {
+        this.oldpass = ''
+        this.newpass = ''
+        this.newpassconfirm = ''
       })
-      this.oldpass = ''
-      this.newpass = ''
-      this.newpassconfirm = ''
     },
     show () {
       this.$refs['modal'].show()
     },
     toLogin () {
-      this.$router.push('/login')
+      this.$emit('login')
     },
     onClose () {
       this.$emit('close')
     },
     hide () {
       this.$refs['modal'].hide()
-    }
+    },
+    ...mapActions({ send: CHANGE_PASSWORD })
   }
+
 }
 </script>
