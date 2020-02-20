@@ -17,7 +17,7 @@ func TestViewbase(t *testing.T) {
 		db := new(Database)
 		*db = *configuration.DB
 		db.DBName = "TestView"
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
 		if err := db.Init(ctx, true); err != nil {
 			t.Fatalf("Unable to init database: %s", err)

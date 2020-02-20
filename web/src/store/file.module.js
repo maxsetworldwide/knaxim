@@ -9,7 +9,8 @@ import {
 import {
   FILE_LOADING,
   SET_FILE,
-  PROCESS_SERVER_STATE
+  PROCESS_SERVER_STATE,
+  PUSH_ERROR
 } from './mutations.type'
 
 const state = {
@@ -36,8 +37,8 @@ const actions = {
           }
         })
         commit(SET_FILE, file)
-      } catch {
-        // TODO: Handle Error
+      } catch (err) {
+        commit(PUSH_ERROR, err)
       } finally {
         commit(FILE_LOADING, -1)
       }
@@ -48,6 +49,7 @@ const actions = {
     context.commit(FILE_LOADING, 1)
     return FileService.create(params)
       .then(res => res.data)
+      .catch(err => context.commit(PUSH_ERROR, err))
       .finally(() => context.dispatch(LOAD_SERVER))
       .finally(() => {
         context.commit(FILE_LOADING, -1)
@@ -57,6 +59,7 @@ const actions = {
     commit(FILE_LOADING, 1)
     return FileService.webpage({ url, group, folder })
       .then(res => res.data)
+      .catch(err => commit(PUSH_ERROR, err))
       .finally(() => dispatch(LOAD_SERVER))
       .finally(() => commit(FILE_LOADING, -1))
   },
@@ -64,7 +67,7 @@ const actions = {
     commit(FILE_LOADING, 1)
     return Promise.allSettled(
       (ids || []).map(
-        id => FileService.erase({ fid: id })
+        id => FileService.erase({ fid: id }).catch(err => { commit(PUSH_ERROR, err); return err })
       )
     )
       .finally(() => {

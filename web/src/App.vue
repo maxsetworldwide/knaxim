@@ -76,12 +76,6 @@
         </b-row>
       </b-col>
     </b-row>
-
-    <!-- TODO: A more descriptive error Object vs error String, would
-    be useful for designing better UI error segments. -->
-    <error-control global v-on:error="makeToast($event)">
-      <div></div>
-    </error-control>
   </b-container>
 
 </template>
@@ -93,8 +87,8 @@ import HeaderSettings from '@/components/header-settings'
 
 // Sub Header
 import TeamSelect from '@/components/team-select'
-import { mapGetters } from 'vuex'
-import { GET_USER, LOAD_SERVER } from '@/store/actions.type'
+import { mapGetters, mapActions } from 'vuex'
+import { GET_USER, LOAD_SERVER, ERROR_LOOP } from '@/store/actions.type'
 
 // Side Nav
 import NavBasic from '@/components/nav-basic'
@@ -102,7 +96,6 @@ import StorageInfo from '@/components/storage-info'
 import HeaderSearchHistory from '@/components/header-search-history'
 
 import Auth from '@/components/auth'
-import ErrorControl from '@/components/error-control'
 
 export default {
   name: 'App',
@@ -129,12 +122,11 @@ export default {
       }
     },
     // Used by ErrorControl to display specific errors: login, ...
-    makeToast (msg, append = false) {
+    makeToast (msg, title = 'Error', appendToast = false) {
       this.$bvToast.toast(msg, {
-        title: 'Error',
+        title,
         autoHideDelay: 5000,
-        appendToast: append,
-        ...(msg === 'Please Login.' ? { to: '/login' } : '')
+        appendToast
       })
     },
 
@@ -148,14 +140,24 @@ export default {
 
     showLogin () {
       this.$refs.auth.openLogin()
-    }
+    },
+    ...mapActions({
+      handleErrors: ERROR_LOOP
+    })
   },
 
   computed: {
     resetkey () {
       return this.$route.params ? this.$route.params.passkey || '' : ''
     },
-    ...mapGetters(['isAuthenticated', 'currentUser'])
+    ...mapGetters(['isAuthenticated', 'currentUser', 'availableErrors'])
+  },
+  watch: {
+    availableErrors (newErrors) {
+      if (newErrors) {
+        this.handleErrors(e => this.makeToast(e.message, e.name || 'Error'))
+      }
+    }
   },
 
   components: {
@@ -171,8 +173,7 @@ export default {
     StorageInfo,
     HeaderSearchHistory,
 
-    Auth,
-    ErrorControl
+    Auth
   }
 }
 </script>

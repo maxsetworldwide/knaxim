@@ -137,7 +137,7 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]database.FileI, error) 
 	var reference []*database.FileDecoder
 	if err := cursor.All(fb.ctx, &reference); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error F6", "unable to decode file list")
 	}
@@ -196,7 +196,7 @@ func (fb *Filebase) MatchStore(oid database.OwnerID, sid []filehash.StoreID, pke
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error F9", "unable to send request")
 	}

@@ -11,10 +11,11 @@ import folder from './folder.module'
 import owner from './owner.module'
 import group from './group.module'
 import preview from './preview.module'
+import error from './error.module'
 
 import UserService from '@/service/user'
 import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
-import { PROCESS_SERVER_STATE } from './mutations.type'
+import { PROCESS_SERVER_STATE, PUSH_ERROR } from './mutations.type'
 
 Vue.use(Vuex)
 
@@ -25,14 +26,14 @@ export default new Vuex.Store({
   modules: {
     auth,
     file,
-    // files,
     search,
     acronyms,
     recents,
     folder,
     owner,
     group,
-    preview
+    preview,
+    error
   },
   // TODO: Extract all the search functionality into a module!
   state: {
@@ -63,6 +64,7 @@ export default new Vuex.Store({
     async [LOAD_SERVER] ({ commit, dispatch }) {
       try {
         let res = await UserService.completeProfile()
+          .catch(err => commit(PUSH_ERROR, err))
         dispatch(HANDLE_SERVER_STATE, res.data)
         commit(PROCESS_SERVER_STATE, res.data)
       } catch {

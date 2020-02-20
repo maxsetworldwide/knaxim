@@ -199,7 +199,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
 	}
@@ -209,7 +209,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
 	}
@@ -389,14 +389,14 @@ func (tb *Tagbase) SearchData(typ tag.Type, data tag.Data) ([]tag.Tag, error) {
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T5", "tag.searchData mongo error")
 	}
 	var returned []tagbson
 	if err := cursor.All(tb.ctx, &returned); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T5.1", "tag.searchData decode error")
 	}

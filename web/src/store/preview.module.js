@@ -1,7 +1,7 @@
 import FileService from '@/service/file'
 import Vue from 'vue'
 import { LOAD_PREVIEW } from './actions.type'
-import { LOADING_PREVIEW, SET_PREVIEW } from './mutations.type'
+import { LOADING_PREVIEW, SET_PREVIEW, PUSH_ERROR } from './mutations.type'
 
 const state = {
   preview: {}
@@ -33,7 +33,7 @@ const actions = {
       }
     } catch (err) {
       commit(SET_PREVIEW, { id, lines: ['Unable to load preview of file.', err] })
-      // TODO: handle Error
+      commit(PUSH_ERROR, err)
     } finally {
       commit(LOADING_PREVIEW, { id, delta: -1 })
     }

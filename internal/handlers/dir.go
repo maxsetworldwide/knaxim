@@ -46,7 +46,13 @@ func getDirs(out http.ResponseWriter, r *http.Request) {
 	}
 
 	var dirs []string
-	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]string{owner.GetID().String(): dirflag}}); err == nil {
+	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(
+		tag.USER,
+		tag.Data{
+			tag.USER: map[string]string{
+				owner.GetID().String(): dirflag},
+		},
+	); err == nil {
 		for _, t := range tags {
 			dirs = append(dirs, t.Word)
 		}

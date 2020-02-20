@@ -70,7 +70,6 @@ export default {
   },
   methods: {
     login () {
-      this.loading = true
       this.$store.dispatch(LOGIN, { login: this.username, password: this.password }
       ).then((res) => {
         this.$emit('login')

@@ -12,13 +12,12 @@ import {
 import {
   SET_USER,
   PURGE_AUTH,
-  SET_ERROR,
   PROCESS_SERVER_STATE,
-  AUTH_LOADING
+  AUTH_LOADING,
+  PUSH_ERROR
 } from './mutations.type'
 
 const state = {
-  errors: null,
   user: null,
   loading: 0
 }
@@ -60,7 +59,6 @@ const actions = {
       dispatch(AFTER_LOGIN)
       out = res.data
     } catch (err) {
-      // TODO: handle Error
       throw err
     } finally {
       commit(AUTH_LOADING, -1)
@@ -79,7 +77,7 @@ const actions = {
     context.commit(AUTH_LOADING, 1)
     UserService.logout().then(({ data }) => {
     }).catch(({ response }) => {
-      context.commit(SET_ERROR, response.data)
+      context.commit(PUSH_ERROR, response.data)
     }).finally(() => {
       context.commit(AUTH_LOADING, -1)
     })
@@ -107,17 +105,24 @@ const actions = {
 
   [CHANGE_PASSWORD] ({ commit, dispatch }, { oldpass, newpass }) {
     commit(AUTH_LOADING, 1)
-    return UserService.changePassword({ oldpass, newpass }).then(() => dispatch(LOGOUT)).finally(() => commit(AUTH_LOADING, -1))
+    return UserService.changePassword({ oldpass, newpass })
+      .then(() => dispatch(LOGOUT))
+      .catch(err => commit(PUSH_ERROR, err))
+      .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [SEND_RESET_REQUEST] ({ commit }, { name }) {
     commit(AUTH_LOADING, 1)
-    return UserService.requestReset({ name }).finally(() => commit(AUTH_LOADING, -1))
+    return UserService.requestReset({ name })
+      .catch(err => commit(PUSH_ERROR, err))
+      .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
     commit(AUTH_LOADING, 1)
-    return UserService.resetPass({ passkey, newpass }).finally(() => commit(AUTH_LOADING, -1))
+    return UserService.resetPass({ passkey, newpass })
+      .catch(err => commit(PUSH_ERROR, err))
+      .finally(() => commit(AUTH_LOADING, -1))
   },
 
   /**
@@ -125,13 +130,13 @@ const actions = {
    *
    * @return {Promise}
    */
-  [GET_USER] (context) {
+  [GET_USER] (context, { quiet } = { quiet: true }) {
     context.commit(AUTH_LOADING, 1)
     return (new Promise((resolve, reject) => {
       UserService.info({})
         .then(({ data }) => {
           if (data.message === 'login') {
-            context.commit(SET_ERROR, data.message)
+            quiet || context.commit(PUSH_ERROR, data.message)
             reject(data)
           } else {
             context.commit(SET_USER, data)
@@ -139,10 +144,10 @@ const actions = {
           }
         }).catch(({ response }) => {
           if (response && response.message) {
-            context.commit(SET_ERROR, response.message)
+            quiet || context.commit(PUSH_ERROR, response.message)
             reject(new Error(response.message))
           } else {
-            context.commit(SET_ERROR, 'unable to get user')
+            quiet || context.commit(PUSH_ERROR, 'Unable to find user account')
             reject(new Error('unable to get user'))
           }
         })
@@ -151,10 +156,6 @@ const actions = {
 }
 
 const mutations = {
-  [SET_ERROR] (state, error) {
-    state.errors = error
-  },
-
   [SET_USER] (state, user) {
     state.user = user
     state.errors = null
