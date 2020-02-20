@@ -306,14 +306,14 @@ func (ub *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, me
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNotFound
+			return nil, nil, database.ErrNoResults
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O3", "unable to find groups")
 	}
 	var groups []*database.Group
 	if err = cursor.All(ub.ctx, &groups); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNotFound
+			return nil, nil, database.ErrNoResults
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O4", "unable to decode groups")
 	}
@@ -472,7 +472,7 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	err = result.Decode(&resetDoc)
 	if err != nil {
-		return database.OwnerID{}, srverror.New(err, 404, "Not Found")
+		return database.OwnerID{}, database.ErrNotFound
 	}
 	if resetDoc.Expire.Before(time.Now()) {
 		return database.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")

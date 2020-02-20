@@ -199,7 +199,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
 	}
@@ -209,7 +209,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults
 		}
 		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
 	}
