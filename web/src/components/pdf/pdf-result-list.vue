@@ -9,16 +9,33 @@ props:
 events:
   'select': emitted upon selection of a match, passing the element of the
             given matchList that the selection corresponded to
+  'highlight', boolean: emitted upon change of the 'sentenceHighlight' boolean,
+                        indicating a desire to toggle sentence highlighting.
 -->
 <template>
   <div class="list h-100 w-100">
     <b-list-group>
-      <h5 class="text-center">Matches:</h5>
+      <span class="text-center">
+        <b-form-checkbox
+          v-b-tooltip.hover="{
+            title: 'Toggle Sentence Highlighting',
+            placement: 'top',
+            boundary: 'window'
+          }"
+          v-model="sentenceHighlight"
+          @change="$emit('highlight', $event)"
+          switch
+          inline
+          class="pl-4"
+          size="lg"
+        />
+        <span class="title">Matches:</span>
+      </span>
       <b-list-group-item
         flush
         button
         class="py-1 w-100 item"
-        @click.stop.prevent="handleClick(match)"
+        @click.stop.prevent="handleSelect(match)"
         v-for="(match, index) in matchList"
         :key="index"
       >
@@ -38,8 +55,13 @@ export default {
   props: {
     matchList: Array
   },
+  data () {
+    return {
+      sentenceHighlight: true
+    }
+  },
   methods: {
-    handleClick (match) {
+    handleSelect (match) {
       this.$emit('select', match)
     },
     preMatchContext (match) {
@@ -89,6 +111,12 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.title {
+  text-decoration: underline;
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 
 .result-text {
