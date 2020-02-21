@@ -17,7 +17,7 @@ events:
 
 -->
 <template>
-  <b-row>
+  <b-row align-v="end">
     <b-col offset-md="1" cols="1">
       <b-button @click="increaseScale">
         <svg>
