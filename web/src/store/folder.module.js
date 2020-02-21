@@ -4,9 +4,9 @@ import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_
 import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER, PUSH_ERROR } from './mutations.type'
 
 const state = {
-  user: {}, // map filename to list of fileids
+  user: {}, // map foldername to list of fileids
   loading: 0, // when greater then 0 folders are being loaded
-  group: {}, // map[group id]map[filename][]fileid
+  group: {}, // map[group id]map[foldername][]fileid
   active: []
 }
 
@@ -156,9 +156,9 @@ const mutations = {
 const getters = {
   folders (state, getters) {
     if (!getters.activeGroup) {
-      return state.user
+      return state.user || {}
     }
-    return state.group[getters.activeGroup]
+    return state.group[getters.activeGroup] || {}
   },
   getFolder (state, getters) {
     return (name) => {

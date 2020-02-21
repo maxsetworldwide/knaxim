@@ -3,9 +3,10 @@
     <!-- Header -->
     <b-row>
       <b-col>
+        <auth ref="auth" :passkey="resetkey"></auth>
         <b-navbar class="app-header"
            toggleable="md">
-          <b-navbar-brand href="#" class="pr-5">
+          <b-navbar-brand href="/" class="pr-5">
             <b-img src="~@/assets/logo.png"
                alt="Knaxim Logo" />
             Knaxim.com
@@ -26,54 +27,49 @@
 
     <b-row>
       <!-- Side Nav -->
-      <b-col class="app-side pl-0 mr-2 min-max-150" cols="2">
-        <b-row>
+      <b-col v-if="isAuthenticated" md="2">
+        <b-row cols="1">
           <b-col>
-            <nav-basic />
-            <hr />
+            <nav-basic @team-selected="gotoTeam"/>
           </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
+
+          <b-col class="d-none d-md-block">
             <storage-info />
           </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
+
+          <b-col class="d-none d-md-block">
             <header-search-history />
           </b-col>
         </b-row>
       </b-col>
 
-      <b-col class="overflow-auto">
+      <b-col v-if="isAuthenticated" class="overflow-auto" md="10">
         <!-- Sub Header -->
-        <b-row>
+        <b-row class="d-none d-md-flex">
           <b-col>
             <team-select v-if="isAuthenticated" class="teamselect"
               @team-selected="gotoTeam"/>
           </b-col>
         </b-row>
 
-        <auth ref="auth" :passkey="resetkey"></auth>
         <b-row class="">
           <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <div v-if="!isAuthenticated">
-                <div class="empty">
-                  <h1>You aren't logged in!</h1>
-                  <b-button @click="showAuth">
-                    <h3>Login</h3>
-                  </b-button>
-                </div>
-              </div>
-              <router-view v-else/>
+              <router-view />
             </div>
           </b-col>
 
           <!-- Side View -->
           <router-view name="sideview" />
         </b-row>
+      </b-col>
+
+      <b-col v-if="!isAuthenticated" class="empty">
+        <h1>You aren't logged in!</h1>
+        <b-button @click="showAuth">
+          <h3>Login</h3>
+        </b-button>
       </b-col>
     </b-row>
   </b-container>
@@ -213,7 +209,7 @@ body {
   height: 55px;
 }
 .teamselect {
-  max-width: 18%;
+  max-width: 12em;
 }
 .empty {
   text-align: center;
