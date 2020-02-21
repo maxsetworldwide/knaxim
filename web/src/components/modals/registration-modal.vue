@@ -42,7 +42,7 @@ events:
             v-model="acceptedTerms"
             value="accepted"
             unchecked-value="not_accepted"
-          >I agree to the <a href="/TermsAndConditions.pdf">terms and conditions</a> and <a href="/PrivacyPolicy.pdf">privacy policy</a></b-form-checkbox>
+          >I understand and agree to the <a href="/APITermsOfService.pdf">Terms of Service</a> and <a href="/CustomerTermsOfService.pdf">Customer Terms of Service</a></b-form-checkbox>
         </b-form-group>
       </b-form-group>
       <div v-if="loading">
