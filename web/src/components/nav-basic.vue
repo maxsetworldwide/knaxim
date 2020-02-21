@@ -2,7 +2,7 @@
   <div class="nav-basic">
     <nav-basic-add class="p-4 px-4 pb-4 d-none d-md-flex"/>
 
-    <b-nav vertical id="normal-nav" class="pb-4 d-none d-md-block">
+    <b-nav vertical id="normal-nav" class="pb-4 min-max-150 d-none d-md-block">
       <b-nav-item class="mb-1"
           to="/" exact>
         <svg>
