@@ -26,28 +26,25 @@
 
     <b-row>
       <!-- Side Nav -->
-      <b-col class="app-side pl-0 mr-2 min-max-150" cols="2">
-        <b-row>
+      <b-col md="2">
+        <b-row cols="1">
           <b-col>
-            <nav-basic />
-            <hr />
+            <nav-basic @team-selected="gotoTeam"/>
           </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
+
+          <b-col class="d-none d-md-block">
             <storage-info />
           </b-col>
-        </b-row>
-        <b-row>
-          <b-col>
+
+          <b-col class="d-none d-md-block">
             <header-search-history />
           </b-col>
         </b-row>
       </b-col>
 
-      <b-col class="overflow-auto">
+      <b-col class="overflow-auto" md="10">
         <!-- Sub Header -->
-        <b-row>
+        <b-row class="d-none d-md-flex">
           <b-col>
             <team-select v-if="isAuthenticated" class="teamselect"
               @team-selected="gotoTeam"/>
@@ -213,7 +210,7 @@ body {
   height: 55px;
 }
 .teamselect {
-  max-width: 18%;
+  max-width: 12em;
 }
 .empty {
   text-align: center;
