@@ -64,9 +64,6 @@ export default {
     handleSelect (match) {
       this.$emit('select', match)
     },
-    handleHighlight (event) {
-      console.log('event:', event)
-    },
     preMatchContext (match) {
       const matchStart = match.match.start.global
       const sentenceStart = match.sentence.start.global
