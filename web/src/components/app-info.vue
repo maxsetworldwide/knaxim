@@ -1,9 +1,10 @@
 <template>
   <b-col cols="2">
-    <div class="app-info">
+    <div class="app-info d-none d-md-inline">
       <div class="header-search-list w-75 ml-auto">
         <!-- Search History Items  -->
-        <b-link v-for="item in expandedSearchMatches"
+        <b-link
+          v-for="item in expandedSearchMatches"
           :key="item.id"
           class="w-100"
           :class="{ 'active-item': item.isActive }"
@@ -31,11 +32,9 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'searchMatches'
-    ]),
+    ...mapGetters(['searchMatches']),
     expandedSearchMatches () {
-      return this.searchMatches.map((item) => {
+      return this.searchMatches.map(item => {
         return {
           ...item,
           isActive: item.id === this.$route.params.id
@@ -57,5 +56,4 @@ export default {
     color: black;
   }
 }
-
 </style>

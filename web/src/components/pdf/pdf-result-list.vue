@@ -13,7 +13,7 @@ events:
                         indicating a desire to toggle sentence highlighting.
 -->
 <template>
-  <div class="list h-100 w-100">
+  <div class="list h-100 w-100 d-none d-md-inline">
     <b-list-group>
       <span class="text-center">
         <b-form-checkbox
