@@ -154,14 +154,18 @@ export default {
           }
         })
         .catch(() => {
-          GroupService.lookup({ name: currName }).then(({ data }) => {
-            this.validName = !!data.id && this.inputName === currName
-            if (this.validName) {
-              this.nameID = data.id
-            } else {
-              this.nameID = ''
-            }
-          })
+          GroupService.lookup({ name: currName })
+            .then(({ data }) => {
+              this.validName = !!data.id && this.inputName === currName
+              if (this.validName) {
+                this.nameID = data.id
+              } else {
+                this.nameID = ''
+              }
+            })
+            .catch(() => {
+              this.validName = false
+            })
         })
     },
     getViewers () {
@@ -175,52 +179,56 @@ export default {
         this.fileIDs.map(id => {
           return PermissionService.permissions({ id })
         })
-      ).then(resArray => {
-        const viewerLists = resArray.map(({ data }) => {
-          if (data.vals) {
-            return data.vals.view
-          } else {
-            return []
+      )
+        .then(resArray => {
+          const viewerLists = resArray.map(({ data }) => {
+            if (data.permission.view) {
+              return data.permission.view
+            } else {
+              return []
+            }
+          })
+          intersectNames = viewerLists.reduce((acc, curr) => {
+            return curr.filter(val => {
+              return acc.indexOf(val) > -1
+            })
+          })
+          this.viewers = {}
+          if (intersectNames.length === 0) {
+            this.loadingViewers = false
+            return
           }
-        })
-        intersectNames = viewerLists.reduce((acc, curr) => {
-          return curr.filter(val => {
-            return acc.indexOf(val) > -1
+          let counter = Promise.resolve(intersectNames.length)
+          intersectNames.forEach(id => {
+            UserService.info({ id }).then(({ data }) => {
+              if (data.name) {
+                Vue.set(this.viewers, id, data.name)
+              }
+              counter.then(count => {
+                count -= 1
+                if (count === 0) {
+                  this.loadingViewers = false
+                }
+                return count
+              })
+            })
+            GroupService.info({ gid: id }).then(({ data }) => {
+              if (data.name) {
+                Vue.set(this.viewers, id, data.name)
+              }
+              counter.then(count => {
+                count -= 1
+                if (count === 0) {
+                  this.loadingViewers = false
+                }
+                return count
+              })
+            })
           })
         })
-        this.viewers = {}
-        if (intersectNames.length === 0) {
+        .finally(() => {
           this.loadingViewers = false
-          return
-        }
-        let counter = Promise.resolve(intersectNames.length)
-        intersectNames.forEach(id => {
-          UserService.info({ id }).then(({ data }) => {
-            if (data.name) {
-              Vue.set(this.viewers, id, data.name)
-            }
-            counter.then(count => {
-              count -= 1
-              if (count === 0) {
-                this.loadingViewers = false
-              }
-              return count
-            })
-          })
-          GroupService.info({ gid: id }).then(({ data }) => {
-            if (data.name) {
-              Vue.set(this.viewers, id, data.name)
-            }
-            counter.then(count => {
-              count -= 1
-              if (count === 0) {
-                this.loadingViewers = false
-              }
-              return count
-            })
-          })
         })
-      })
     },
     share () {
       if (this.validName) {
