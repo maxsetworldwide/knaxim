@@ -5,7 +5,7 @@
       <b-col>
         <b-navbar class="app-header"
            toggleable="md">
-          <b-navbar-brand href="#" class="pr-5">
+          <b-navbar-brand href="/" class="pr-5">
             <b-img src="~@/assets/logo.png"
                alt="Knaxim Logo" />
             Knaxim.com
