@@ -18,34 +18,34 @@ events:
 -->
 <template>
   <b-row align-v="end">
-    <b-col offset-md="1" cols="1">
+    <b-col class="d-none d-md-flex" offset="1" cols="1">
       <b-button @click="increaseScale">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
         </svg>
       </b-button>
     </b-col>
-    <b-col cols="1">
+    <b-col class="d-none d-md-flex" cols="1">
       <b-button @click="decreaseScale">
         <svg>
           <use href="@/assets/app.svg#zoom-out"></use>
         </svg>
       </b-button>
     </b-col>
-    <b-col cols="1">
+    <b-col class="d-none d-md-flex" cols="1">
       <b-button @click="fitWidth">
         <b-icon-arrow-left-right scale="1.4" />
       </b-button>
     </b-col>
-    <b-col cols="1">
+    <b-col class="d-none d-md-flex" cols="1">
       <b-button @click="fitHeight">
         <b-icon-arrow-up-down scale="1.4" />
       </b-button>
     </b-col>
-    <b-col cols="4">
+    <b-col offset="4" offset-md="0" cols="6" md="4">
       <h4 class="title text-center">{{ name }}</h4>
     </b-col>
-    <b-col cols="2">
+    <b-col class="d-none d-md-flex" cols="2">
       <input
         :value="currPage"
         @input="onPageInput"
@@ -56,7 +56,7 @@ events:
       <span> / {{ maxPages }}</span>
     </b-col>
 
-    <b-col cols="1">
+    <b-col cols="2" md="1">
       <file-list-batch
         fileSelected
         singleFile
