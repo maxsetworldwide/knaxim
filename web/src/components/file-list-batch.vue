@@ -133,8 +133,6 @@ export default {
   .more {
     width: 40px;
     height: 40px;
-    margin-left: 50%;
-    margin-top: -20%;
   }
 }
 </style>
