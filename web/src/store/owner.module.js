@@ -17,11 +17,11 @@ const actions = {
       let response = null
       try {
         response = await UserService.info({ id })
-      } catch {
+      } catch (err) {
         try {
           response = await GroupService.info({ id })
-        } catch {
-          context.commit(PUSH_ERROR, 'User or Team does not exist')
+        } catch (errr) {
+          context.commit(PUSH_ERROR, `LOAD_OWNER: ${err} + ${errr}`)
         }
       }
       context.commit(SET_OWNER_NAME, { id, name: response.data.name })

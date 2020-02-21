@@ -151,7 +151,11 @@ export default {
   watch: {
     availableErrors (newErrors) {
       if (newErrors) {
-        this.handleErrors(e => this.makeToast(e.message, e.name || 'Error'))
+        if (process.env.VUE_APP_DEBUG) {
+          this.handleErrors(e => this.makeToast(e.message, e.name || 'Error'))
+        } else {
+          this.handleErrors(() => {}) // Production drop errors
+        }
       }
     }
   },
