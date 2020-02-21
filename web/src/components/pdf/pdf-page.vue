@@ -7,6 +7,7 @@ props:
   scrollTop: the pdf viewer's current scrollTop
   clientHeight: the pdf viewer's current height (paired with scrollTop
                 for determining visibility)
+  sentenceHighlight: toggle the highlighting of sentences
 
 events:
   'visible', pageNum: emitted when this page becomes visible (1 indexed)
@@ -36,6 +37,10 @@ export default {
     clientHeight: {
       type: Number,
       default: 0
+    },
+    sentenceHighlight: {
+      type: Boolean,
+      default: true
     }
   },
   data () {
@@ -111,6 +116,9 @@ export default {
     },
     pixelRatio () {
       return window.devicePixelRatio || 1
+    },
+    sentenceStyle () {
+      return this.sentenceHighlight ? 'sentenceOn' : 'sentenceOff'
     },
     ...mapGetters(['currentSearch'])
   },
@@ -414,7 +422,9 @@ export default {
           segments[spanIdx].push({
             start: from,
             end: to,
-            type: 'sentence'
+            type: this.sentenceStyle
+            // the 'type' portion of this object will determine the CSS style
+            // used in appendTextChild()
           })
           from = 0
         }
@@ -612,6 +622,7 @@ export default {
       this.updateElementBounds()
       this.staleTextLayer = true
     },
+    sentenceHighlight: 'renderText',
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
     page (newPage, oldPage) {
@@ -683,8 +694,12 @@ export default {
   background-color: goldenrod;
 }
 
-.sentence {
+.sentenceOn {
   background-color: $app-clr2;
+}
+
+.sentenceOff {
+  background-color: transparent;
 }
 
 .link {

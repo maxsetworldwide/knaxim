@@ -24,6 +24,7 @@
             class="h-100 result-list"
             :matchList="matchList"
             @select="onMatchSelect"
+            @highlight="sentenceHighlight = $event"
           />
         </b-col>
         <b-col>
@@ -31,7 +32,13 @@
             <pdf-page
               class="pdf-page"
               v-for="page in pages"
-              v-bind="{ page, scale, scrollTop, clientHeight }"
+              v-bind="{
+                page,
+                scale,
+                scrollTop,
+                clientHeight,
+                sentenceHighlight
+              }"
               :key="page.pageNumber"
               ref="pages"
               @matches="handleMatches"
@@ -76,7 +83,8 @@ export default {
       scale: 3,
       scrollTop: 0,
       clientHeight: 0,
-      matchContexts: {}
+      matchContexts: {},
+      sentenceHighlight: true
     }
   },
   computed: {
