@@ -3,6 +3,7 @@
     <!-- Header -->
     <b-row>
       <b-col>
+        <auth ref="auth" :passkey="resetkey"></auth>
         <b-navbar class="app-header"
            toggleable="md">
           <b-navbar-brand href="/" class="pr-5">
@@ -26,7 +27,7 @@
 
     <b-row>
       <!-- Side Nav -->
-      <b-col md="2">
+      <b-col v-if="isAuthenticated" md="2">
         <b-row cols="1">
           <b-col>
             <nav-basic @team-selected="gotoTeam"/>
@@ -42,7 +43,7 @@
         </b-row>
       </b-col>
 
-      <b-col class="overflow-auto" md="10">
+      <b-col v-if="isAuthenticated" class="overflow-auto" md="10">
         <!-- Sub Header -->
         <b-row class="d-none d-md-flex">
           <b-col>
@@ -51,26 +52,24 @@
           </b-col>
         </b-row>
 
-        <auth ref="auth" :passkey="resetkey"></auth>
         <b-row class="">
           <!-- Main Content -->
           <b-col class="p-0">
             <div class="app-content">
-              <div v-if="!isAuthenticated">
-                <div class="empty">
-                  <h1>You aren't logged in!</h1>
-                  <b-button @click="showAuth">
-                    <h3>Login</h3>
-                  </b-button>
-                </div>
-              </div>
-              <router-view v-else/>
+              <router-view />
             </div>
           </b-col>
 
           <!-- Side View -->
           <router-view name="sideview" />
         </b-row>
+      </b-col>
+
+      <b-col v-if="!isAuthenticated" class="empty">
+        <h1>You aren't logged in!</h1>
+        <b-button @click="showAuth">
+          <h3>Login</h3>
+        </b-button>
       </b-col>
     </b-row>
   </b-container>
