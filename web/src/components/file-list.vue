@@ -31,9 +31,11 @@
           :checkedFiles="selected"
           :removeFavorite="src === 'favorites'"
           :fileSelected="checked.length > 0"
+          :restoreTrash="src === 'trash'"
           @favorite="adjustFavorite"
           @add-folder="showFolderModal"
           @share-file="showShareModal"
+          @restore="restoreFile"
         />
         <folder-modal
           ref="folderModal"
@@ -191,6 +193,18 @@ export default {
           group: this.activeGroup ? this.activeGroup.id : undefined
         })
       })
+    },
+    removeFromFolder (name) {
+      this.checked.forEach(fid => {
+        this.$store.dispatch(REMOVE_FILE_FOLDER, {
+          fid,
+          name,
+          group: this.activeGroup ? this.activeGroup.id : undefined
+        })
+      })
+    },
+    restoreFile () {
+      this.removeFromFolder('_trash_')
     }
   },
   watch: {

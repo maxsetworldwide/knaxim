@@ -30,6 +30,16 @@
       <span v-else>Favorite</span>
     </b-dropdown-item>
 
+    <b-dropdown-item
+      href="#"
+      v-if="restoreTrash"
+      :disabled="!fileSelected"
+      @click="restoreFile"
+    >
+      <b-icon-arrow-counterclockwise />
+      <span>Restore File</span>
+    </b-dropdown-item>
+
     <b-dropdown-item v-if="singleFile" href="#" @click="downloadOriginal">
       <svg>
         <use href="../assets/app.svg#cloud" />
@@ -81,7 +91,8 @@ export default {
     fileSelected: Boolean,
     removeFavorite: Boolean,
     checkedFiles: Array,
-    singleFile: Boolean
+    singleFile: Boolean,
+    restoreTrash: Boolean
   },
   methods: {
     newFolder () {
@@ -89,6 +100,9 @@ export default {
     },
     addFavorite () {
       this.$emit('favorite', !this.removeFavorite)
+    },
+    restoreFile () {
+      this.$emit('restore')
     },
     share () {
       this.$emit('share-file')
