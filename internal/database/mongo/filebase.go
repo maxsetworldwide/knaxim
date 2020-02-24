@@ -70,7 +70,7 @@ func (fb *Filebase) Insert(r database.FileI) error {
 		return srverror.New(err, 500, "Database Error F2", "Unable to insert")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrIDNotReserved
+		return database.ErrIDNotReserved.Extend("missing fileid")
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 	fd := new(database.FileDecoder)
 	if err := result.Decode(fd); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNotFound.Extend(fid.String())
 		}
 		return nil, srverror.New(err, 500, "Database Error F3", "Unable to get file")
 	}
@@ -100,7 +100,11 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			ids := make([]string, 0, len(fids))
+			for _, fid := range fids {
+				ids = append(ids, fid.String())
+			}
+			return nil, database.ErrNoResults.Extend(ids...)
 		}
 		return nil, srverror.New(err, 500, "Database Error F3.1", "Unable to get files")
 	}
@@ -115,7 +119,7 @@ func (fb *Filebase) Update(r database.FileI) error {
 		return srverror.New(err, 500, "Database Error F4", "error updating file")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound
+		return database.ErrNotFound.Extend("unable to update:", r.GetID().String())
 	}
 	return nil
 }
@@ -128,7 +132,7 @@ func (fb *Filebase) Remove(r filehash.FileID) error {
 		return srverror.New(err, 500, "Database Error F5", "unable to remove file", r.String())
 	}
 	if result.DeletedCount == 0 {
-		return database.ErrNotFound
+		return database.ErrNotFound.Extend("File id: ", r.String())
 	}
 	return nil
 }
@@ -137,7 +141,7 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]database.FileI, error) 
 	var reference []*database.FileDecoder
 	if err := cursor.All(fb.ctx, &reference); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("unable to decode files")
 		}
 		return nil, srverror.New(err, 500, "Database Error F6", "unable to decode file list")
 	}
@@ -160,7 +164,7 @@ func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults.Extend("no owned files")
 		}
 		return nil, srverror.New(err, 500, "Database Error F7", "unable to send request")
 	}
@@ -173,7 +177,7 @@ func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.Fi
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNoResults.Extend("no files with:", pkey)
 		}
 		return nil, srverror.New(err, 500, "Database Error F8", "unable to send request")
 	}
@@ -196,7 +200,7 @@ func (fb *Filebase) MatchStore(oid database.OwnerID, sid []filehash.StoreID, pke
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no filestores match file")
 		}
 		return nil, srverror.New(err, 500, "Database Error F9", "unable to send request")
 	}

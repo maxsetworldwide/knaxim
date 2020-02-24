@@ -199,7 +199,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
 	}
@@ -209,7 +209,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no tags decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
 	}
@@ -297,14 +297,14 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults
+			return nil, nil, database.ErrNoResults.Extend("no files match tags")
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4.1", "unable to get aggregate tags")
 	}
 	var results []tagAggReturn
 	if err := cursor.All(tb.ctx, &results); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults
+			return nil, nil, database.ErrNoResults.Extend("no files decoded matching tags")
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4", "unable to decode data")
 	}
@@ -368,7 +368,7 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 		}
 	}
 	if len(fids) == 0 && len(sids) == 0 {
-		return nil, nil, database.ErrNoResults
+		return nil, nil, database.ErrNoResults.Extend("no full matching files")
 	}
 	return fids, sids, nil
 }
@@ -389,14 +389,14 @@ func (tb *Tagbase) SearchData(typ tag.Type, data tag.Data) ([]tag.Tag, error) {
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no matching tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T5", "tag.searchData mongo error")
 	}
 	var returned []tagbson
 	if err := cursor.All(tb.ctx, &returned); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no decoded tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T5.1", "tag.searchData decode error")
 	}
