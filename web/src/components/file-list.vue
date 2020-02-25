@@ -27,28 +27,7 @@
       @open="open"
     >
       <template #action>
-        <file-list-batch
-          :checkedFiles="selected"
-          :openedFolders="activeFolders || []"
-          :removeFavorite="src === 'favorites'"
-          :fileSelected="checked.length > 0"
-          :restoreTrash="src === 'trash'"
-          @favorite="adjustFolder($event, '_favorites_')"
-          @add-folder="showFolderModal"
-          @remove-folder="handleFolderRemove"
-          @share-file="showShareModal"
-          @restore="adjustFolder(false, '_trash_')"
-        />
-        <folder-modal
-          ref="folderModal"
-          id="newFolderModal"
-          @new-folder="adjustFolder(true, $event)"
-        />
-        <share-modal
-          ref="shareModal"
-          id="file-list-share-modal"
-          :files="selected"
-        />
+        <file-list-batch :checkedFiles="selected" />
       </template>
     </file-table>
   </div>
@@ -56,16 +35,9 @@
 
 <script>
 import UploadModal from '@/components/modals/upload-modal'
-import FolderModal from '@/components/modals/folder-modal'
-import ShareModal from '@/components/modals/share-modal'
 import FileListBatch from '@/components/file-list-batch'
 import FileTable from '@/components/file-table'
-import {
-  LOAD_FOLDERS,
-  PUT_FILE_FOLDER,
-  REMOVE_FILE_FOLDER,
-  GET_USER
-} from '@/store/actions.type'
+import { LOAD_FOLDERS, GET_USER } from '@/store/actions.type'
 import { ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
 import { mapGetters } from 'vuex'
 
@@ -74,8 +46,6 @@ export default {
   components: {
     UploadModal,
     FileListBatch,
-    FolderModal,
-    ShareModal,
     FileTable
   },
   props: {
@@ -170,65 +140,6 @@ export default {
     },
     closeFolder (name) {
       this.$store.commit(DEACTIVATE_FOLDER, name)
-    },
-    // file actions
-    showShareModal () {
-      this.$refs['shareModal'].show()
-    },
-    showFolderModal () {
-      this.$refs['folderModal'].show()
-    },
-    adjustFolder (add, name) {
-      this.checked.forEach(fid => {
-        this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
-          fid,
-          name,
-          group: this.activeGroup ? this.activeGroup.id : undefined
-        })
-      })
-    },
-    handleFolderRemove () {
-      const fileNames = this.checked.map(fid => {
-        return this.populateFiles(fid).name
-      })
-      const folders = this.activeFolders
-      const h = this.$createElement
-      function msgBody () {
-        return h('b-container', [
-          h('b-row', [
-            h('b-col', [
-              h('h5', 'Files:'),
-              h(
-                'ul',
-                fileNames.map(name => {
-                  return h('li', name)
-                })
-              )
-            ]),
-            h('b-col', [
-              h('h5', 'Folders:'),
-              h(
-                'ul',
-                folders.map(folder => {
-                  return h('li', folder)
-                })
-              )
-            ])
-          ])
-        ])
-      }
-      this.$bvModal
-        .msgBoxConfirm(msgBody(), {
-          modalClass: 'modal-msg',
-          title: 'Files will be removed from these folders:'
-        })
-        .then(val => {
-          if (val) {
-            folders.forEach(folder => {
-              this.adjustFolder(false, folder)
-            })
-          }
-        })
     }
   },
   watch: {

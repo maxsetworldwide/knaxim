@@ -15,7 +15,7 @@
 
     <b-dropdown-item
       href="#"
-      :disabled="!fileSelected || openedFolders.length === 0"
+      :disabled="!fileSelected || activeFolders.length === 0"
       @click="removeFromFolder"
     >
       <b-icon-x-square />
@@ -31,19 +31,19 @@
       <span>Share</span>
     </b-dropdown-item>
 
-    <b-dropdown-item href="#" :disabled="!fileSelected" @click="addFavorite">
+    <b-dropdown-item href="#" :disabled="!fileSelected" @click="adjustFavorite">
       <svg>
         <use href="../assets/app.svg#star" />
       </svg>
-      <span v-if="removeFavorite">UnFavorite</span>
+      <span v-if="isFavorite">UnFavorite</span>
       <span v-else>Favorite</span>
     </b-dropdown-item>
 
     <b-dropdown-item
       href="#"
-      v-if="restoreTrash"
+      v-if="isTrash"
       :disabled="!fileSelected"
-      @click="restoreFile"
+      @click="adjustFolder(false, '_trash_')"
     >
       <b-icon-arrow-counterclockwise />
       <span>Restore File</span>
@@ -66,7 +66,7 @@
     <batch-delete
       v-if="!singleFile"
       :files="checkedFiles"
-      :permanent="permanentDelete"
+      :permanent="isTrash"
       #default="{ inputEvents }"
       v-on:delete-files="$emit('delete-files')"
     >
@@ -85,62 +85,151 @@
       </svg>
       <span>Redact</span>
     </b-dropdown-item> -->
+    <folder-modal
+      ref="folderModal"
+      id="newFolderModal"
+      @new-folder="adjustFolder(true, $event)"
+    />
+    <share-modal
+      ref="shareModal"
+      id="file-list-share-modal"
+      :files="checkedFiles"
+    />
   </b-dropdown>
 </template>
 
 <script>
 import BatchDelete from '@/components/batch-delete'
+import FolderModal from '@/components/modals/folder-modal'
+import ShareModal from '@/components/modals/share-modal'
+import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
+import { mapGetters } from 'vuex'
+import FileService from '@/service/file'
 
 export default {
   name: 'file-list-batch',
   components: {
-    BatchDelete
+    BatchDelete,
+    FolderModal,
+    ShareModal
   },
   props: {
-    fileSelected: Boolean,
-    removeFavorite: Boolean,
-    checkedFiles: Array,
-    singleFile: Boolean,
-    restoreTrash: Boolean,
-    openedFolders: Array
+    checkedFiles: {
+      type: Array,
+      required: true
+    },
+    singleFile: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
     newFolder () {
-      this.$emit('add-folder')
+      this.showFolderModal()
+    },
+    adjustFavorite () {
+      this.adjustFolder(!this.isFavorite, '_favorites_')
+    },
+    showShareModal () {
+      this.$refs['shareModal'].show()
+    },
+    showFolderModal () {
+      this.$refs['folderModal'].show()
+    },
+    adjustFolder (add, name) {
+      this.checkedFiles.forEach(({ id: fid }) => {
+        this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
+          fid,
+          name,
+          group: this.activeGroup ? this.activeGroup.id : undefined
+        })
+      })
     },
     removeFromFolder () {
-      this.$emit('remove-folder')
-    },
-    addFavorite () {
-      this.$emit('favorite', !this.removeFavorite)
-    },
-    restoreFile () {
-      this.$emit('restore')
+      const fileNames = this.checkedFiles.map(file => {
+        return file.name
+      })
+      const folders = this.activeFolders
+      const h = this.$createElement
+      function msgBody () {
+        return h('b-container', [
+          h('b-row', [
+            h('b-col', [
+              h('h5', 'Files:'),
+              h(
+                'ul',
+                fileNames.map(name => {
+                  return h('li', name)
+                })
+              )
+            ]),
+            h('b-col', [
+              h('h5', 'Folders:'),
+              h(
+                'ul',
+                folders.map(folder => {
+                  return h('li', folder)
+                })
+              )
+            ])
+          ])
+        ])
+      }
+      this.$bvModal
+        .msgBoxConfirm(msgBody(), {
+          modalClass: 'modal-msg',
+          title: 'Files will be removed from these folders:'
+        })
+        .then(val => {
+          if (val) {
+            folders.forEach(folder => {
+              this.adjustFolder(false, folder)
+            })
+          }
+        })
     },
     share () {
-      this.$emit('share-file')
+      this.showShareModal()
     },
     downloadOriginal () {
-      this.$emit('download-orig')
+      if (this.checkedFiles[0]) {
+        const fid = this.checkedFiles[0].id
+        window.location.href = FileService.downloadURL({ fid })
+      }
     },
     downloadPdf () {
-      this.$emit('download-pdf')
+      if (this.checkedFiles[0]) {
+        const fid = this.checkedFiles[0].id
+        window.location.href = FileService.viewURL({ fid })
+      }
     }
   },
   computed: {
-    trashFolder () {
-      return this.$store.state.folder.user['_trash_'] || []
+    fileSelected () {
+      return this.checkedFiles.length > 0
     },
-    permanentDelete () {
+    trashFolder () {
+      return this.getFolder('_trash_') || []
+    },
+    favoritesFolder () {
+      return this.getFolder('_favorites_') || []
+    },
+    isFavorite () {
       return this.checkedFiles.reduce((acc, file) => {
-        return (
-          acc &&
-          this.trashFolder.reduce((a, id) => {
-            return a || id === file.id
-          }, false)
-        )
+        return acc && this.favoritesFolder.includes(file.id)
       }, true)
-    }
+    },
+    isTrash () {
+      return this.checkedFiles.reduce((acc, file) => {
+        return acc && this.trashFolder.includes(file.id)
+      }, true)
+    },
+    ...mapGetters([
+      'getFolder',
+      'activeFolders',
+      'activeGroup',
+      'populateFiles'
+    ])
   }
 }
 </script>

@@ -9,8 +9,7 @@
       <pdf-toolbar
         :currPage="currPage"
         :maxPages="pages.length"
-        :id="fileID"
-        :name="getFileName"
+        :file="getFile"
         @scale-increase="increaseScale"
         @scale-decrease="decreaseScale"
         @fit-height="fitToHeight"
@@ -102,11 +101,11 @@ export default {
       }
       return result
     },
-    getFileName () {
+    getFile () {
       this.fetchFile({ id: this.fileID })
       const file = this.populateFiles(this.fileID)
-      if (!file) return ''
-      return file.name
+      if (!file) return {}
+      return file
     },
     ...mapGetters(['populateFiles'])
   },
