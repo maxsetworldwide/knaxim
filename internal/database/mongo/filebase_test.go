@@ -7,6 +7,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 func TestFilebase(t *testing.T) {
@@ -227,7 +228,7 @@ func TestFilebase(t *testing.T) {
 			t.Fatal("failed to remove", err)
 		}
 		_, err = fb.Get(files[0].GetID())
-		if err != database.ErrNotFound {
+		if se, ok := err.(srverror.Error); !ok || se.Status() != database.ErrNotFound.Status() {
 			t.Fatal("file not removed", err)
 		}
 	})

@@ -14,6 +14,7 @@ type Error interface {
 	http.Handler
 	Unwrap() error
 	Extend(msgs ...string) Error
+	Status() int
 }
 
 type srverr struct {
@@ -103,6 +104,10 @@ func (se *srverr) Extend(msgs ...string) Error {
 		e:      se.e,
 		msgs:   nmsgs,
 	}
+}
+
+func (se *srverr) Status() int {
+	return se.status
 }
 
 //Add feature that adds Header Fields
