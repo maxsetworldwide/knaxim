@@ -12,6 +12,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/handlers"
 	"git.maxset.io/web/knaxim/internal/util"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	muxhandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -60,7 +61,7 @@ func setup() {
 		userbase := config.DB.Owner(setupctx)
 		if preexisting, err := userbase.FindUserName(config.V.GuestUser.Name); preexisting != nil {
 			log.Printf("Guest User Already Exists")
-		} else if err == database.ErrNotFound {
+		} else if se, ok := err.(srverror.Error); !ok || se.Status() == database.ErrNotFound.Status() {
 			if guestUser.ID, err = userbase.Reserve(guestUser.ID, guestUser.Name); err != nil {
 				log.Fatalf("unable to reserve guestUser: %v", err)
 			}
