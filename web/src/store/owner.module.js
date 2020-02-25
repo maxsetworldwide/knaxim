@@ -63,7 +63,7 @@ const actions = {
           throw new Error(`unable to find owner: ${name}`)
         }
       } catch (e) {
-        commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`)
+        commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`))
       } finally {
         commit(OWNER_LOADING, -1)
       }
