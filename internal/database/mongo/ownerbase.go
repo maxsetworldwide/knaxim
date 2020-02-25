@@ -472,7 +472,7 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	err = result.Decode(&resetDoc)
 	if err != nil {
-		return database.OwnerID{}, database.ErrNotFound.("no key", err.Error())
+		return database.OwnerID{}, database.ErrNotFound.Extend("no key", err.Error())
 	}
 	if resetDoc.Expire.Before(time.Now()) {
 		return database.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")
