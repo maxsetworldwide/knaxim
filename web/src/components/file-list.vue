@@ -192,7 +192,6 @@ export default {
         return this.populateFiles(fid).name
       })
       const folders = this.activeFolders
-      console.log({ fileNames, folders })
       const h = this.$createElement
       function msgBody () {
         return h('b-container', [
