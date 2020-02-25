@@ -207,7 +207,7 @@ export default {
               )
             ]),
             h('b-col', [
-              h('h5', 'Will be removed from these folders:'),
+              h('h5', 'Folders:'),
               h(
                 'ul',
                 folders.map(folder => {
@@ -220,7 +220,8 @@ export default {
       }
       this.$bvModal
         .msgBoxConfirm(msgBody(), {
-          modalClass: 'modal-msg'
+          modalClass: 'modal-msg',
+          title: 'Files will be removed from these folders:'
         })
         .then(val => {
           if (val) {
