@@ -13,6 +13,15 @@
       <span>Folder+</span>
     </b-dropdown-item>
 
+    <b-dropdown-item
+      href="#"
+      :disabled="!fileSelected || openedFolders.length === 0"
+      @click="removeFromFolder"
+    >
+      <b-icon-x-square />
+      <span>Folder-</span>
+    </b-dropdown-item>
+
     <b-dropdown-divider />
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="share">
@@ -92,11 +101,15 @@ export default {
     removeFavorite: Boolean,
     checkedFiles: Array,
     singleFile: Boolean,
-    restoreTrash: Boolean
+    restoreTrash: Boolean,
+    openedFolders: Array
   },
   methods: {
     newFolder () {
       this.$emit('add-folder')
+    },
+    removeFromFolder () {
+      this.$emit('remove-folder')
     },
     addFavorite () {
       this.$emit('favorite', !this.removeFavorite)

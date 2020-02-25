@@ -29,18 +29,20 @@
       <template #action>
         <file-list-batch
           :checkedFiles="selected"
+          :openedFolders="activeFolders || []"
           :removeFavorite="src === 'favorites'"
           :fileSelected="checked.length > 0"
           :restoreTrash="src === 'trash'"
-          @favorite="adjustFavorite"
+          @favorite="adjustFolder($event, '_favorites_')"
           @add-folder="showFolderModal"
+          @remove-folder="handleFolderRemove"
           @share-file="showShareModal"
-          @restore="restoreFile"
+          @restore="adjustFolder(false, '_trash_')"
         />
         <folder-modal
           ref="folderModal"
           id="newFolderModal"
-          @new-folder="createFolder"
+          @new-folder="adjustFolder(true, $event)"
         />
         <share-modal
           ref="shareModal"
@@ -170,41 +172,63 @@ export default {
       this.$store.commit(DEACTIVATE_FOLDER, name)
     },
     // file actions
-    adjustFavorite (add) {
-      this.checked.forEach(fid => {
-        this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
-          fid,
-          name: '_favorites_',
-          group: this.activeGroup ? this.activeGroup.id : undefined
-        })
-      })
-    },
     showShareModal () {
       this.$refs['shareModal'].show()
     },
     showFolderModal () {
       this.$refs['folderModal'].show()
     },
-    createFolder (name) {
+    adjustFolder (add, name) {
       this.checked.forEach(fid => {
-        this.$store.dispatch(PUT_FILE_FOLDER, {
+        this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
           fid,
           name,
           group: this.activeGroup ? this.activeGroup.id : undefined
         })
       })
     },
-    removeFromFolder (name) {
-      this.checked.forEach(fid => {
-        this.$store.dispatch(REMOVE_FILE_FOLDER, {
-          fid,
-          name,
-          group: this.activeGroup ? this.activeGroup.id : undefined
-        })
+    handleFolderRemove () {
+      const fileNames = this.checked.map(fid => {
+        return this.populateFiles(fid).name
       })
-    },
-    restoreFile () {
-      this.removeFromFolder('_trash_')
+      const folders = this.activeFolders
+      console.log({ fileNames, folders })
+      const h = this.$createElement
+      function msgBody () {
+        return h('b-container', [
+          h('b-row', [
+            h('b-col', [
+              h('h5', 'Files:'),
+              h(
+                'ul',
+                fileNames.map(name => {
+                  return h('li', name)
+                })
+              )
+            ]),
+            h('b-col', [
+              h('h5', 'Will be removed from these folders:'),
+              h(
+                'ul',
+                folders.map(folder => {
+                  return h('li', folder)
+                })
+              )
+            ])
+          ])
+        ])
+      }
+      this.$bvModal
+        .msgBoxConfirm(msgBody(), {
+          modalClass: 'modal-msg'
+        })
+        .then(val => {
+          if (val) {
+            folders.forEach(folder => {
+              this.adjustFolder(false, folder)
+            })
+          }
+        })
     }
   },
   watch: {
