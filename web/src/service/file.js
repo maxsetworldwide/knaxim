@@ -1,10 +1,11 @@
 import Vue from 'vue'
 import ApiService from '@/service/api'
+import { buildError } from '@/service/util'
 
 const FileService = {
   slice ({ fid, start, end }) {
     return ApiService.get(`file/${fid}/slice/${start}/${end}`).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.slice', error)
     })
   },
 
@@ -12,7 +13,7 @@ const FileService = {
     return ApiService.query(`file/${fid}/search/${start}/${end}`, {
       find
     }).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.search', error)
     })
   },
 
@@ -22,7 +23,7 @@ const FileService = {
       file: file,
       dir: folder
     }).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.create', error)
     })
   },
 
@@ -32,19 +33,19 @@ const FileService = {
       group: group,
       dir: folder
     }).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.webpage', error)
     })
   },
 
   rename ({ fid, name }) {
     return ApiService.post(`record/${fid}/name`, { name }).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.rename', error)
     })
   },
 
   info ({ fid }) {
     return ApiService.get(`file/${fid}`).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.info', error)
     })
   },
 
@@ -58,7 +59,7 @@ const FileService = {
 
   erase ({ fid }) {
     return ApiService.delete(`file/${fid}`).catch(error => {
-      throw new Error(`FileService ${error}`)
+      throw buildError('FileService.erase', error)
     })
   },
 
@@ -66,7 +67,7 @@ const FileService = {
     return ApiService.query(`record${shared ? '/view' : ''}`, {
       group: gid
     }).catch(error => {
-      throw new Error(`FilesService->list: ${error}`)
+      throw buildError('FileService.list', error)
     })
   }
 }

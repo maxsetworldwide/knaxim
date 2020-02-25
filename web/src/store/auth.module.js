@@ -76,8 +76,8 @@ const actions = {
     context.commit(PURGE_AUTH)
     context.commit(AUTH_LOADING, 1)
     UserService.logout().then(({ data }) => {
-    }).catch(({ response }) => {
-      context.commit(PUSH_ERROR, response.data)
+    }).catch((err) => {
+      context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
     }).finally(() => {
       context.commit(AUTH_LOADING, -1)
     })
@@ -107,21 +107,21 @@ const actions = {
     commit(AUTH_LOADING, 1)
     return UserService.changePassword({ oldpass, newpass })
       .then(() => dispatch(LOGOUT))
-      .catch(err => commit(PUSH_ERROR, err))
+      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [SEND_RESET_REQUEST] ({ commit }, { name }) {
     commit(AUTH_LOADING, 1)
     return UserService.requestReset({ name })
-      .catch(err => commit(PUSH_ERROR, err))
+      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
     commit(AUTH_LOADING, 1)
     return UserService.resetPass({ passkey, newpass })
-      .catch(err => commit(PUSH_ERROR, err))
+      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
@@ -132,26 +132,16 @@ const actions = {
    */
   [GET_USER] (context, { quiet } = { quiet: true }) {
     context.commit(AUTH_LOADING, 1)
-    return (new Promise((resolve, reject) => {
-      UserService.info({})
-        .then(({ data }) => {
-          if (data.message === 'login') {
-            quiet || context.commit(PUSH_ERROR, data.message)
-            reject(data)
-          } else {
-            context.commit(SET_USER, data)
-            resolve(data)
-          }
-        }).catch(({ response }) => {
-          if (response && response.message) {
-            quiet || context.commit(PUSH_ERROR, response.message)
-            reject(new Error(response.message))
-          } else {
-            quiet || context.commit(PUSH_ERROR, 'Unable to find user account')
-            reject(new Error('unable to get user'))
-          }
-        })
-    })).finally(() => context.commit(AUTH_LOADING, -1))
+    return UserService.info({})
+      .then(({ data }) => {
+        context.commit(SET_USER, data)
+        return data
+      })
+      .catch((err) => {
+        quiet || context.commit(PUSH_ERROR, `GET_USER: ${err}`)
+        throw err
+      })
+      .finally(() => context.commit(AUTH_LOADING, -1))
   }
 }
 
