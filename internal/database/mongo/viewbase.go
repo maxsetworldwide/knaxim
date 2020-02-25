@@ -7,6 +7,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -37,6 +38,9 @@ func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error
 		return nil, srverror.New(err, 500, "Database Error V4", "failed to get view data chunks")
 	}
 	if err = cursor.All(vb.ctx, &chunks); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, database.ErrNotFound.Extend("no View", id.String())
+		}
 		return nil, srverror.New(err, 500, "Database Error V5", "failed to decode view chunks")
 	}
 	defer func() {
