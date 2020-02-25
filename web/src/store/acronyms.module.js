@@ -32,7 +32,7 @@ const actions = {
       state.commit(SET_ACRONYMS, { acronyms: matched })
       return matched
     })
-      .catch(err => state.commit(PUSH_ERROR, err))
+      .catch(err => state.commit(PUSH_ERROR, new Error(`ACRONYMS: ${err}`)))
       .finally(() => state.commit(LOADING_ACRONYMS, -1))
   }
 }
