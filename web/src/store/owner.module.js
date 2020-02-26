@@ -21,7 +21,7 @@ const actions = {
         try {
           response = await GroupService.info({ id })
         } catch (errr) {
-          context.commit(PUSH_ERROR, `LOAD_OWNER: ${err} + ${errr}`)
+          context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${err} + ${errr}`))
         }
       }
       context.commit(SET_OWNER_NAME, { id, name: response.data.name })
@@ -63,7 +63,7 @@ const actions = {
           throw new Error(`unable to find owner: ${name}`)
         }
       } catch (e) {
-        commit(PUSH_ERROR, e)
+        commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`))
       } finally {
         commit(OWNER_LOADING, -1)
       }

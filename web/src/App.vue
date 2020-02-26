@@ -121,6 +121,7 @@ export default {
     makeToast (msg, title = 'Error', appendToast = false) {
       this.$bvToast.toast(msg, {
         title,
+        noAutoHide: !!process.env.VUE_APP_DEBUG,
         autoHideDelay: 5000,
         appendToast
       })

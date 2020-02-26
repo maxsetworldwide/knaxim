@@ -37,7 +37,7 @@ const actions = {
         })
       }
     } catch (err) {
-      context.commit(PUSH_ERROR, err)
+      context.commit(PUSH_ERROR, new Error(`REFRESH_GROUPS: ${err}`))
     } finally {
       context.commit(GROUP_LOADING, -1)
     }
@@ -48,7 +48,7 @@ const actions = {
       await GroupService.create({ name })
       await context.dispatch(LOAD_SERVER)
     } catch (err) {
-      context.commit(PUSH_ERROR, err)
+      context.commit(PUSH_ERROR, new Error(`CREATE_GROUP: ${err}`))
     } finally {
       context.commit(GROUP_LOADING, -1)
     }
@@ -65,7 +65,7 @@ const actions = {
       })
       dispatch(LOAD_SERVER)
     } catch (err) {
-      commit(PUSH_ERROR, err)
+      commit(PUSH_ERROR, new Error(`ADD_MEMBER: ${err}`))
     } finally {
       commit(GROUP_LOADING, -1)
     }
@@ -82,7 +82,7 @@ const actions = {
       })
       dispatch(LOAD_SERVER)
     } catch (err) {
-      commit(PUSH_ERROR, err)
+      commit(PUSH_ERROR, new Error(`REMOVE_MEMBER: ${err}`))
     } finally {
       commit(GROUP_LOADING, -1)
     }

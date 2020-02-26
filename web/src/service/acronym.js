@@ -1,9 +1,10 @@
 import ApiService from '@/service/api'
+import { buildError } from '@/service/util'
 
 const AcronymService = {
   get ({ acronym }) {
     return ApiService.get(`acronym/${acronym}`).catch(error => {
-      throw new Error(`AcronymService ${error}`)
+      throw buildError('AcronymService.get', error)
     })
   }
 }

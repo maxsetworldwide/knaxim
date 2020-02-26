@@ -7,4 +7,4 @@ if [ "$KNAXIMINIT" = "restart" ]; then
   acronymloader -db mongodb://mongo:27017 -dur 2m -f ./resource/NextDODIndex.csv
 fi
 
-knaxim -v -debug
+knaxim -v -debug -dev

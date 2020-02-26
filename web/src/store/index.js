@@ -64,11 +64,10 @@ export default new Vuex.Store({
     async [LOAD_SERVER] ({ commit, dispatch }) {
       try {
         let res = await UserService.completeProfile()
-          .catch(err => commit(PUSH_ERROR, err))
         dispatch(HANDLE_SERVER_STATE, res.data)
         commit(PROCESS_SERVER_STATE, res.data)
-      } catch {
-        // TODO: handle error
+      } catch (err) {
+        commit(PUSH_ERROR, new Error(`LOAD_SERVER: ${err}`))
       }
     },
     [AFTER_LOGIN] ({ dispatch }) {
