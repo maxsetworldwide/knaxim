@@ -39,7 +39,21 @@ export default {
       name: '',
       sentenceCount: 0,
       viewExists: true,
-      imageTypes: ['jpg', 'jpeg', 'png']
+      imageTypes: [
+        'jpg',
+        'jpeg',
+        'jfif',
+        'pjpeg',
+        'pjp',
+        'png',
+        'gif',
+        'apng',
+        'bmp',
+        'ico',
+        'cur',
+        'svg',
+        'webp'
+      ]
     }
   },
   computed: {
