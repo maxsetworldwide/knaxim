@@ -1,5 +1,8 @@
 package memory
 
+// This package provides an in memory implementation of the database interface.
+// Primarily used for testing.
+
 import (
 	"context"
 	"errors"
@@ -11,6 +14,7 @@ import (
 
 var lock = new(sync.RWMutex)
 
+// Database is an implementation of database.Database that operates within local machine memory
 type Database struct {
 	ctx context.Context
 
@@ -29,6 +33,8 @@ type Database struct {
 	Acronyms  map[string][]string
 }
 
+// Init preps an instance of the Database for use. if reset is true, it will allocate new maps to store the
+// data
 func (db *Database) Init(_ context.Context, reset bool) error {
 	if db == nil {
 		return errors.New("Memory Database Unallocated")
@@ -55,17 +61,15 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 var connectionCount int
 var countLock sync.Mutex
 
-// func connectionCount += delta int {
-//
-// 	connectionCount += delta
-// }
-
+// CurrentOpenConnections returns the current number of open connections to the database.
 func CurrentOpenConnections() int {
 	countLock.Lock()
 	defer countLock.Unlock()
 	return connectionCount
 }
 
+// Owner opens a connection to the database and returns Ownerbase wrapping of the
+// Database
 func (db *Database) Owner(c context.Context) database.Ownerbase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -75,10 +79,12 @@ func (db *Database) Owner(c context.Context) database.Ownerbase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// File opens a connection to the database and returns Filebase wrapping of the
+// Database
 func (db *Database) File(c context.Context) database.Filebase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -88,10 +94,12 @@ func (db *Database) File(c context.Context) database.Filebase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// Store opens a connection to the database and returns Storebase wrapping of the
+// Database
 func (db *Database) Store(c context.Context) database.Storebase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -106,10 +114,12 @@ func (db *Database) store(c context.Context) database.Storebase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// Content opens a connection to the database and returns Contentbase wrapping of the
+// Database
 func (db *Database) Content(c context.Context) database.Contentbase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -119,10 +129,12 @@ func (db *Database) Content(c context.Context) database.Contentbase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// Tag opens a connection to the database and returns Tagbase wrapping of the
+// Database
 func (db *Database) Tag(c context.Context) database.Tagbase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -132,10 +144,11 @@ func (db *Database) Tag(c context.Context) database.Tagbase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// Acronym opens a connection to the database and returns Acronymbase wrapping of the Database
 func (db *Database) Acronym(c context.Context) database.Acronymbase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -145,10 +158,11 @@ func (db *Database) Acronym(c context.Context) database.Acronymbase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// View opens a connection to the database and returns Viewbase wrapping of the Database
 func (db *Database) View(c context.Context) database.Viewbase {
 	lock.Lock()
 	defer lock.Unlock()
@@ -158,10 +172,11 @@ func (db *Database) View(c context.Context) database.Viewbase {
 		Database: *db,
 	}
 	out.ctx = c
-	connectionCount += 1
+	connectionCount++
 	return out
 }
 
+// Close closes the open connection, meant to be called by wrapping objects
 func (db *Database) Close(_ context.Context) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -176,6 +191,7 @@ func (db *Database) close() error {
 	return nil
 }
 
+// GetContext returns the context of the active connection
 func (db *Database) GetContext() context.Context {
 	lock.RLock()
 	defer lock.RUnlock()

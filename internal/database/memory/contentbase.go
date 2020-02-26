@@ -8,10 +8,12 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// Contentbase is the memory database accessor for lines of content
 type Contentbase struct {
 	Database
 }
 
+// Insert adds lines to the database
 func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -35,12 +37,14 @@ func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 	return nil
 }
 
+// Len returns the number of lines associated with a StoreID
 func (cb *Contentbase) Len(id filehash.StoreID) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	return int64(len(cb.Lines[id.String()])), nil
 }
 
+// Slice returns all lines from a particular StoreID within bounds
 func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -70,6 +74,8 @@ func (cb *Contentbase) slice(id filehash.StoreID, start int, end int) ([]databas
 	return cb.Lines[id.String()][start:end], perr
 }
 
+// RegexSearchFile returns lines from a StoreID within bounds, whose content contains a match to the
+// regular expression
 func (cb *Contentbase) RegexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
 	lock.RLock()
 	defer lock.RUnlock()

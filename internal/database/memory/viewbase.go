@@ -5,10 +5,12 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
+// Viewbase wraps database and provides view operations
 type Viewbase struct {
 	Database
 }
 
+// Insert adds new viewstore to the database
 func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -16,6 +18,7 @@ func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 	return nil
 }
 
+// Get viewstore of associated id
 func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
