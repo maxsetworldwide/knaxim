@@ -27,7 +27,7 @@
       @open="open"
     >
       <template #action>
-        <file-list-batch :checkedFiles="selected" />
+        <file-actions :checkedFiles="selected" />
       </template>
     </file-table>
   </div>
@@ -35,7 +35,7 @@
 
 <script>
 import UploadModal from '@/components/modals/upload-modal'
-import FileListBatch from '@/components/file-list-batch'
+import FileActions from '@/components/file-actions'
 import FileTable from '@/components/file-table'
 import { LOAD_FOLDERS, GET_USER } from '@/store/actions.type'
 import { ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
@@ -45,7 +45,7 @@ export default {
   name: 'file-list',
   components: {
     UploadModal,
-    FileListBatch,
+    FileActions,
     FileTable
   },
   props: {

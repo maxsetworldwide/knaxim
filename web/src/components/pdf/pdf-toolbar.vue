@@ -57,19 +57,19 @@ events:
     </b-col>
 
     <b-col cols="2" md="1">
-      <file-list-batch singleFile :checkedFiles="[file]" />
+      <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
   </b-row>
 </template>
 
 <script>
-import FileListBatch from '@/components/file-list-batch'
+import FileActions from '@/components/file-actions'
 import { mapGetters } from 'vuex'
 
 export default {
   name: 'pdf-toolbar',
   components: {
-    FileListBatch
+    FileActions
   },
   props: {
     currPage: Number,

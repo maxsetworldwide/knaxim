@@ -1,5 +1,5 @@
 <template>
-  <b-dropdown class="file-list-batch" no-caret variant="link" size="sm">
+  <b-dropdown class="file-actions" no-caret variant="link" size="sm">
     <template v-slot:button-content>
       <svg class="more">
         <use href="../assets/app.svg#more" />
@@ -107,7 +107,7 @@ import { mapGetters } from 'vuex'
 import FileService from '@/service/file'
 
 export default {
-  name: 'file-list-batch',
+  name: 'file-actions',
   components: {
     BatchDelete,
     FolderModal,
@@ -235,7 +235,7 @@ export default {
 </script>
 
 <style lang="scss">
-.file-list-batch {
+.file-actions {
   .dropdown {
     height: 35px;
   }
