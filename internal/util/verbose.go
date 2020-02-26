@@ -17,10 +17,12 @@ func initverbose() {
 	}
 }
 
+// SetLogger changes the logger used for verbose messages
 func SetLogger(l *log.Logger) {
 	vlog = l
 }
 
+// Verbose write a verbose message if the verboseflag is true
 func Verbose(a string, b ...interface{}) {
 	if *verboseflag {
 		initverbose()
@@ -28,6 +30,8 @@ func Verbose(a string, b ...interface{}) {
 	}
 }
 
+// VerboseRequest writes a verbose message containing containing info
+// from the http.Request, but only if the verboseflag is true
 func VerboseRequest(r *http.Request, a string, b ...interface{}) {
 	if *verboseflag {
 		Verbose(fmt.Sprintf("%s:\n\t%s(%s)\n\t\t%s", r.RemoteAddr, r.Method, r.URL.Path, a), b...)
