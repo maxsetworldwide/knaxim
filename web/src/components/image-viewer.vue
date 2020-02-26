@@ -5,7 +5,12 @@
         <h4 class="title text-center">{{ fileInfo.name }}</h4>
       </b-col>
       <b-col cols="2" md="1">
-        <file-actions fileSelected singleFile :checkedFiles="[fileInfo]" />
+        <file-actions
+          fileSelected
+          singleFile
+          disableDownloadPDF
+          :checkedFiles="[fileInfo]"
+        />
       </b-col>
     </b-row>
     <b-row class="content-row h-100" align-h="center">

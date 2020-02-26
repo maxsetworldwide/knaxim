@@ -56,7 +56,11 @@
       <span>Download Original</span>
     </b-dropdown-item>
 
-    <b-dropdown-item v-if="singleFile" href="#" @click="downloadPdf">
+    <b-dropdown-item
+      v-if="singleFile && !disableDownloadPDF"
+      href="#"
+      @click="downloadPdf"
+    >
       <svg>
         <use href="../assets/app.svg#pdf" />
       </svg>
@@ -119,6 +123,10 @@ export default {
       required: true
     },
     singleFile: {
+      type: Boolean,
+      default: false
+    },
+    disableDownloadPDF: {
       type: Boolean,
       default: false
     }
