@@ -7,18 +7,21 @@ import (
 	"time"
 )
 
+// Ssl is SSL configuration values
 type Ssl struct {
 	CertFile string `json:"cert"`
 	KeyFile  string `json:"key"`
 	HTTPport string `json:"http_port"`
 }
 
+// Guest user setup configuration
 type Guest struct {
 	Name  string
 	Pass  string
 	Email string
 }
 
+// Tika connection and configuration values
 type Tika struct {
 	Type        string `json:"type"`
 	Path        string `json:"path"`
@@ -30,6 +33,7 @@ type Tika struct {
 	PingTimeout int    `json:"child_ping_timeout"`
 }
 
+// SMTP configuration values
 type SMTP struct {
 	From       string `json:"from"`
 	Server     string `json:"server"`
@@ -41,10 +45,14 @@ type SMTP struct {
 	} `json:"cred"`
 }
 
+// Duration type that has custom UnmarshalJSON to allow use of
+// time.ParseDuration for more easily written and read duration values
+// in configuration
 type Duration struct {
 	time.Duration
 }
 
+// UnmarshalJSON allows use of time.ParseDuration if associated value is // a string
 func (d *Duration) UnmarshalJSON(b []byte) error {
 	if len(b) == 0 {
 		return errors.New("no data when parsing data")
@@ -57,6 +65,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &(d.Duration))
 }
 
+// Configuration struct that is populated by the Configuration file
 type Configuration struct {
 	Address         string
 	StaticPath      string          `json:"static"`
