@@ -25,6 +25,11 @@ https://%s/reset/%s
 Knaxim Team
 `, "\n", "\r\n")
 
+// SendResetEmail sends an email with a reset link
+// to: list of emails
+// name: username of the account with the password reset
+// address: web address of the site to visit to reset the password
+// resetkey: the key needed to reset the password
 func SendResetEmail(to []string, name, address, resetkey string) error {
 	msgstr := fmt.Sprintf(resetEmail, strings.Join(to, ", "), config.V.Email.From, name, address, resetkey)
 	return sendEmail(to, []byte(msgstr))
