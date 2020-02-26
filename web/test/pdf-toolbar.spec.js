@@ -14,6 +14,9 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(PdfToolbar, {
     stubs: ['b-col', 'b-button', 'b-row'],
     propsData: {
+      file: {
+        name: 'name'
+      },
       ...options.props
     },
     methods: {
