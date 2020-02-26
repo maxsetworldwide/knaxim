@@ -14,7 +14,12 @@
       </b-col>
     </b-row>
     <b-row class="content-row h-100" align-h="center">
-      <img class="image-content" :src="srcURL" :alt="fileInfo.name" />
+      <img
+        class="image-content"
+        :src="srcURL"
+        :alt="fileInfo.name"
+        @error="$emit('no-image')"
+      />
     </b-row>
   </b-container>
 </template>

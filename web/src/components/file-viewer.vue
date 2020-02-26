@@ -6,7 +6,11 @@
       :acr="acr"
       @no-view="viewExists = false"
     />
-    <image-viewer v-else-if="imageTypes.includes(fileType)" :id="id" />
+    <image-viewer
+      v-else-if="imageExists"
+      :id="id"
+      @no-image="imageExists = false"
+    />
     <text-viewer
       v-else
       :fileName="name"
@@ -39,21 +43,7 @@ export default {
       name: '',
       sentenceCount: 0,
       viewExists: true,
-      imageTypes: [
-        'jpg',
-        'jpeg',
-        'jfif',
-        'pjpeg',
-        'pjp',
-        'png',
-        'gif',
-        'apng',
-        'bmp',
-        'ico',
-        'cur',
-        'svg',
-        'webp'
-      ]
+      imageExists: true
     }
   },
   computed: {
