@@ -147,3 +147,11 @@ sendEmail:
   script:
     - cd internal/email
     - go test -v -to=delete@maxset.org
+
+golint:
+  stage: build
+  tags:
+    - golang
+  script:
+    - go get -u golang.org/x/lint/golint
+    - golint -set_exit_status ./...
