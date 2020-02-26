@@ -1,5 +1,10 @@
 package srvjson
 
+// This Package implements a http.ResponseWriter that wraps another
+// http.ResponseWriter. When this ResponseWriter is flushed it
+// transforms whatever was written to json, and writes the json to the
+// wrapped http.ResponseWriter.
+
 import (
 	"encoding/json"
 	"fmt"
@@ -7,11 +12,14 @@ import (
 	"net/http"
 )
 
+// ResponseWriter implements http.ResponseWriter and converts responses
+// to http
 type ResponseWriter struct {
 	Internal http.ResponseWriter
 	data     map[string]interface{}
 }
 
+// NewRW builds a ResponseWriter wrapping the given http.ResponseWriter
 func NewRW(in http.ResponseWriter) *ResponseWriter {
 	return &ResponseWriter{
 		Internal: in,
@@ -24,10 +32,14 @@ func (rw *ResponseWriter) init() {
 	}
 }
 
+// Header implements http.ResponseWriter, calles underlying
+// http.ResponseWriter
 func (rw *ResponseWriter) Header() http.Header {
 	return rw.Internal.Header()
 }
 
+// Write implements http.ResponseWriter, preps data to be written to the
+// "message" field in the resulting json object when flushed.
 func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 	rw.init()
 	switch v := rw.data["message"].(type) {
@@ -45,10 +57,15 @@ func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 	}
 }
 
+// WriteHeader implements http.ResponseWriter, calls underlying
+// http.ResponseWriter
 func (rw *ResponseWriter) WriteHeader(sc int) {
 	rw.Internal.WriteHeader(sc)
 }
 
+// Set assigns additional key=value pairs into the resulting json object
+// when flushed. If the key is "message" it will overwrite any previous
+// calls to Write with the new value.
 func (rw *ResponseWriter) Set(key string, val interface{}) {
 	rw.init()
 	if val == nil {
@@ -58,6 +75,8 @@ func (rw *ResponseWriter) Set(key string, val interface{}) {
 	rw.data[key] = val
 }
 
+// Flush writes the message and set key/value pairs to the underlying
+// http.ResponseWriter in json form.
 func (rw *ResponseWriter) Flush() error {
 	return json.NewEncoder(rw.Internal).Encode(rw.data)
 }

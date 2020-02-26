@@ -6,6 +6,8 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// JSONResponse is a middleware function that replaces the incoming
+// http.ResponseWriter with a srvjson.ResponseWriter
 func JSONResponse(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		jsw := NewRW(w)
