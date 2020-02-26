@@ -1,5 +1,9 @@
 package srverror
 
+// This package implements an error type that is meant to be used
+// within a server. The Error also implements the http.Handler so that
+// if an error occurs it can be used to respond to the request directly
+
 import (
 	"encoding/json"
 	"errors"
@@ -9,10 +13,14 @@ import (
 	//"fmt"
 )
 
+// Error type that can also be used to handle http requests
 type Error interface {
 	error
+	// normally only sends the first string in the messsages. In debug
+	// mode sends the full Error message
 	http.Handler
 	Unwrap() error
+	// creates new error with addition messages
 	Extend(msgs ...string) Error
 	Status() int
 }
@@ -23,6 +31,8 @@ type srverr struct {
 	e      error
 }
 
+// New creates a new instance of an Error wrapping the given error.
+// status and msgs define what to respond to the request with.
 func New(e error, status int, msgs ...string) Error {
 	if e == nil {
 		return nil
@@ -41,6 +51,8 @@ func New(e error, status int, msgs ...string) Error {
 	}
 }
 
+// Basic creates a new instance of the server error without wrapping
+// another error. See New
 func Basic(status int, msgs ...string) Error {
 	return &srverr{
 		status: status,
@@ -49,6 +61,7 @@ func Basic(status int, msgs ...string) Error {
 	}
 }
 
+// Error implements error
 func (se *srverr) Error() string {
 	if se == nil {
 		return ""
@@ -56,8 +69,13 @@ func (se *srverr) Error() string {
 	return strings.Join(se.msgs, "--") + "--" + se.e.Error()
 }
 
+// DEBUG is used to flag if the server errors are to respond with debug
+// messages when handling http. Should be false when running during
+// production
 var DEBUG = false
 
+// ServeHTTP to implement http.Handler, normally only sends the first
+// string in the msgs. In debug mode sends the full Error message
 func (se *srverr) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	if se == nil {
 		w.WriteHeader(200)
@@ -67,7 +85,7 @@ func (se *srverr) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		var msg string
 		if DEBUG {
 			msg = se.Error()
-		} else {
+		} else if len(se.msgs) > 0 {
 			msg = se.msgs[0]
 		}
 		if err := json.NewEncoder(w).Encode(map[string]string{
@@ -110,4 +128,4 @@ func (se *srverr) Status() int {
 	return se.status
 }
 
-//Add feature that adds Header Fields
+// TODO: Add feature that adds Header Fields
