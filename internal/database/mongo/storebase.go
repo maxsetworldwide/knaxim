@@ -102,7 +102,7 @@ func (db *Storebase) Get(id filehash.StoreID) (out *database.FileStore, err erro
 	var store = new(database.FileStore)
 	if err := result.Decode(store); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNotFound.Extend("FileStore", id.String())
 		}
 		return nil, srverror.New(err, 500, "Database Error S4", "failed to find file store")
 	}
@@ -188,7 +188,7 @@ func (sb *Storebase) UpdateMeta(fs *database.FileStore) error {
 		return srverror.New(err, 500, "Database Error S12", "error updating file store metadata")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound
+		return database.ErrNotFound.Extend("FileStore", fs.ID.String())
 	}
 	return nil
 }

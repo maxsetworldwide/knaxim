@@ -13,6 +13,8 @@ type Error interface {
 	error
 	http.Handler
 	Unwrap() error
+	Extend(msgs ...string) Error
+	Status() int
 }
 
 type srverr struct {
@@ -54,14 +56,22 @@ func (se *srverr) Error() string {
 	return strings.Join(se.msgs, "--") + "--" + se.e.Error()
 }
 
+var DEBUG = false
+
 func (se *srverr) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	if se == nil {
 		w.WriteHeader(200)
 		w.Write([]byte("Success"))
 	} else {
 		w.WriteHeader(se.status)
+		var msg string
+		if DEBUG {
+			msg = se.Error()
+		} else {
+			msg = se.msgs[0]
+		}
 		if err := json.NewEncoder(w).Encode(map[string]string{
-			"message": se.msgs[0],
+			"message": msg,
 		}); err != nil {
 			w.WriteHeader(500)
 			w.Write([]byte("Server Error Error"))
@@ -76,6 +86,28 @@ func (se *srverr) Unwrap() error {
 		return nil
 	}
 	return se.e
+}
+
+func (se *srverr) Extend(msgs ...string) Error {
+	if se == nil {
+		return &srverr{
+			status: 500,
+			msgs:   msgs,
+			e:      errors.New("nil srverrror"),
+		}
+	}
+	nmsgs := make([]string, 0, len(se.msgs)+len(msgs))
+	nmsgs = append(nmsgs, se.msgs...)
+	nmsgs = append(nmsgs, msgs...)
+	return &srverr{
+		status: se.status,
+		e:      se.e,
+		msgs:   nmsgs,
+	}
+}
+
+func (se *srverr) Status() int {
+	return se.status
 }
 
 //Add feature that adds Header Fields

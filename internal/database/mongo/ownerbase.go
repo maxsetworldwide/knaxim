@@ -215,7 +215,7 @@ func (ub *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 		u := new(database.User)
 		if err := result.Decode(u); err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, database.ErrNotFound
+				return nil, database.ErrNotFound.Extend("unable to find user", id.String())
 			}
 			return nil, srverror.New(err, 500, "Database Error U3", "unable to get user")
 		}
@@ -228,7 +228,7 @@ func (ub *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 		g := new(database.Group)
 		if err := result.Decode(g); err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, database.ErrNotFound
+				return nil, database.ErrNotFound.Extend("unable to find group", id.String())
 			}
 			return nil, srverror.New(err, 500, "DatabaseError U3.1", "unable to get group")
 		}
@@ -254,7 +254,7 @@ func (ub *Ownerbase) FindUserName(name string) (database.UserI, error) {
 	user := new(database.User)
 	if err := result.Decode(user); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNotFound.Extend("User name", name)
 		}
 		return nil, srverror.New(err, 500, "Database Error O1", "error finding user name")
 	}
@@ -272,7 +272,7 @@ func (ub *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 	group := new(database.Group)
 	if err := result.Decode(group); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound
+			return nil, database.ErrNotFound.Extend("Group name", name)
 		}
 		return nil, srverror.New(err, 500, "Database Error O2", "error finding group name")
 	}
@@ -306,14 +306,14 @@ func (ub *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, me
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults
+			return nil, nil, database.ErrNoResults.Extend("No associated groups", id.String())
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O3", "unable to find groups")
 	}
 	var groups []*database.Group
 	if err = cursor.All(ub.ctx, &groups); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults
+			return nil, nil, database.ErrNoResults.Extend("No associated groups decoded", id.String())
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O4", "unable to decode groups")
 	}
@@ -364,7 +364,7 @@ func (ub *Ownerbase) Update(u database.Owner) (err error) {
 		return srverror.New(err, 500, "Database Error O5", "error updating owner")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound
+		return database.ErrNotFound.Extend(u.GetID().String())
 	}
 	ub.gotten[u.GetID().String()] = nil
 	return nil
@@ -427,7 +427,7 @@ func (ob *Ownerbase) GetTotalSpace(id database.OwnerID) (int64, error) {
 			return 50 << 20, nil
 		}
 	default:
-		return 0, database.ErrNotFound
+		return 0, database.ErrNotFound.Extend("unrecognized user")
 	}
 }
 
@@ -472,7 +472,7 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	}
 	err = result.Decode(&resetDoc)
 	if err != nil {
-		return database.OwnerID{}, database.ErrNotFound
+		return database.OwnerID{}, database.ErrNotFound.Extend("no key", err.Error())
 	}
 	if resetDoc.Expire.Before(time.Now()) {
 		return database.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")

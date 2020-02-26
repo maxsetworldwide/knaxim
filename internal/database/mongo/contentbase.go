@@ -58,7 +58,7 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no slices in range")
 		}
 		return nil, srverror.New(err, 500, "Database Error C3", "Failed to find lines")
 	}
@@ -68,7 +68,7 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no slices when decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error C3.1", "failed to decode lines")
 	}
@@ -97,7 +97,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no matches in range")
 		}
 		return nil, srverror.New(err, 500, "Database Error C4", "Failed to find lines")
 	}
@@ -107,7 +107,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults
+			return nil, database.ErrNoResults.Extend("no matches decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error C4.1", "failed to decode lines")
 	}
