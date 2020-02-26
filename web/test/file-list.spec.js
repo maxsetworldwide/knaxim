@@ -1,8 +1,12 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import FileList from '@/components/file-list'
 import Vuex from 'vuex'
-import { LOAD_FOLDERS, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER,
-  GET_USER } from '@/store/actions.type'
+import {
+  LOAD_FOLDERS,
+  PUT_FILE_FOLDER,
+  REMOVE_FILE_FOLDER,
+  GET_USER
+} from '@/store/actions.type'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
@@ -42,8 +46,16 @@ let store = new Vuex.Store({
 
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(FileList, {
-    stubs: ['b-table', 'b-tooltip', 'upload-modal', 'file-list-batch', 'folder-modal', 'share-modal',
-      'file-icon', 'file-table'],
+    stubs: [
+      'b-table',
+      'b-tooltip',
+      'upload-modal',
+      'file-actions',
+      'folder-modal',
+      'share-modal',
+      'file-icon',
+      'file-table'
+    ],
     store,
     localVue,
     watch: {

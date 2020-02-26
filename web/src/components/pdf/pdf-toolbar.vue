@@ -43,7 +43,7 @@ events:
       </b-button>
     </b-col>
     <b-col offset="4" offset-md="0" cols="6" md="4">
-      <h4 class="title text-center">{{ name }}</h4>
+      <h4 class="title text-center">{{ file.name }}</h4>
     </b-col>
     <b-col class="d-none d-md-flex" cols="2">
       <input
@@ -57,52 +57,24 @@ events:
     </b-col>
 
     <b-col cols="2" md="1">
-      <file-list-batch
-        fileSelected
-        singleFile
-        :checkedFiles="mockFileArray"
-        :removeFavorite="isFavorite"
-        @favorite="adjustFavorite"
-        @add-folder="showFolderModal"
-        @share-file="showShareModal"
-        @download-orig="downloadOrig"
-        @download-pdf="downloadPdf"
-      />
-      <folder-modal
-        ref="folderModal"
-        id="newFolderModal"
-        @new-folder="createFolder"
-      />
-      <share-modal
-        hideList
-        ref="shareModal"
-        id="file-list-share-modal"
-        :files="mockFileArray"
-      />
+      <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
   </b-row>
 </template>
 
 <script>
-import FileListBatch from '@/components/file-list-batch'
-import FolderModal from '@/components/modals/folder-modal'
-import ShareModal from '@/components/modals/share-modal'
-import FileService from '@/service/file'
-import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
+import FileActions from '@/components/file-actions'
 import { mapGetters } from 'vuex'
 
 export default {
   name: 'pdf-toolbar',
   components: {
-    FileListBatch,
-    ShareModal,
-    FolderModal
+    FileActions
   },
   props: {
     currPage: Number,
     maxPages: Number,
-    id: String,
-    name: String
+    file: Object
   },
   data () {
     return {
@@ -110,26 +82,7 @@ export default {
     }
   },
   computed: {
-    isFavorite () {
-      let favorite = this.$store.state.folder.user['_favorites_'] || []
-      return favorite.reduce((acc, id) => {
-        return acc || id === this.id
-      }, false)
-    },
-    // TODO: File-List-Batch should be a File-List-Actions (my bad)
-    // TODO: Get the actual file information for File-List-Batch.  I'd like to
-    //  replace this with a file control component.
-    mockFileArray () {
-      return [
-        {
-          id: this.id,
-          name: this.id,
-          own: '-',
-          date: { upload: '-' }
-        }
-      ]
-    },
-    ...mapGetters(['activeGroup'])
+    ...mapGetters(['activeGroup', 'getFolder'])
   },
   methods: {
     increaseScale () {
@@ -148,32 +101,6 @@ export default {
       const pageNumber = parseInt(event.target.value, 10)
       if (isNaN(pageNumber) || pageNumber < 1) return
       this.$emit('page-input', pageNumber)
-    },
-    // file actions
-    adjustFavorite (add) {
-      return this.$store.dispatch(add ? PUT_FILE_FOLDER : REMOVE_FILE_FOLDER, {
-        fid: this.id,
-        name: '_favorites_'
-      })
-    },
-    showShareModal () {
-      this.$refs['shareModal'].show()
-    },
-    showFolderModal () {
-      this.$refs['folderModal'].show()
-    },
-    createFolder (name) {
-      this.$store.dispatch(PUT_FILE_FOLDER, {
-        fid: this.id,
-        name,
-        group: this.activeGroup ? this.activeGroup.id : undefined
-      })
-    },
-    downloadOrig () {
-      window.location.href = FileService.downloadURL({ fid: this.id })
-    },
-    downloadPdf () {
-      window.location.href = FileService.viewURL({ fid: this.id })
     }
   },
   watch: {
