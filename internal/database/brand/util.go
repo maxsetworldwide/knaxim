@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// ByteGen generates each possible byte in a random order
 type ByteGen struct {
 	r   *rand.Rand
 	buf []byte
@@ -26,6 +27,7 @@ func (b *ByteGen) getSwap() func(i, j int) {
 
 var bg = New(time.Now().Unix())
 
+// New returns a new ByteGen using the given seed
 func New(seed int64) *ByteGen {
 	n := new(ByteGen)
 
@@ -40,6 +42,7 @@ func New(seed int64) *ByteGen {
 	return n
 }
 
+// Next returns the next byte
 func (b *ByteGen) Next() byte {
 	b.m.Lock()
 	defer b.m.Unlock()
@@ -52,6 +55,8 @@ func (b *ByteGen) Next() byte {
 	return b.buf[bg.i]
 }
 
+// Next returns a random byte without repeating until every possible byte has
+// been returned
 func Next() byte {
 	return bg.Next()
 }
