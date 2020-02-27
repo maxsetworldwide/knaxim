@@ -6,6 +6,11 @@
       :acr="acr"
       @no-view="viewExists = false"
     />
+    <image-viewer
+      v-else-if="imageExists"
+      :id="id"
+      @no-image="imageExists = false"
+    />
     <text-viewer
       v-else
       :fileName="name"
@@ -18,6 +23,7 @@
 <script>
 import TextViewer from '@/components/text-viewer'
 import PDFDoc from '@/components/pdf/pdf-doc'
+import ImageViewer from '@/components/image-viewer'
 import { TOUCH } from '@/store/mutations.type'
 import { GET_FILE } from '@/store/actions.type'
 
@@ -25,7 +31,8 @@ export default {
   name: 'file-viewer',
   components: {
     'text-viewer': TextViewer,
-    'pdf-doc': PDFDoc
+    'pdf-doc': PDFDoc,
+    'image-viewer': ImageViewer
   },
   props: {
     id: String,
@@ -35,7 +42,8 @@ export default {
     return {
       name: '',
       sentenceCount: 0,
-      viewExists: true
+      viewExists: true,
+      imageExists: true
     }
   },
   computed: {
@@ -54,10 +62,7 @@ export default {
       // Add fileID to Recents
       this.$store.commit(TOUCH, this.id)
       this.$store.dispatch(GET_FILE, this).then(data => {
-        const {
-          count,
-          name
-        } = data
+        const { count, name } = data
         this.name = name
         this.sentenceCount = count
       })

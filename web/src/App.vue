@@ -4,25 +4,22 @@
     <b-row>
       <b-col>
         <auth ref="auth" :passkey="resetkey"></auth>
-        <b-navbar class="app-header"
-           toggleable="md">
+        <b-navbar class="app-header" toggleable="md">
           <b-navbar-brand href="/" class="pr-5">
-            <b-img src="~@/assets/logo.png"
-               alt="Knaxim Logo" />
+            <b-img src="~@/assets/logo.png" alt="Knaxim Logo" />
             Knaxim.com
           </b-navbar-brand>
           <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
           <b-collapse id="nav-collapse" is-nav>
+            <!-- Search & History -->
+            <header-search />
 
-           <!-- Search & History -->
-           <header-search />
-
-           <!-- Settings Nav -->
-           <header-settings @login="showLogin"/>
+            <!-- Settings Nav -->
+            <header-settings @login="showLogin" />
           </b-collapse>
         </b-navbar>
       </b-col>
-      <hr class="w-100 m-0"/>
+      <hr class="w-100 m-0" />
     </b-row>
 
     <b-row>
@@ -30,7 +27,7 @@
       <b-col v-if="isAuthenticated" md="2">
         <b-row cols="1">
           <b-col>
-            <nav-basic @team-selected="gotoTeam"/>
+            <nav-basic @team-selected="gotoTeam" />
           </b-col>
 
           <b-col class="d-none d-md-block">
@@ -47,14 +44,17 @@
         <!-- Sub Header -->
         <b-row class="d-none d-md-flex">
           <b-col>
-            <team-select v-if="isAuthenticated" class="teamselect"
-              @team-selected="gotoTeam"/>
+            <team-select
+              v-if="isAuthenticated"
+              class="teamselect"
+              @team-selected="gotoTeam"
+            />
           </b-col>
         </b-row>
 
         <b-row class="">
           <!-- Main Content -->
-          <b-col class="p-0">
+          <b-col cols="10" class="p-0">
             <div class="app-content">
               <router-view />
             </div>
@@ -73,7 +73,6 @@
       </b-col>
     </b-row>
   </b-container>
-
 </template>
 
 <script>
@@ -103,11 +102,14 @@ export default {
     }
   },
   created () {
-    this.$store.dispatch(GET_USER).then(() => {
-      this.$store.dispatch(LOAD_SERVER)
-    }).catch(() => {
-      this.showAuth()
-    })
+    this.$store
+      .dispatch(GET_USER)
+      .then(() => {
+        this.$store.dispatch(LOAD_SERVER)
+      })
+      .catch(() => {
+        this.showAuth()
+      })
   },
   methods: {
     showAuth () {
