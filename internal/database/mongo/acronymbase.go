@@ -16,6 +16,8 @@ type acronym struct {
 	Complete string `bson:"complete"`
 }
 
+// Acronymbase is an active connection to the database and
+// operations on acronyms
 type Acronymbase struct {
 	Database
 }
@@ -32,6 +34,7 @@ func stripAcronym(in string) string {
 	return keybuilder.String()
 }
 
+// Put adds an association with an acronym and a phrase
 func (ab *Acronymbase) Put(a, c string) error {
 	val := acronym{
 		Acronym:  stripAcronym(a),
@@ -46,6 +49,7 @@ func (ab *Acronymbase) Put(a, c string) error {
 	return nil
 }
 
+// Get returns all associated phrases for an acronym
 func (ab *Acronymbase) Get(a string) ([]string, error) {
 	cursor, err := ab.client.Database(ab.DBName).Collection(ab.CollNames["acronym"]).Find(ab.ctx, bson.M{
 		"acronym": stripAcronym(a),
