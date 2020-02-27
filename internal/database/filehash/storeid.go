@@ -11,19 +11,26 @@ import (
 	"time"
 )
 
+// StoreID is used to uniquely identify a FileStore.
+// Contains a hash of the file's content used to quickly identify copies of the
+// same file.
 type StoreID struct {
 	Hash  uint32 `bson:"hash"`
 	Stamp uint16 `bson:"stamp"`
 }
 
+// ToNum converts StoreID to a int64 representation
 func (sid StoreID) ToNum() int64 {
 	return int64(sid.Stamp)<<32 | int64(sid.Hash)
 }
 
+// NewStoreID builds a StoreID from a reader of the file's contents
 func NewStoreID(r io.Reader) (StoreID, error) {
 	return NewStoreIDComplete(r, adler32.New(), uint16(time.Now().UnixNano()))
 }
 
+// NewStoreIDComplete build a StoreID from a reader of the file's contents,
+// a hash scheme and stamp value
 func NewStoreIDComplete(r io.Reader, h hash.Hash32, s uint16) (StoreID, error) {
 	var st StoreID
 	st.Stamp = s
@@ -38,22 +45,25 @@ func NewStoreIDComplete(r io.Reader, h hash.Hash32, s uint16) (StoreID, error) {
 	return st, nil
 }
 
-func (s StoreID) String() string {
+// String returns a base64 encoding as a string
+func (sid StoreID) String() string {
 	build := new(strings.Builder)
 	encoder := base64.NewEncoder(base64.URLEncoding, build)
 
-	binary.Write(encoder, binary.LittleEndian, s.Hash)
-	binary.Write(encoder, binary.LittleEndian, s.Stamp)
+	binary.Write(encoder, binary.LittleEndian, sid.Hash)
+	binary.Write(encoder, binary.LittleEndian, sid.Stamp)
 	encoder.Close()
 
 	return build.String()
 }
 
-func (s StoreID) Mutate() StoreID {
-	s.Stamp++
-	return s
+// Mutate returns a new StoreID with the same hash
+func (sid StoreID) Mutate() StoreID {
+	sid.Stamp++
+	return sid
 }
 
+// DecodeStoreID returns a StoreID from base64 encoded string, inverse of String()
 func DecodeStoreID(h string) (sid StoreID, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -80,6 +90,7 @@ func decodeStoreID(b []byte) StoreID {
 	return n
 }
 
+// Equal returns true if the other StoreID has the same value
 func (sid StoreID) Equal(oid StoreID) bool {
 	return sid.Hash == oid.Hash && sid.Stamp == oid.Stamp
 }

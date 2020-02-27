@@ -58,10 +58,12 @@ func storetag(s filehash.StoreID, t tag.Tag) tagbson {
 	return r
 }
 
+// Tagbase is a connection to the database with tag operations
 type Tagbase struct {
 	Database
 }
 
+// UpsertFile adds tags associated with file id
 func (tb *Tagbase) UpsertFile(id filehash.FileID, tags ...tag.Tag) error {
 	var data []tagbson
 	for _, t := range tags {
@@ -114,6 +116,7 @@ func (tb *Tagbase) UpsertFile(id filehash.FileID, tags ...tag.Tag) error {
 	return <-errch
 }
 
+// UpsertStore adds tags associated with store id
 func (tb *Tagbase) UpsertStore(id filehash.StoreID, tags ...tag.Tag) error {
 	var data []tagbson
 	for _, t := range tags {
@@ -166,6 +169,7 @@ func (tb *Tagbase) UpsertStore(id filehash.StoreID, tags ...tag.Tag) error {
 	return <-errch
 }
 
+// FileTags returns all tags associated with file
 func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, error) {
 	stores := make([]filehash.StoreID, 0, len(files))
 	for _, f := range files {
@@ -240,6 +244,8 @@ type tagAggReturn struct {
 	Tags  []tagbson        `bson:"tags"`
 }
 
+// GetFiles returns file ids and store ids that have matching tags
+// if any files are given in context, then only tags of those files are searched
 func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]filehash.FileID, []filehash.StoreID, error) {
 	//Build Aggregation Pipeline
 	aggmatch := make(bson.A, 0, len(filters))
@@ -373,8 +379,9 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 	return fids, sids, nil
 }
 
-//TODO: bit-wise-or the keys of data rather then pass tag.Type
+// SearchData returns tags that contain a particular type and matching data fields
 func (tb *Tagbase) SearchData(typ tag.Type, data tag.Data) ([]tag.Tag, error) {
+	//TODO: bit-wise-or the keys of data rather then pass tag.Type
 	filter := make(bson.M)
 	filter["type"] = bson.M{"$bitsAnySet": typ}
 	for t, m := range data {

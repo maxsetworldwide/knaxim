@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachPublic is for searching public available files
 func AttachPublic(r *mux.Router) {
 	r.Use(srvjson.JSONResponse)
 	r.Use(ConnectDatabase)

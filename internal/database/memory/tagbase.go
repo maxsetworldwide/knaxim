@@ -5,10 +5,12 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/tag"
 )
 
+// Tagbase wraps database and provides tag operations
 type Tagbase struct {
 	Database
 }
 
+// UpsertFile adds tags attached to fileid
 func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -25,6 +27,7 @@ func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
 	return nil
 }
 
+// UpsertStore add tags attached to storeids
 func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -41,6 +44,7 @@ func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
 	return nil
 }
 
+// FileTags returns all tags associated with a particular fileid
 func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -78,6 +82,8 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 	return out, perr
 }
 
+// GetFiles returns all fileids and storeids associated with particular
+// tags, optionally allows only searching over certain FileIDs
 func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) (fileids []filehash.FileID, storeids []filehash.StoreID, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -135,6 +141,7 @@ FILES:
 	return
 }
 
+// SearchData returns all tags that have matching data fields
 func (tb *Tagbase) SearchData(typ tag.Type, d tag.Data) (out []tag.Tag, err error) {
 	lock.RLock()
 	defer lock.RUnlock()

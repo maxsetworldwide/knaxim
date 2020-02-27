@@ -21,6 +21,7 @@ func isChar(b byte) bool {
 	return false
 }
 
+// ScanWords causes a scanner to extract each alpha-numeric sequence
 func ScanWords(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	var start int
 	start = -1
@@ -39,6 +40,7 @@ func ScanWords(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return start, nil, nil
 }
 
+// ExtractContentTags generates an array of tags for each unique word as defined by ScanWords
 func ExtractContentTags(content io.Reader) ([]Tag, error) {
 	cache := make(map[string]Tag)
 

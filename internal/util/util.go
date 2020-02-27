@@ -2,6 +2,8 @@ package util
 
 import "strings"
 
+// SplitSearch divides the search strings into individual words for
+// searching
 func SplitSearch(search ...string) []string {
 	out := make([]string, 0, len(search))
 	for _, find := range search {
@@ -15,6 +17,7 @@ func SplitSearch(search ...string) []string {
 	return out
 }
 
+// BuildSearchRegex generates a regular expression from the search terms
 func BuildSearchRegex(search ...string) string {
 	splits := make([]string, 0, len(search))
 	for _, find := range search {

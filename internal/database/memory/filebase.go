@@ -5,10 +5,13 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
+// Filebase is the memory database accessor for file operations
 type Filebase struct {
 	Database
 }
 
+// Reserve is the first step in inserting a new file and it reserves a FileID,
+// mutating it if necessary. and returns the FileID that has been reserved
 func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -19,6 +22,7 @@ func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 	return id, nil
 }
 
+// Insert addes file to datase, file's fileid must be already reserved
 func (fb *Filebase) Insert(r database.FileI) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -31,6 +35,7 @@ func (fb *Filebase) Insert(r database.FileI) error {
 	return nil
 }
 
+// Get returns file matching id
 func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -44,6 +49,7 @@ func (fb *Filebase) get(fid filehash.FileID) (database.FileI, error) {
 	return fb.Files[fid.String()].Copy(), nil
 }
 
+// GetAll returns all files matching file ids
 func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -58,6 +64,7 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 	return out, nil
 }
 
+// Update replaces file matching fileid
 func (fb *Filebase) Update(r database.FileI) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -68,6 +75,7 @@ func (fb *Filebase) Update(r database.FileI) error {
 	return nil
 }
 
+// Remove file from database
 func (fb *Filebase) Remove(r filehash.FileID) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -78,6 +86,7 @@ func (fb *Filebase) Remove(r filehash.FileID) error {
 	return nil
 }
 
+// GetOwned returns all files owned by ownerid
 func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -90,6 +99,7 @@ func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 	return out, nil
 }
 
+// GetPermKey returns all files that a given owner has a particular permission
 func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -106,6 +116,8 @@ LOOP:
 	return out, nil
 }
 
+// MatchStore returns all files that match one of the storeids,
+// and is either owned by oid or oid has one of the form of permission
 func (fb *Filebase) MatchStore(oid database.OwnerID, sids []filehash.StoreID, pkeys ...string) ([]database.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()

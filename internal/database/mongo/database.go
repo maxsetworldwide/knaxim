@@ -14,6 +14,7 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// Database implements database.Database for mongodb
 type Database struct {
 	trackOwners
 	URI       string            `json:"uri"`
@@ -24,6 +25,8 @@ type Database struct {
 	cancel    context.CancelFunc
 }
 
+// Init tests the connection to the database
+// if reset is true, empties out the databases and sets up indexex
 func (d *Database) Init(ctx context.Context, reset bool) error {
 	d.CollNames = initcoll(d.CollNames)
 	//try connecting
@@ -321,6 +324,8 @@ func (d *Database) initclient(c context.Context) {
 	}
 }
 
+// Owner opens a new connection to the database if provided a context and returns Ownerbase type
+// if provided context is nil the resulting Ownerbase will reuse the existing connection
 func (d *Database) Owner(c context.Context) database.Ownerbase {
 	n := new(Ownerbase)
 	n.Database = *d
@@ -329,6 +334,8 @@ func (d *Database) Owner(c context.Context) database.Ownerbase {
 	return n
 }
 
+// File opens a new connection to the database if provided a context and returns Filebase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) File(c context.Context) database.Filebase {
 	n := new(Filebase)
 	n.Database = *d
@@ -337,6 +344,8 @@ func (d *Database) File(c context.Context) database.Filebase {
 	return n
 }
 
+// Store opens a new connection to the database if provided a context and returns Storebase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) Store(c context.Context) database.Storebase {
 	n := new(Storebase)
 	n.Database = *d
@@ -344,6 +353,8 @@ func (d *Database) Store(c context.Context) database.Storebase {
 	return n
 }
 
+// Content opens a new connection to the database if provided a context and returns Contentbase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) Content(c context.Context) database.Contentbase {
 	n := new(Contentbase)
 	n.Database = *d
@@ -351,6 +362,8 @@ func (d *Database) Content(c context.Context) database.Contentbase {
 	return n
 }
 
+// Tag opens a new connection to the database if provided a context and returns Tagbase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) Tag(c context.Context) database.Tagbase {
 	n := new(Tagbase)
 	n.Database = *d
@@ -358,6 +371,8 @@ func (d *Database) Tag(c context.Context) database.Tagbase {
 	return n
 }
 
+// Acronym opens a new connection to the database if provided a context and returns Acronymbase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) Acronym(c context.Context) database.Acronymbase {
 	n := new(Acronymbase)
 	n.Database = *d
@@ -365,6 +380,8 @@ func (d *Database) Acronym(c context.Context) database.Acronymbase {
 	return n
 }
 
+// View opens a new connection to the database if provided a context and returns Viewbase type
+// if provided context is nil it will reuse the existing connection
 func (d *Database) View(c context.Context) database.Viewbase {
 	n := new(Viewbase)
 	n.Database = *d
@@ -372,6 +389,7 @@ func (d *Database) View(c context.Context) database.Viewbase {
 	return n
 }
 
+// Close stops the active connection necessary or else there can be memory leak from unclosed connections
 func (d *Database) Close(ctx context.Context) error {
 	defer func() {
 		d.client = nil
@@ -392,6 +410,7 @@ func (d *Database) Close(ctx context.Context) error {
 	return nil
 }
 
+// GetContext returns context of the current open connection
 func (d *Database) GetContext() context.Context {
 	return d.ctx
 }

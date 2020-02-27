@@ -11,10 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Viewbase is a connection to the database with pdf view operations
 type Viewbase struct {
 	Database
 }
 
+// Insert adds pdf view to the database
 func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 	chunks := chunkify(vs.ID, vs.Content)
 	_, err := vb.client.Database(vb.DBName).Collection(vb.CollNames["view"]).InsertMany(
@@ -28,6 +30,7 @@ func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 	return nil
 }
 
+// Get view from database
 func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error) {
 	var chunks []*contentchunk
 	cursor, err := vb.client.Database(vb.DBName).Collection(vb.CollNames["view"]).Find(

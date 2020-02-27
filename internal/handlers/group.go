@@ -59,7 +59,7 @@ func groupidMiddleware(checkmembership bool) mux.MiddlewareFunc {
 	}
 }
 
-// server sends: /api/group
+// AttachGroup adds api paths related to group actions
 func AttachGroup(r *mux.Router) {
 	r.Use(ConnectDatabase)
 	r.Use(UserCookie)

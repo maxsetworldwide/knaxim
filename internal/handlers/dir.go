@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachDir is for connecting folder related api paths
 func AttachDir(r *mux.Router) {
 	r.Use(srvjson.JSONResponse)
 	r.Use(ConnectDatabase)

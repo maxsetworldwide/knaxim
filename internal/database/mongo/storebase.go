@@ -15,10 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Storebase is a connection to the database with file store operations
 type Storebase struct {
 	Database
 }
 
+// Reserve a store id, will mutate if store id not available, returns reserved store id
 func (db *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
 	var out *filehash.StoreID
 	for out == nil {
@@ -63,6 +65,7 @@ func (db *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
 	return *out, nil
 }
 
+// Insert file store, must reserve store id first, see Reserve
 func (db *Storebase) Insert(fs *database.FileStore) error {
 	{
 		result, e := db.client.Database(db.DBName).Collection(db.CollNames["store"]).UpdateOne(
@@ -94,6 +97,7 @@ func (db *Storebase) Insert(fs *database.FileStore) error {
 	return nil
 }
 
+// Get file store
 func (db *Storebase) Get(id filehash.StoreID) (out *database.FileStore, err error) {
 	result := db.client.Database(db.DBName).Collection(db.CollNames["store"]).FindOne(
 		db.ctx,
@@ -133,6 +137,7 @@ func (db *Storebase) Get(id filehash.StoreID) (out *database.FileStore, err erro
 	return store, nil
 }
 
+// MatchHash returns all file stores with matching hashes
 func (db *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) {
 	ctx, cancel := context.WithCancel(db.ctx)
 	defer cancel()
@@ -180,8 +185,9 @@ func (db *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) 
 	return
 }
 
-func (sb *Storebase) UpdateMeta(fs *database.FileStore) error {
-	result, err := sb.client.Database(sb.DBName).Collection(sb.CollNames["store"]).ReplaceOne(sb.ctx, bson.M{
+// UpdateMeta of file store
+func (db *Storebase) UpdateMeta(fs *database.FileStore) error {
+	result, err := db.client.Database(db.DBName).Collection(db.CollNames["store"]).ReplaceOne(db.ctx, bson.M{
 		"id": fs.ID,
 	}, fs)
 	if err != nil {

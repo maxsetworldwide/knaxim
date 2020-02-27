@@ -9,10 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Contentbase database connection with content lines operations
 type Contentbase struct {
 	Database
 }
 
+// Insert adds lines to the database
 func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 	var docs []interface{}
 	for _, line := range lines {
@@ -25,6 +27,7 @@ func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 	return nil
 }
 
+// Len returns number of lines associated with StoreID
 func (cb *Contentbase) Len(id filehash.StoreID) (count int64, err error) {
 	count, err = cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).CountDocuments(cb.ctx, bson.M{
 		"id": id,
@@ -35,6 +38,7 @@ func (cb *Contentbase) Len(id filehash.StoreID) (count int64, err error) {
 	return
 }
 
+// Slice returns slices associated with StoreID within bounds
 func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
 	fs, err := cb.Store(nil).Get(id)
 	if err != nil {
@@ -75,6 +79,7 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 	return out, perr
 }
 
+// RegexSearchFile returns lines associated with StoreID, within bounds, and matches regular expression
 func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
 	fs, err := cb.Store(nil).Get(id)
 	if err != nil {

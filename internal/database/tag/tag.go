@@ -7,34 +7,40 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// Type is a byte flag for different kinds of tags
 type Type uint32
 
+// Types of tags, bitwise or them together to make compound tags
 const (
 	CONTENT Type = 1 << iota
-	SYNTH_TOPIC
-	SYNTH_ACTION
-	SYNTH_RESOURCE
-	SYNTH_PROCESS
+	TOPIC
+	ACTION
+	RESOURCE
+	PROCESS
 )
 
 const (
+	// USER indicates a custom tag created by a user, ie a folder
 	USER Type = (1 << 24) << iota
 )
 
+// ALLTYPES is the compound of all possible tag types
 const ALLTYPES = Type(math.MaxUint32)
+
+// ALLSYNTH is the combination of TOPIC, ACTION, RESOURCE, and PROCESS
 const ALLSYNTH = Type(60)
 
 func (t Type) String() string {
 	switch t {
 	case CONTENT:
 		return "content"
-	case SYNTH_TOPIC:
+	case TOPIC:
 		return "topic"
-	case SYNTH_ACTION:
+	case ACTION:
 		return "action"
-	case SYNTH_PROCESS:
+	case PROCESS:
 		return "process"
-	case SYNTH_RESOURCE:
+	case RESOURCE:
 		return "resource"
 	case USER:
 		return "user"
@@ -47,18 +53,19 @@ func (t Type) String() string {
 	}
 }
 
+// DecodeType converts String representation back to Type
 func DecodeType(s string) (Type, error) {
 	switch s {
 	case "content":
 		return CONTENT, nil
 	case "topic":
-		return SYNTH_TOPIC, nil
+		return TOPIC, nil
 	case "action":
-		return SYNTH_ACTION, nil
+		return ACTION, nil
 	case "process":
-		return SYNTH_PROCESS, nil
+		return PROCESS, nil
 	case "resource":
-		return SYNTH_RESOURCE, nil
+		return RESOURCE, nil
 	case "user":
 		return USER, nil
 	case "alltypes":
@@ -75,12 +82,15 @@ func DecodeType(s string) (Type, error) {
 	}
 }
 
+// Tag is a combination of a word and a type to attach to a file or store
+// Data is to store additional data about a particular tag
 type Tag struct {
 	Word string `bson:"word" json:"word"`
 	Type Type   `bson:"type" json:"type"`
 	Data Data   `bson:"data" json:"data"`
 }
 
+// Update adds or replaces data values in the passed tag
 func (t Tag) Update(oth Tag) Tag {
 	newt := Tag{
 		Word: t.Word,
@@ -98,8 +108,10 @@ func (t Tag) Update(oth Tag) Tag {
 	return newt
 }
 
+// Data maps a tag type to an abitrary collection of string to string mappings
 type Data map[Type]map[string]string
 
+// Copy generates a new Data object with the same values as the original
 func (d Data) Copy() Data {
 	if d == nil {
 		return make(Data)
@@ -114,6 +126,7 @@ func (d Data) Copy() Data {
 	return newd
 }
 
+// Contains returns true if all data fields in the provided data match the fields in the original
 func (d Data) Contains(oth Data) bool {
 	for typ, mapping := range oth {
 		for k, v := range mapping {
@@ -125,6 +138,7 @@ func (d Data) Contains(oth Data) bool {
 	return true
 }
 
+// MarshalBSON converts Data into a bson representation
 func (d Data) MarshalBSON() ([]byte, error) {
 	form := make(map[string]map[string]string)
 	for typ, fields := range d {
@@ -133,6 +147,7 @@ func (d Data) MarshalBSON() ([]byte, error) {
 	return bson.Marshal(form)
 }
 
+// UnmarshalBSON converts bson representation back into Data
 func (d *Data) UnmarshalBSON(b []byte) error {
 	*d = make(Data)
 	var form map[string]map[string]string

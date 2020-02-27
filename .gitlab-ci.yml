@@ -10,7 +10,6 @@ clientBuild:
   tags:
     - puppeteer
   cache:
-    key: ${CI_BUILD_REF_NAME}
     paths:
       - web/node_modules
   artifacts:
@@ -42,7 +41,7 @@ serverBuild:
     - cd cmd/
     - go build ./...
   cache:
-    key: ${CI_BUILD_REF_NAME}
+    key: build
     paths:
       - .cache/go
   artifacts:
@@ -147,3 +146,16 @@ sendEmail:
   script:
     - cd internal/email
     - go test -v -to=delete@maxset.org
+
+golint:
+  stage: build
+  tags:
+    - golang
+  script:
+    - go get -u golang.org/x/lint/golint
+    - go list -f {{.Target}} golang.org/x/lint/golint
+    - .cache/go/bin/golint -set_exit_status ./...
+  cache:
+    key: lint
+    paths:
+      - .cache/go

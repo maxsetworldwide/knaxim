@@ -8,10 +8,13 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// Ownerbase is a wrapper for the memory database for owner operations
 type Ownerbase struct {
 	Database
 }
 
+// Reserve is the first step to adding a new Owner, returns OwnerID
+// that was reserved, it might be a mutated value of the input
 func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID, error) {
 	lock.Lock()
 	defer lock.Unlock()
@@ -43,6 +46,7 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID
 	return id, nil
 }
 
+// Insert adds owner to database
 func (ob *Ownerbase) Insert(u database.Owner) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -78,6 +82,7 @@ func (ob *Ownerbase) Insert(u database.Owner) error {
 	return nil
 }
 
+// Get pulls owner out of database
 func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -91,6 +96,7 @@ func (ob *Ownerbase) get(id database.OwnerID) (database.Owner, error) {
 	return ob.Owners.ID[id.String()].Copy(), nil
 }
 
+// FindUserName returns user that has a particular username
 func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -100,6 +106,7 @@ func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
 	return ob.Owners.UserName[name].Copy().(database.UserI), nil
 }
 
+// FindGroupName returns group that has a particular name
 func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -109,6 +116,8 @@ func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 	return ob.Owners.GroupName[name].Copy().(database.GroupI), nil
 }
 
+// GetGroups returns groups that are owned by owner and groups the
+// owner is a member of
 func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, member []database.GroupI, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -128,6 +137,7 @@ LOOP:
 	return
 }
 
+// Update owner
 func (ob *Ownerbase) Update(o database.Owner) error {
 	lock.Lock()
 	defer lock.Unlock()
@@ -146,6 +156,7 @@ func (ob *Ownerbase) Update(o database.Owner) error {
 	return nil
 }
 
+// GetSpace returns the total amount of filesize owned by owner
 func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -161,6 +172,7 @@ func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
 	return total, nil
 }
 
+// GetTotalSpace returns the total file space available to owner
 func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -173,6 +185,7 @@ func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
 	return 0, nil
 }
 
+// GetResetKey generates new password reset key
 func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
@@ -184,6 +197,7 @@ func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
 	return str, nil
 }
 
+// CheckResetKey returns associated ownerid of reset key
 func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err error) {
 	id, assigned := ob.Owners.Reset[keystr]
 	if !assigned {
@@ -192,6 +206,7 @@ func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err erro
 	return
 }
 
+// DeleteResetKey removes resetkey
 func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
 	for k, v := range ob.Owners.Reset {
 		if v.Equal(id) {

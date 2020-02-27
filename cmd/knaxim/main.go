@@ -18,9 +18,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var conf_path = flag.String("config", "", "specify configuration file, default is Enviroment Variable KNAXIM_SERVER_CONFIG or if Enviroment Variable is missing or empty, looks for /etc/knaxim/conf.json")
+var confPath = flag.String("config", "", "specify configuration file, default is Enviroment Variable KNAXIM_SERVER_CONFIG or if Enviroment Variable is missing or empty, looks for /etc/knaxim/conf.json")
 
-var conf_path_short = flag.String("c", "", "see config")
+var confPathShort = flag.String("c", "", "see config")
 
 // var standardtimeout time.Duration
 
@@ -35,18 +35,18 @@ func redirect(w http.ResponseWriter, req *http.Request) {
 
 func setup() {
 	flag.Parse()
-	if len(*conf_path_short) > 0 && len(*conf_path) == 0 {
-		conf_path = conf_path_short
+	if len(*confPathShort) > 0 && len(*confPath) == 0 {
+		confPath = confPathShort
 	}
-	if len(*conf_path) == 0 {
+	if len(*confPath) == 0 {
 		econfp := os.Getenv("KNAXIM_SERVER_CONFIG")
 		if len(econfp) == 0 {
-			*conf_path = "/etc/knaxim/conf.json"
+			*confPath = "/etc/knaxim/conf.json"
 		} else {
-			*conf_path = econfp
+			*confPath = econfp
 		}
 	}
-	if err := config.ParseConfig(*conf_path); err != nil {
+	if err := config.ParseConfig(*confPath); err != nil {
 		log.Fatalln("unable to parse config:", err)
 	}
 	log.Printf("Configuration: %+v", config.V)

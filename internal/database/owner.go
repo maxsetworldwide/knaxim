@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// OwnerID used to uniquely identify owners
 type OwnerID struct {
 	Type        byte    `bson:"type"`
 	UserDefined [3]byte `bson:"ud"`
@@ -48,6 +49,7 @@ func (oid OwnerID) bytes() []byte {
 	return b
 }
 
+// String returns string representation of OwnerID
 func (oid OwnerID) String() string {
 	out := new(strings.Builder)
 	enc := base64.NewEncoder(base64.RawURLEncoding, out)
@@ -56,6 +58,7 @@ func (oid OwnerID) String() string {
 	return out.String()
 }
 
+// DecodeObjectIDString inverse operation of String()
 func DecodeObjectIDString(s string) (oid OwnerID, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -84,16 +87,19 @@ func DecodeObjectIDString(s string) (oid OwnerID, err error) {
 	return out, nil
 }
 
+// Mutate creates new OwnerID of the same type
 func (oid OwnerID) Mutate() OwnerID {
 	oid.Stamp = append(oid.Stamp, brand.Next())
 	return oid
 }
 
+// MarshalJSON build json representation of OwnerID
 func (oid OwnerID) MarshalJSON() ([]byte, error) {
 	content := oid.String()
 	return json.Marshal(content)
 }
 
+// UnmarshalJSON builds OwnerID from json
 func (oid *OwnerID) UnmarshalJSON(b []byte) error {
 	var oidstr string
 	err := json.Unmarshal(b, &oidstr)
@@ -104,6 +110,7 @@ func (oid *OwnerID) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// Equal is true if all fields are equal
 func (oid OwnerID) Equal(oth OwnerID) bool {
 	if oid.Type != oth.Type {
 		return false
@@ -122,11 +129,7 @@ func (oid OwnerID) Equal(oth OwnerID) bool {
 	return true
 }
 
-// TODO: in mongo add private type to handle loading owners from database
-// construction type needed that mirrors Permission Object but with OwnerIDs
-// instead of full references to Owners in order to handle circular references
-// due to Groups
-
+// Owner is the interface for types that can own things
 type Owner interface {
 	GetID() OwnerID
 	GetName() string
@@ -138,8 +141,10 @@ type Owner interface {
 type publicowner struct {
 }
 
-var Public = publicowner{}
+// Public is the owner that matches all other owners
+var Public publicowner
 
+//GetID implements Owner
 func (p publicowner) GetID() OwnerID {
 	return OwnerID{
 		Type:        'p',
@@ -147,14 +152,17 @@ func (p publicowner) GetID() OwnerID {
 	}
 }
 
+// GetName implements Owner
 func (p publicowner) GetName() string {
 	return "Public"
 }
 
+// Match implements Owner, always true
 func (p publicowner) Match(_ Owner) bool {
 	return true
 }
 
+// Equal implements Owner
 func (p publicowner) Equal(o Owner) bool {
 	switch o.(type) {
 	case publicowner:
@@ -164,6 +172,7 @@ func (p publicowner) Equal(o Owner) bool {
 	}
 }
 
+// Copy implements Owner, Public is an empty value so doesn't actually allocate a new object
 func (p publicowner) Copy() Owner {
 	return Public
 }

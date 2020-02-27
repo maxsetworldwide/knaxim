@@ -8,16 +8,19 @@ import (
 	"git.maxset.io/web/knaxim/internal/util"
 )
 
+// FileInfo json response type of file information
 type FileInfo struct {
 	File  database.FileI `json:"file"`
 	Count int64          `json:"count,omitempty"` //sentence count
 	Size  int64          `json:"size,omitempty"`  //size of original file in bytes
 }
 
+// SearchResponse json response of matched files to a search
 type SearchResponse struct {
 	Files []FileInfo `json:"matched"`
 }
 
+// BuildSearchResponse contructs SearchResponse from a list of matched fileids
 func BuildSearchResponse(r *http.Request, fids []filehash.FileID) SearchResponse {
 	filebase := r.Context().Value(database.FILE).(database.Filebase)
 	var files []database.FileI
@@ -58,16 +61,19 @@ func BuildSearchResponse(r *http.Request, fids []filehash.FileID) SearchResponse
 	return result
 }
 
+// DirInformation is the json encoding for folder information
 type DirInformation struct {
 	Name  string            `json:"name"`
 	Files []filehash.FileID `json:"files"`
 }
 
+// FileContent is the json encoding for lines from a file
 type FileContent struct {
 	Length int                    `json:"size"`
 	Vals   []database.ContentLine `json:"lines"`
 }
 
+// GroupInformation is the json encoding object for Groups
 type GroupInformation struct {
 	ID      string   `json:"id"`
 	Name    string   `json:"name"`
@@ -75,6 +81,7 @@ type GroupInformation struct {
 	Members []string `json:"members,omitempty"`
 }
 
+// BuildGroupInfo contructs Group Response Object from Group
 func BuildGroupInfo(grp database.GroupI) GroupInformation {
 	return GroupInformation{
 		ID:    grp.GetID().String(),
@@ -90,6 +97,7 @@ func BuildGroupInfo(grp database.GroupI) GroupInformation {
 	}
 }
 
+// UserInfo is the json contruction struct for user information
 type UserInfo struct {
 	ID    string   `json:"id"`
 	Name  string   `json:"name"`
@@ -100,6 +108,7 @@ type UserInfo struct {
 	} `json:"data,omitempty"`
 }
 
+// BuildUserInfo builds user info from user object
 func BuildUserInfo(r *http.Request, u database.UserI) UserInfo {
 	actor := r.Context().Value(USER).(database.UserI)
 	var ui UserInfo

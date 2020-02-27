@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// GroupI is the group interface
 type GroupI interface {
 	Owner
 	PermissionI
@@ -15,12 +16,14 @@ type GroupI interface {
 	RemoveMember(o Owner)
 }
 
+// Group is the basic Group implementation
 type Group struct {
 	Permission
 	ID   OwnerID `json:"id" bson:"id"`
 	Name string  `json:"name" bson:"name"`
 }
 
+// NewGroup build Group with a particular name and owner
 func NewGroup(name string, o Owner) *Group {
 	ng := new(Group)
 	ng.Own = o
@@ -36,18 +39,23 @@ func NewGroup(name string, o Owner) *Group {
 	return ng
 }
 
+// GetID implements GroupI
 func (g *Group) GetID() OwnerID {
 	return g.ID
 }
 
+// GetName implements GroupI
 func (g *Group) GetName() string {
 	return g.Name
 }
 
+// SetName implements GroupI
 func (g *Group) SetName(s string) {
 	g.Name = s
 }
 
+// Match returns true if owner is equal to group, matches
+// group's owner, or matches any of the group's members
 func (g *Group) Match(o Owner) bool {
 	if g.Equal(o) {
 		return true
@@ -63,6 +71,7 @@ func (g *Group) Match(o Owner) bool {
 	return false
 }
 
+// Equal returns true if the Owner has Equal ID values
 func (g *Group) Equal(o Owner) bool {
 	if o == nil {
 		return false
@@ -70,6 +79,7 @@ func (g *Group) Equal(o Owner) bool {
 	return g.ID.Equal(o.GetID())
 }
 
+// Copy Group
 func (g *Group) Copy() Owner {
 	if g == nil {
 		return nil
@@ -80,11 +90,13 @@ func (g *Group) Copy() Owner {
 	return ng
 }
 
+// GetMembers implements GroupI
 func (g *Group) GetMembers() []Owner {
 	result := make([]Owner, 0, len(g.GetPerm("%member%")))
 	return append(result, g.GetPerm("%member%")...)
 }
 
+// AddMember implements GroupI
 func (g *Group) AddMember(o Owner) {
 	if o == nil {
 		return
@@ -92,6 +104,7 @@ func (g *Group) AddMember(o Owner) {
 	g.SetPerm(o, "%member%", true)
 }
 
+// RemoveMember implements GroupI
 func (g *Group) RemoveMember(o Owner) {
 	if o == nil {
 		return
@@ -99,6 +112,7 @@ func (g *Group) RemoveMember(o Owner) {
 	g.SetPerm(o, "%member%", false)
 }
 
+// MarshalJSON builds json representation
 func (g *Group) MarshalJSON() ([]byte, error) {
 	vals := g.toMap()
 	vals["id"] = g.ID
@@ -106,6 +120,7 @@ func (g *Group) MarshalJSON() ([]byte, error) {
 	return json.Marshal(vals)
 }
 
+// MarshalBSON builds bson representation
 func (g *Group) MarshalBSON() ([]byte, error) {
 	vals := g.toMap()
 	vals["id"] = g.ID
@@ -118,6 +133,8 @@ type gForm struct {
 	Name string  `json:"name" bson:"name"`
 }
 
+// UnmarshalJSON decodes to Group
+// group still needs Populate called inorder to load owner and members
 func (g *Group) UnmarshalJSON(b []byte) error {
 	err := g.Permission.UnmarshalJSON(b)
 	if err != nil {
@@ -133,6 +150,8 @@ func (g *Group) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// UnmarshalBSON decodes to Group
+// group still needs Populate to be called inorder to load owner and members
 func (g *Group) UnmarshalBSON(b []byte) error {
 	err := g.Permission.UnmarshalBSON(b)
 	if err != nil {

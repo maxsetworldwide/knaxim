@@ -21,6 +21,7 @@ var stokenizer = tokenize.NewPunktSentenceTokenizer()
 
 //TODO split on newline or any punc when token gets too large
 
+// SentenceSplitter implements the scanner split func type for splitting strings into sentences
 func SentenceSplitter(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(bytes.TrimSpace(data)) == 0 {
 		return 0, nil, nil
@@ -41,9 +42,8 @@ func SentenceSplitter(data []byte, atEOF bool) (advance int, token []byte, err e
 			if breakpoint < 0 {
 				if len(data) < 2048 {
 					return 0, nil, nil
-				} else {
-					return 2048, data[:2048], nil
 				}
+				return 2048, data[:2048], nil
 			}
 		}
 		return breakpoint + 1, data[:breakpoint+1], nil
@@ -52,12 +52,15 @@ func SentenceSplitter(data []byte, atEOF bool) (advance int, token []byte, err e
 	return 0, nil, nil
 }
 
+// ContentExtractor is a connector to a tika server and build content lines from file streams
 type ContentExtractor tika.Client
 
+// NewContentExtractor connects to a tika server at a given address
 func NewContentExtractor(httpClient *http.Client, urlString string) *ContentExtractor {
 	return (*ContentExtractor)(tika.NewClient(httpClient, urlString))
 }
 
+// ExtractText process a file stream assuming it is some kind of text file
 func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
 
 	out := make([]database.ContentLine, 0, 128)
@@ -90,6 +93,7 @@ var csvSep = regexp.MustCompile("[,\t]")
 
 // var csvRow = regexp.MustCompile("^.*(,.*)*$")
 
+// ExtractCSV process a byte stream assuming it is a type of comma or tab separated values
 func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
 
 	out := make([]database.ContentLine, 0, 128)

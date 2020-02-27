@@ -12,10 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Filebase is a database connection with file operations
 type Filebase struct {
 	Database
 }
 
+// Reserve a fileid, will mutate if fileid not available, returns reserved file id
 func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 	var out *filehash.FileID
 	for out == nil {
@@ -54,6 +56,7 @@ func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 	return *out, nil
 }
 
+// Insert file into database. file id must all ready been reserved, see Reserve
 func (fb *Filebase) Insert(r database.FileI) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).UpdateOne(
 		fb.ctx,
@@ -75,6 +78,7 @@ func (fb *Filebase) Insert(r database.FileI) error {
 	return nil
 }
 
+// Get file from id
 func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 	result := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).FindOne(fb.ctx, bson.M{
 		"id": fid,
@@ -94,6 +98,7 @@ func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 	return f, nil
 }
 
+// GetAll files from ids
 func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"id": bson.M{"$in": fids},
@@ -111,6 +116,7 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 	return fb.decodefiles(cursor)
 }
 
+// Update File
 func (fb *Filebase) Update(r database.FileI) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).ReplaceOne(fb.ctx, bson.M{
 		"id": r.GetID(),
@@ -124,6 +130,7 @@ func (fb *Filebase) Update(r database.FileI) error {
 	return nil
 }
 
+// Remove file with id
 func (fb *Filebase) Remove(r filehash.FileID) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).DeleteOne(fb.ctx, bson.M{
 		"id": r,
@@ -158,6 +165,7 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]database.FileI, error) 
 	return files, nil
 }
 
+// GetOwned returns all files owned by owner id
 func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"own": uid,
@@ -171,6 +179,7 @@ func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 	return fb.decodefiles(cursor)
 }
 
+// GetPermKey returns all files that have owner id with provided permission
 func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"perm." + pkey: uid,
@@ -184,6 +193,8 @@ func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.Fi
 	return fb.decodefiles(cursor)
 }
 
+// MatchStore returns all files where an owner either owns the file or has a particular permission,
+// and the file matches one of the provided StoreIDs
 func (fb *Filebase) MatchStore(oid database.OwnerID, sid []filehash.StoreID, pkeys ...string) ([]database.FileI, error) {
 	query := bson.M{
 		"id.storeid": bson.M{"$in": sid},

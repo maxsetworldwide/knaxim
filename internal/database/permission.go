@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// PermissionI interface for Permission Object that can be owned
 type PermissionI interface {
 	json.Marshaler
 	json.Unmarshaler
@@ -20,6 +21,7 @@ type PermissionI interface {
 	Populate(Ownerbase) error
 }
 
+// Permission is to be used as an abstract class of objects that are owned
 type Permission struct {
 	Own    Owner              `json:"own" bson:"own"`
 	Perm   map[string][]Owner `json:"perm,omitempty" bson:"perm,omitempty"`
@@ -27,10 +29,12 @@ type Permission struct {
 	permid map[string][]OwnerID
 }
 
+// GetOwner returns owner of object
 func (p *Permission) GetOwner() Owner {
 	return p.Own
 }
 
+// CheckPerm returns true if owner has particular permission
 func (p *Permission) CheckPerm(o Owner, s string) bool {
 	for _, v := range p.Perm[s] {
 		if v.Match(o) {
@@ -40,20 +44,23 @@ func (p *Permission) CheckPerm(o Owner, s string) bool {
 	return false
 }
 
+// GetPerm returns all owners that have a certain permission
 func (p *Permission) GetPerm(s string) []Owner {
 	def := make([]Owner, len(p.Perm[s]))
 	copy(def, p.Perm[s])
 	return def
 }
 
+// PermTypes returns all permission types that have an associated owner
 func (p *Permission) PermTypes() []string {
 	out := make([]string, 0, len(p.Perm))
-	for k, _ := range p.Perm {
+	for k := range p.Perm {
 		out = append(out, k)
 	}
 	return out
 }
 
+// SetPerm sets permission for a particular owner
 func (p *Permission) SetPerm(o Owner, s string, b bool) {
 	if o != nil {
 		if b {
@@ -81,6 +88,7 @@ func (p *Permission) SetPerm(o Owner, s string, b bool) {
 	}
 }
 
+// CopyPerm creates new permission with new owner, if new owner is nil, reuses current owner
 func (p *Permission) CopyPerm(newowner Owner) PermissionI {
 	n := new(Permission)
 	if newowner == nil {
@@ -113,10 +121,12 @@ func (p *Permission) toMap() map[string]interface{} {
 	return m
 }
 
+// MarshalJSON converts permission to json
 func (p *Permission) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p.toMap())
 }
 
+// MarshalBSON converts permission to bson
 func (p *Permission) MarshalBSON() ([]byte, error) {
 	return bson.Marshal(p.toMap())
 }
@@ -126,6 +136,7 @@ type pReference struct {
 	Perm map[string][]OwnerID `bson:"perm,omitempty" json:"perm,omitempty"`
 }
 
+// UnmarshalJSON converts json to permission
 func (p *Permission) UnmarshalJSON(b []byte) error {
 	form := new(pReference)
 	err := json.Unmarshal(b, form)
@@ -137,6 +148,7 @@ func (p *Permission) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// UnmarshalBSON converts bson to permission
 func (p *Permission) UnmarshalBSON(b []byte) error {
 	form := new(pReference)
 	err := bson.Unmarshal(b, form)
@@ -148,6 +160,7 @@ func (p *Permission) UnmarshalBSON(b []byte) error {
 	return nil
 }
 
+// Populate loads owners from the database after decoding Permission object from json or bson
 func (p *Permission) Populate(ub Ownerbase) error {
 	var err error
 	p.Own, err = ub.Get(p.ownid)

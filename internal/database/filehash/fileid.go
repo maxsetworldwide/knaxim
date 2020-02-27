@@ -11,11 +11,13 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/brand"
 )
 
+// FileID uniquely identifies a file and its associated file store.
 type FileID struct {
 	StoreID
 	Stamp []byte `bson:"stamp"`
 }
 
+// NewFileID generates a new file id for a particular file store.
 func NewFileID(st StoreID) FileID {
 	var n FileID
 	n.StoreID = st
@@ -23,6 +25,7 @@ func NewFileID(st StoreID) FileID {
 	return n
 }
 
+// String returns a base64 encoding of the FileID as a string
 func (f FileID) String() string {
 	build := new(strings.Builder)
 	encoder := base64.NewEncoder(base64.RawURLEncoding, build)
@@ -35,11 +38,13 @@ func (f FileID) String() string {
 	return build.String()
 }
 
+// Mutate returns a new FileID that is associated with the same StoreID
 func (f FileID) Mutate() FileID {
 	f.Stamp = append(f.Stamp, brand.Next())
 	return f
 }
 
+// DecodeFileID produces a FileID from a base64 encoded string, inverse of String().
 func DecodeFileID(h string) (fid FileID, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -62,14 +67,17 @@ func DecodeFileID(h string) (fid FileID, err error) {
 	return n, nil
 }
 
+// Equal is true if the provided FileID is the same value as the FileID
 func (f FileID) Equal(oth FileID) bool {
 	return f.StoreID.Equal(oth.StoreID) && bytes.Equal(f.Stamp, oth.Stamp)
 }
 
+// MarshalJSON returns the string representation of the FileID in json format
 func (f FileID) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f.String())
 }
 
+// UnmarshalJSON decodes a json string value into a FileID, using DecodeFileID
 func (f *FileID) UnmarshalJSON(b []byte) error {
 	var fstr string
 	err := json.Unmarshal(b, &fstr)
