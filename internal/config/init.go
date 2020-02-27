@@ -31,7 +31,7 @@ var T struct {
 // handle reuests from server for static files. also will respond with
 // index.html if the path does not map to any static file, on the
 // assumption that the path is relevant to a single page application
-var StaticHandler spa.SpaHandler
+var StaticHandler spa.Handler
 
 // ParseConfig loads configuration file and populates global vars
 func ParseConfig(path string) error {

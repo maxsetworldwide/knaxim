@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 )
 
-// spaHandler implements the http.Handler interface, so we can use it
+// Handler implements the http.Handler interface, so we can use it
 // to respond to HTTP requests. The path to the static directory and
 // path to the index file within that static directory are used to
 // serve the SPA in the given static directory.
-type SpaHandler struct {
+type Handler struct {
 	StaticPath string `json:"static"`
 	IndexPath  string `json:"index"`
 }
@@ -19,7 +19,7 @@ type SpaHandler struct {
 // on the SPA handler. If a file is found, it will be served. If not, the
 // file located at the index path on the SPA handler will be served. This
 // is suitable behavior for serving an SPA (single page application).
-func (h SpaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the absolute path to prevent directory traversal
 	path, err := filepath.Abs(r.URL.Path)
 	if err != nil {
