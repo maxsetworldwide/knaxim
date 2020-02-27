@@ -11,6 +11,7 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// InjestFile builds a file and file store from data and adds to database
 func InjestFile(ctx context.Context, file database.FileI, contenttype string, stream io.Reader, db database.Database) (fs *database.FileStore, err error) {
 	defer func() {
 		if r := recover(); r != nil {
