@@ -17,18 +17,25 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// ResWrtrCapturer http.ResponseWriter that saves status code
 type ResWrtrCapturer struct {
 	internal   http.ResponseWriter
 	StatusCode int
 }
 
-func (rwc *ResWrtrCapturer) Header() http.Header         { return rwc.internal.Header() }
+// Header implements http.ResponseWriter
+func (rwc *ResWrtrCapturer) Header() http.Header { return rwc.internal.Header() }
+
+// Write implements http.ResponseWriter
 func (rwc *ResWrtrCapturer) Write(b []byte) (int, error) { return rwc.internal.Write(b) }
+
+// WriteHeader implements http.ResponseWriter
 func (rwc *ResWrtrCapturer) WriteHeader(sc int) {
 	rwc.StatusCode = sc
 	rwc.internal.WriteHeader(sc)
 }
 
+// Logging is a middleware to log requests and responses
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		nw := new(ResWrtrCapturer)
@@ -42,6 +49,7 @@ func Logging(next http.Handler) http.Handler {
 
 var debugflag = flag.Bool("debug", false, "write debug messages to response Writer")
 
+// Recovery is a middleware to recover from panics in handling requests
 func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -72,11 +80,11 @@ func Recovery(next http.Handler) http.Handler {
 	})
 }
 
-//Token verification MiddleWare
+// UserCookie Token verification MiddleWare
 func UserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
-		uid, err := database.GetCookieUid(r)
+		uid, err := database.GetCookieUID(r)
 		if err != nil {
 			panic(srverror.New(err, 401, "login", "invalid cookie, error getting userid from cookie"))
 		}
@@ -101,6 +109,7 @@ func UserCookie(next http.Handler) http.Handler {
 	})
 }
 
+// ConnectDatabase is a middleware the opens a connection to the database and populates the request context with connection objects
 func ConnectDatabase(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithCancel(r.Context())
@@ -139,6 +148,7 @@ func ConnectDatabase(next http.Handler) http.Handler {
 	})
 }
 
+// Timeout puts a timeout on request length
 func Timeout(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if config.V.BasicTimeout.Duration > 0 {
@@ -191,6 +201,7 @@ func (jf jsonform) Values() url.Values {
 	return out
 }
 
+// ParseBody parses request's body allows for requests to be formed as json or normal request forms
 func ParseBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Type") == "application/json" {

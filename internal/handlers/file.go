@@ -23,6 +23,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachFile is to add file api paths
 func AttachFile(r *mux.Router) {
 	r.Use(ConnectDatabase)
 	r.Use(ParseBody)

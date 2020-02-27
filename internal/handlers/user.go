@@ -20,7 +20,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// '/user/...'
+// AttachUser hooks up paths for handling user related requests
 func AttachUser(r *mux.Router) {
 	r = r.NewRoute().Subrouter()
 	r.Use(srvjson.JSONResponse)

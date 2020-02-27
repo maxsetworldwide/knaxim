@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachAcronym is to add api paths related to acronyms
 func AttachAcronym(r *mux.Router) {
 	r = r.NewRoute().Subrouter()
 	r.Use(srvjson.JSONResponse)

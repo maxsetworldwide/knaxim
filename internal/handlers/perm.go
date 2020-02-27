@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachPerm is for paths related to permission actions
 func AttachPerm(r *mux.Router) {
 	// TODO: Move neccessary middleware use commands here and each attach??
 

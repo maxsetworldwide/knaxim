@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachRecord adds paths for basic file actions TODO: combine with AttachFile
 func AttachRecord(r *mux.Router) {
 
 	r.Use(srvjson.JSONResponse)

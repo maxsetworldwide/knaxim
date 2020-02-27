@@ -99,6 +99,7 @@ func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
 
 type publicProfile []string
 
+// CompletePackage is a full set of metadata relating to a particular user
 type CompletePackage struct {
 	User    userProfile             `json:"user"`
 	Public  publicProfile           `json:"public"`
@@ -106,16 +107,16 @@ type CompletePackage struct {
 	Records map[string]fileProfile  `json:"files"`
 }
 
-func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.UserI, ownerbase database.Ownerbase, filebase database.Filebase, tagbase database.Tagbase) error {
+func (cp *CompletePackage) addGroup(g database.GroupI, currentUser database.UserI, ownerbase database.Ownerbase, filebase database.Filebase, tagbase database.Tagbase) error {
 	if _, ok := cp.Groups[g.GetID().String()]; !ok {
 		var gown, gm, d, fo, fv []string
 		if owned, member, err := ownerbase.GetGroups(g.GetID()); err == nil {
 			for _, ele := range owned {
-				cp.addGroup(ele, current_user, ownerbase, filebase, tagbase)
+				cp.addGroup(ele, currentUser, ownerbase, filebase, tagbase)
 				gown = append(gown, ele.GetID().String())
 			}
 			for _, ele := range member {
-				cp.addGroup(ele, current_user, ownerbase, filebase, tagbase)
+				cp.addGroup(ele, currentUser, ownerbase, filebase, tagbase)
 				gm = append(gm, ele.GetID().String())
 			}
 		} else {
@@ -130,7 +131,7 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if owned, err := filebase.GetOwned(g.GetID()); err == nil {
 			for _, o := range owned {
-				cp.addRecord(current_user, o, filebase)
+				cp.addRecord(currentUser, o, filebase)
 				fo = append(fo, o.GetID().String())
 			}
 		} else {
@@ -138,11 +139,11 @@ func (cp *CompletePackage) addGroup(g database.GroupI, current_user database.Use
 		}
 		if viewable, err := filebase.GetPermKey(g.GetID(), "view"); err == nil {
 			for _, v := range viewable {
-				cp.addRecord(current_user, v, filebase)
+				cp.addRecord(currentUser, v, filebase)
 				fv = append(fv, v.GetID().String())
 			}
 		}
-		cp.Groups[g.GetID().String()] = buildGP(g, g.GetOwner().Match(current_user), gown, gm, d, fo, fv)
+		cp.Groups[g.GetID().String()] = buildGP(g, g.GetOwner().Match(currentUser), gown, gm, d, fo, fv)
 	}
 	return nil
 }
