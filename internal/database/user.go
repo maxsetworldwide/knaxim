@@ -10,6 +10,7 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// UserI interface tyoe for representing users
 type UserI interface {
 	Owner
 	GetLock() UserCredentialI
@@ -25,10 +26,12 @@ type UserI interface {
 	ChangeEmail(string)
 }
 
+// UserCredentialI interface representing types that can be used to validate user
 type UserCredentialI interface {
 	Valid(c map[string]interface{}) bool
 }
 
+// User basic user object
 type User struct {
 	ID               OwnerID         `json:"uid" bson:"id"`
 	Name             string          `json:"name" bson:"name"`
@@ -40,6 +43,7 @@ type User struct {
 	Roles            map[string]bool `json:"roles,omitempty" bson:"roles,omitempty"`
 }
 
+// NewUser with username, email and password
 func NewUser(name, password, email string) *User {
 	n := new(User)
 
@@ -55,26 +59,32 @@ func NewUser(name, password, email string) *User {
 	return n
 }
 
+// GetName implements UserI
 func (u *User) GetName() string {
 	return u.Name
 }
 
+// GetEmail implements UserI
 func (u *User) GetEmail() string {
 	return u.Email
 }
 
+// ChangeEmail implements UserI
 func (u *User) ChangeEmail(path string) {
 	u.Email = path
 }
 
+// GetID implements UserI
 func (u *User) GetID() OwnerID {
 	return u.ID
 }
 
+// GetLock implements UserI
 func (u *User) GetLock() UserCredentialI {
 	return u.Pass
 }
 
+// SetLock implements UserI
 func (u *User) SetLock(c UserCredentialI) {
 	if cred, ok := c.(UserCredential); !ok {
 		panic("Invalid UserCredential, Not Sha256 User Credential")
@@ -86,6 +96,7 @@ func (u *User) SetLock(c UserCredentialI) {
 var cookiekeys = []string{"KnaximSessionSig", "KnaximSessionUID"}
 var cookiesize = 7
 
+// NewCookies creates new cookies for a new session
 func (u *User) NewCookies(inactivity time.Time, timeout time.Time) []*http.Cookie {
 	if _, err := rand.Read(u.CookieSig); err != nil {
 		panic(err)
@@ -117,6 +128,7 @@ func (u *User) NewCookies(inactivity time.Time, timeout time.Time) []*http.Cooki
 	return result
 }
 
+// CheckCookie returns true if request has cookied session cookies
 func (u *User) CheckCookie(r *http.Request) bool {
 	if u.CookieTimeout.Before(time.Now()) || u.CookieInactivity.Before(time.Now()) {
 		//log.Printf("Cookie Timed Out: %s %s\n", u.CookieInactivity.String(), u.CookieTimeout.String())
@@ -146,15 +158,18 @@ func (u *User) CheckCookie(r *http.Request) bool {
 	return true
 }
 
+// RefreshCookie sets inactivity timeout
 func (u *User) RefreshCookie(inactive time.Time) {
 	u.CookieInactivity = inactive
 }
 
+// GetCookieTimeouts returns current session timeouts
 func (u *User) GetCookieTimeouts() (time.Time, time.Time) {
 	return u.CookieInactivity, u.CookieTimeout
 }
 
-func GetCookieUid(r *http.Request) (OwnerID, error) {
+// GetCookieUID gets OwnerID of current session
+func GetCookieUID(r *http.Request) (OwnerID, error) {
 	cookie, err := r.Cookie(cookiekeys[1])
 	if err != nil {
 		return OwnerID{}, srverror.New(err, 401, "Unable to identity user")
@@ -162,10 +177,12 @@ func GetCookieUid(r *http.Request) (OwnerID, error) {
 	return DecodeObjectIDString(cookie.Value)
 }
 
+// Match returns true if owner is equal to user
 func (u *User) Match(o Owner) bool {
 	return u.Equal(o)
 }
 
+// Equal if id is Equal
 func (u *User) Equal(o Owner) bool {
 	switch v := o.(type) {
 	case *User:
@@ -175,6 +192,7 @@ func (u *User) Equal(o Owner) bool {
 	}
 }
 
+// Copy builds a new instance of the User
 func (u *User) Copy() Owner {
 	if u == nil {
 		return nil
@@ -184,10 +202,12 @@ func (u *User) Copy() Owner {
 	return nu
 }
 
+// GetRole is true if user has that role
 func (u *User) GetRole(k string) bool {
 	return u.Roles[k]
 }
 
+// GetRoles returns all roles that user has
 func (u *User) GetRoles() []string {
 	var out []string
 	for k, v := range u.Roles {
@@ -198,10 +218,12 @@ func (u *User) GetRoles() []string {
 	return out
 }
 
+// SetRole assigns user to role if v is true, removes role if v is false
 func (u *User) SetRole(k string, v bool) {
 	u.Roles[k] = v
 }
 
+// UserCredential is a salt and hashed of a password
 type UserCredential struct {
 	Salt []byte `json:"a" bson:"a"`
 	Hash []byte `json:"b" bson:"b"`
@@ -217,6 +239,7 @@ func hash(pass, salt []byte) []byte {
 	return h.Sum(nil)
 }
 
+// NewUserCredential build UserCredential from password
 func NewUserCredential(pass string) UserCredential {
 	var n UserCredential
 
@@ -228,6 +251,7 @@ func NewUserCredential(pass string) UserCredential {
 	return n
 }
 
+// Valid returns true if credential has the field "pass" has the correct password.
 func (up UserCredential) Valid(credential map[string]interface{}) bool {
 	temp := credential["pass"]
 	var pass []byte

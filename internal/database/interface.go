@@ -9,8 +9,10 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// ContextKey is used to store connections to a database in the values of a context
 type ContextKey byte
 
+// Context Keys for each type of database connection
 const (
 	OWNER ContextKey = iota
 	FILE
@@ -21,6 +23,7 @@ const (
 	VIEW
 )
 
+// Error types for use across different database implementations
 var (
 	ErrNotFound       = srverror.New(errors.New("Not Found in Database"), 404, "Not Found")
 	ErrNoResults      = srverror.Basic(204, "Empty", "No results found")
@@ -33,6 +36,7 @@ var (
 	FileLoadInProgress = &ProcessingError{Status: 202, Message: "Processing File"}
 )
 
+// Database is the root Database interface
 type Database interface {
 	Init(context.Context, bool) error
 	Owner(context.Context) Ownerbase
@@ -46,6 +50,7 @@ type Database interface {
 	GetContext() context.Context
 }
 
+// Ownerbase is a database connection for owner related actions
 type Ownerbase interface {
 	Database
 	Reserve(id OwnerID, name string) (OwnerID, error)
@@ -62,6 +67,7 @@ type Ownerbase interface {
 	DeleteResetKey(id OwnerID) error
 }
 
+// Filebase is a database connection for file operations
 type Filebase interface {
 	Database
 	Reserve(id filehash.FileID) (filehash.FileID, error)
@@ -75,6 +81,7 @@ type Filebase interface {
 	MatchStore(OwnerID, []filehash.StoreID, ...string) ([]FileI, error)
 }
 
+// Storebase is a database connection for file store operations
 type Storebase interface {
 	Database
 	Reserve(id filehash.StoreID) (filehash.StoreID, error)
@@ -82,9 +89,9 @@ type Storebase interface {
 	Get(id filehash.StoreID) (*FileStore, error)
 	MatchHash(h uint32) ([]*FileStore, error)
 	UpdateMeta(fs *FileStore) error
-	//Get Total size
 }
 
+// Contentbase is a database connection for the content operations
 type Contentbase interface {
 	Database
 	Insert(...ContentLine) error
@@ -93,6 +100,7 @@ type Contentbase interface {
 	RegexSearchFile(regex string, file filehash.StoreID, start int, end int) ([]ContentLine, error)
 }
 
+// Tagbase is a database connection for the tag operations
 type Tagbase interface {
 	Database
 	UpsertFile(filehash.FileID, ...tag.Tag) error
@@ -102,12 +110,14 @@ type Tagbase interface {
 	SearchData(tag.Type, tag.Data) ([]tag.Tag, error)
 }
 
+// Acronymbase is a database connection for the acronym operations
 type Acronymbase interface {
 	Database
 	Put(string, string) error
 	Get(string) ([]string, error)
 }
 
+// Viewbase is a database connection for the view operations
 type Viewbase interface {
 	Database
 	Insert(*ViewStore) error

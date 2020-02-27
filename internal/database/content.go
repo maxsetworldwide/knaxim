@@ -9,6 +9,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
+// ContentLine is a line of content within a file
 type ContentLine struct {
 	ID filehash.StoreID `bson:"id"`
 	//PageNum  int              `bson:"pagenum"`
@@ -16,6 +17,7 @@ type ContentLine struct {
 	Content  []string `bson:"content"`
 }
 
+// NewContentReader streams content lines together into a reader
 func NewContentReader(lines []ContentLine) (result io.Reader, err error) {
 	defer func() {
 		if r := recover(); r != nil {

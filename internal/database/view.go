@@ -11,11 +11,14 @@ import (
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
+// ViewStore represents the PDF representation of a File
 type ViewStore struct {
 	ID      filehash.StoreID `json:"id" bson:"id"`
 	Content []byte           `json:"content" bson:"-"`
 }
 
+// NewViewStore builds ViewStore from a StoreID and Reader of
+// pdf representation
 func NewViewStore(id filehash.StoreID, r io.Reader) (*ViewStore, error) {
 	store := new(ViewStore)
 
@@ -36,6 +39,7 @@ func NewViewStore(id filehash.StoreID, r io.Reader) (*ViewStore, error) {
 	return store, nil
 }
 
+// Reader returns a reader of the content of a pdf representation of the file
 func (vs *ViewStore) Reader() (io.Reader, error) {
 	buf := bytes.NewReader(vs.Content)
 	out, err := gzip.NewReader(buf)

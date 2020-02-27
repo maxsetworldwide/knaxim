@@ -36,11 +36,11 @@ func TestUser(t *testing.T) {
 		t.Fatalf("Failed to validate cookies")
 	}
 
-	cookie_oid, err := GetCookieUid(testrequest)
+	cookieOID, err := GetCookieUID(testrequest)
 	if err != nil {
 		t.Fatalf("unable to get oid: %s", err)
 	}
-	if !cookie_oid.Equal(user.GetID()) {
-		t.Fatalf("mismatched cookie id: %v", cookie_oid)
+	if !cookieOID.Equal(user.GetID()) {
+		t.Fatalf("mismatched cookie id: %v", cookieOID)
 	}
 }
