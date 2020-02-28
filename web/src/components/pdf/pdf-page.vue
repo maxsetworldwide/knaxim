@@ -168,7 +168,11 @@ export default {
           result.push(match[1] ? match[1] : match[0])
           match = regex.exec(searchQuery)
         }
-        result = result.filter(term => term.length > 0) // just in case
+        result = result
+          .filter(term => term.length > 0) // just in case
+          .map(term => {
+            return term.toLowerCase()
+          })
         return result
       }
 
