@@ -21,12 +21,14 @@ export default {
   watch: {
     phrase: function (n, o) {
       if (n !== o) {
-        this[ACRONYMS]({ acronym: n })
+        this.search({ acronym: n })
       }
     }
   },
   methods: {
-    ...mapActions([ACRONYMS])
+    ...mapActions({
+      search: ACRONYMS
+    })
   },
   computed: {
     result () {

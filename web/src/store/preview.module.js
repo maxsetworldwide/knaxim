@@ -46,18 +46,17 @@ const mutations = {
     if (!state.preview[id]) {
       Vue.set(state.preview, id, {
         loadingCount: 0,
-        loading: false,
+        get loading () { return this.loadingCount > 0 },
         lines: null
       })
     }
     Vue.set(state.preview[id], 'loadingCount', state.preview[id].loadingCount + delta)
-    Vue.set(state.preview[id], 'loading', state.preview[id].loadingCount > 0)
   },
   [SET_PREVIEW] (state, { id, lines }) {
     if (!state.preview[id]) {
       Vue.set(state.preview, id, {
         loadingCount: 0,
-        loading: false,
+        get loading () { return this.loadingCount > 0 },
         lines: null
       })
     }
