@@ -92,7 +92,7 @@ const actions = {
           start,
           end: start + state.summaryStep,
           find
-        }).then(({ data }) => data.lines)
+        }).then(({ data }) => (data.lines || []))
         found = [ ...found, ...lines ]
       }
       commit(SET_MATCHED_LINES, { id, matched: found })

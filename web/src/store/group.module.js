@@ -99,9 +99,13 @@ const mutations = {
   [ACTIVATE_GROUP] (state, { id }) {
     state.active = id
   },
-  [PROCESS_SERVER_STATE] ({ commit }, { groups }) {
-    for (let gid in groups) {
-      commit(SET_GROUP, groups[gid])
+  [PROCESS_SERVER_STATE] (state, { groups }) {
+    for (let id in groups) {
+      let { name, owner, members } = groups[id]
+      if (state.ids.reduce((a, i) => { return a && i !== id }, true)) { state.ids.push(id) }
+      Vue.set(state.names, id, name || '')
+      Vue.set(state.members, id, members || [])
+      Vue.set(state.owners, id, owner || '')
     }
   },
   [GROUP_LOADING] (state, delta) {
