@@ -14,7 +14,7 @@ events:
 -->
 <template>
   <div class="list h-100 w-100 d-none d-md-inline">
-    <b-list-group>
+    <b-list-group v-if="matchList.length > 0">
       <span class="text-center">
         <b-form-checkbox
           v-b-tooltip.hover="{
@@ -46,10 +46,16 @@ events:
         </span>
       </b-list-group-item>
     </b-list-group>
+    <div v-else class="no-matches h-100 text-center">
+      <div class="title my-2">No Matches for:</div>
+      <div>{{ currentSearch }}</div>
+    </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'pdf-result-list',
   props: {
@@ -59,6 +65,9 @@ export default {
     return {
       sentenceHighlight: true
     }
+  },
+  computed: {
+    ...mapGetters(['currentSearch'])
   },
   methods: {
     handleSelect (match) {
@@ -129,5 +138,11 @@ export default {
 
 .list {
   overflow: auto;
+}
+
+.no-matches {
+  border: 2px solid $app-clr2;
+  border-radius: 10px;
+  background-color: $app-bg1;
 }
 </style>
