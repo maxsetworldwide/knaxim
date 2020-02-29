@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214 // indirect
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/go-stack/stack v1.8.0 // indirect
+	github.com/go-test/deep v1.0.5
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/go-tika v0.1.22-0.20190923214147-92d050676162
