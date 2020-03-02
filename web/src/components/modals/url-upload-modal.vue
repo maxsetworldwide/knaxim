@@ -64,11 +64,10 @@ export default {
         return
       }
       this.loading = true
-      await this.send({ url: this.input }).then(() => {
-        this.$emit('upload')
-        EventBus.$emit('url-upload')
-        this.$refs['modal'].hide()
-      })
+      await this.send({ url: this.input })
+      this.$emit('upload')
+      EventBus.$emit('url-upload')
+      this.$refs['modal'].hide()
     },
     onClose () {
       this.$emit('close')
