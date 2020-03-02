@@ -42,3 +42,8 @@ export const SEND_RESET_REQUEST = 'sendResetRequest'
 export const RESET_PASSWORD = 'resetPassword'
 
 export const CREATE_WEB_FILE = 'createWebFile'
+
+export const LOAD_FILE_MATCH_LINES = 'loadFileMatchLines'
+export const LOAD_MATCHED_LINES = 'loadMatchedLines'
+
+export const SEARCH = 'search'

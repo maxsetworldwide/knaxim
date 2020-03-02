@@ -1,23 +1,22 @@
 import Vue from 'vue'
 import FileService from '@/service/file'
 import SearchService from '@/service/search'
-import { FILES_SEARCH, LOAD_FILE_MATCHES } from './actions.type'
+import { SEARCH, LOAD_MATCHED_LINES, LOAD_FILE_MATCH_LINES } from './actions.type'
 import {
-  FILES_SEARCH_START,
-  UPDATE_SEARCH_HISTORY,
-  GET_SLICES,
-  ADD_FILE_META,
-  UPDATE_FILE_META,
-  FILES_SEARCH_END
+  SEARCH_LOADING,
+  PUSH_ERROR,
+  NEW_SEARCH,
+  SET_MATCHED_LINES,
+  LOADING_MATCHED_LINES,
+  SET_MATCHES
 } from './mutations.type'
 
 const state = {
-  files: [],
+  matches: [],
   loading: 0,
-  slicesLoading: false,
-  selected: '',
   history: [],
-  maxSummary: 100,
+  lines: {},
+  summaryStep: 100,
   cancelSearch: false
 }
 
@@ -25,113 +24,119 @@ const actions = {
   // TODO: isLoading is updated correctly but not Utalized yet.  If a user spams
   // the FILES_SEARCH action they might get duplicate results.
   // TODO: Use isLoading: true to cancel the current search and start a new one.
-  async [FILES_SEARCH] (state, params) {
-    if (params.acr) {
-      params.find = `"${params.find}" ${params.acr}`
+  async [SEARCH] ({ commit, dispatch, getters }, { find, acr }) {
+    commit(SEARCH_LOADING, 1)
+    if (acr) {
+      find = `"${find}" ${acr}`
     }
-    state.commit(UPDATE_SEARCH_HISTORY, params)
-    state.commit(FILES_SEARCH_START)
-
-    let fileList = await new Promise((resolve, reject) => {
-      state.commit('cancelSearch', () => {
-        reject(new Error('search canceled'))
+    if (find.length < 1) {
+      return false
+    }
+    try {
+      let fileList = await new Promise((resolve, reject) => {
+        commit('cancelSearch', () => {
+          reject(new Error('search canceled'))
+        })
+        commit(NEW_SEARCH, { find })
+        let ag = getters.activeGroup
+        if (ag) {
+          SearchService.groupFiles({ gid: ag.id, find: find }).then(({ data }) => {
+            if (data.matched && data.matched.length > 0) {
+              return data.matched.map(item => {
+                return {
+                  ...item.file,
+                  count: item.count
+                }
+              })
+            }
+            return []
+          }).then(r => resolve(r)).catch(e => reject(e))
+        } else {
+          SearchService.userFiles({ find }).then(({ data }) => {
+            if (data.matched && data.matched.length > 0) {
+              return data.matched.map(item => {
+                return {
+                  ...item.file,
+                  count: item.count
+                }
+              })
+            }
+            return []
+          }).then(r => resolve(r)).catch(e => reject(e))
+        }
       })
-      let ag = state.getters.activeGroup
-      if (ag) {
-        SearchService.groupFiles({ gid: ag.id, find: params.find }).then(({ data }) => {
-          if (data.matched && data.matched.length > 0) {
-            return data.matched.map(item => {
-              return {
-                ...item.file,
-                count: item.count
-              }
-            })
-          }
-          return []
-        }).then(r => resolve(r)).catch(e => reject(e))
-      } else {
-        SearchService.userFiles(params).then(({ data }) => {
-          if (data.matched && data.matched.length > 0) {
-            return data.matched.map(item => {
-              return {
-                ...item.file,
-                count: item.count
-              }
-            })
-          }
-          return []
-        }).then(r => resolve(r)).catch(e => reject(e))
-      }
-    })
-    state.commit(GET_SLICES)
-    fileList.forEach((file) => {
-      FileService.search({
-        fid: file.id,
-        start: 0,
-        end: this.state.search.maxSummary,
-        find: params.find
-      }).then(({ data }) => {
-        file.lines = data.lines
-        state.commit(ADD_FILE_META, { file })
-        state.dispatch(LOAD_FILE_MATCHES, { find: params.find, id: file.id })
-      })
-    })
-    state.commit(FILES_SEARCH_END)
+      commit(SET_MATCHES, fileList)
+      await dispatch(LOAD_MATCHED_LINES, { find, files: fileList })
+    } catch (err) {
+      commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
+    } finally {
+      commit(SEARCH_LOADING, -1)
+    }
   },
-  async [LOAD_FILE_MATCHES] (context, { find, id }) {
-    let file = context.getters.searchMatches.reduce((acc, f) => {
-      if (f.id === id) {
-        return f
+  async [LOAD_MATCHED_LINES] ({ commit, dispatch }, { find, files }) {
+    files.forEach(({ id, count }) => {
+      commit(LOADING_MATCHED_LINES, { id, delta: 1 })
+      commit(SET_MATCHED_LINES, { id, matched: [] })
+      dispatch(LOAD_FILE_MATCH_LINES, { find, id, limit: count })
+        .finally(() => commit(LOADING_MATCHED_LINES, { id, delta: -1 }))
+    })
+  },
+  async [LOAD_FILE_MATCH_LINES] ({ commit, dispatch, state }, { find, id, limit }) {
+    try {
+      commit(LOADING_MATCHED_LINES, { id, delta: 1 })
+      commit(SET_MATCHED_LINES, { id, matched: [] })
+      let found = []
+      for (let start = 0; start < limit && found.length < 4; start += state.summaryStep) {
+        let lines = await FileService.search({
+          fid: id,
+          start,
+          end: start + state.summaryStep,
+          find
+        }).then(({ data }) => (data.lines || []))
+        found = [ ...found, ...lines ]
       }
-      return acc
-    }, {})
-    for (let start = context.state.maxSummary; start < file.count && (file.lines || []).length < 4; start += context.state.maxSummary) {
-      let lines = await FileService.search({
-        fid: id,
-        start,
-        end: start + context.state.maxSummary,
-        find
-      }).then(({ data }) => data.lines)
-      if ((lines || []).length) {
-        context.commit(UPDATE_FILE_META, { id, lines })
-      }
+      commit(SET_MATCHED_LINES, { id, matched: found })
+    } catch (err) {
+      commit(PUSH_ERROR, new Error(`LOAD_FILE_MATCH_LINES ${err}`))
+    } finally {
+      commit(LOADING_MATCHED_LINES, { id, delta: -1 })
     }
   }
 }
 
 const mutations = {
-  [FILES_SEARCH_START] (state) {
-    state.files = []
-    state.loading += 1
+  [SEARCH_LOADING] (state, delta) {
+    state.loading += delta
   },
-  [UPDATE_SEARCH_HISTORY] (state, { find }) {
-    state.selected = find
-
-    if ((typeof find !== 'string' || find.length < 1) ||
-        state.history.find((i) => { return i === find })) {
-      return false
-    }
-
+  [NEW_SEARCH] (state, { find }) {
+    state.history = state.history.filter(h => h !== find)
     if (state.history.unshift(find) > 10) {
       state.history.pop()
     }
+    state.matches = []
   },
-  [GET_SLICES] (state) {
-    state.slicesloading = true
+  [SET_MATCHES] (state, matches) {
+    state.matches = matches
   },
-  [ADD_FILE_META] (state, { file }) {
-    state.files.push(file)
+  [LOADING_MATCHED_LINES] (state, { id, delta }) {
+    if (!state.lines[id]) {
+      Vue.set(state.lines, id, {
+        loadingCount: 0,
+        get loading () { return this.loadingCount > 0 },
+        matched: []
+      })
+    }
+    Vue.set(state.lines[id], 'loadingCount', state.lines[id].loadingCount + delta)
   },
-  [UPDATE_FILE_META] (state, { id, lines }) {
-    state.files.forEach((f, i, arr) => {
-      if (f.id === id) {
-        Vue.set(arr[i], 'lines', (f.lines || []).concat(lines))
-      }
-    })
-  },
-  [FILES_SEARCH_END] (state) {
-    state.slicesLoading = false
-    state.loading -= 1
+  [SET_MATCHED_LINES] (state, { id, matched }) {
+    if (!state.lines[id]) {
+      Vue.set(state.lines, id, {
+        loadingCount: 0,
+        get loading () { return this.loadingCount > 0 },
+        matched: []
+      })
+    }
+    Vue.set(state.lines[id], 'matched', matched)
   },
   cancelSearch (state, newfunc) {
     if (state.cancelSearch) {
@@ -143,16 +148,19 @@ const mutations = {
 
 const getters = {
   searchMatches (state) {
-    return state.files
+    return state.matches
   },
   currentSearch (state) {
-    return state.selected
+    return state.history[0]
   },
   searchHistory (state) {
     return state.history
   },
   searchLoading (state) {
     return state.loading > 0
+  },
+  searchLines (state) {
+    return state.lines
   }
 }
 

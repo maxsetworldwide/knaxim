@@ -54,12 +54,6 @@ export default new Vuex.Store({
     }
   },
 
-  mutations: {
-    setSearch (state, item) {
-      state.selected = item
-    }
-  },
-
   actions: {
     async [LOAD_SERVER] ({ commit, dispatch }) {
       try {

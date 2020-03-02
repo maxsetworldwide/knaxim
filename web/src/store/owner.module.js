@@ -17,15 +17,19 @@ const actions = {
       let response = null
       try {
         response = await UserService.info({ id })
+        context.commit(SET_OWNER_NAME, { id, name: response.data.name })
       } catch (err) {
         try {
           response = await GroupService.info({ id })
+          context.commit(SET_OWNER_NAME, { id, name: response.data.name })
         } catch (errr) {
           context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${err} + ${errr}`))
+          context.commit(SET_OWNER_NAME, { id, name: 'Unknown' })
+          return 'Unknown'
         }
+      } finally {
+        context.commit(OWNER_LOADING, -1)
       }
-      context.commit(SET_OWNER_NAME, { id, name: response.data.name })
-      context.commit(OWNER_LOADING, -1)
       return response.data.name
     } else {
       return context.state.names[id]

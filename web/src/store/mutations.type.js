@@ -54,3 +54,11 @@ export const PUSH_ERROR = 'pushError'
 export const POP_ERROR = 'popError'
 export const ADD_ERROR_LOOP = 'addErrorLoop'
 export const RESET_ERROR = 'resetError'
+
+export const LOADING_MATCHED_LINES = 'loadingMatchedLines'
+
+export const NEW_SEARCH = 'newSearch'
+export const SEARCH_LOADING = 'searchLoading'
+export const SET_MATCHED_LINES = 'setMatchedLines'
+
+export const SET_MATCHES = 'setMatches'
