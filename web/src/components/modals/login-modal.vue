@@ -19,11 +19,13 @@ The methods show() and hide() are intended to be public methods for the parent.
   hide-footer
   hide-header
   content-class="modal-style">
-    <b-img src="@/assets/logo.png" alt="Knaxim Logo"/>
+    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="login">
       <b-form-group :state="!fail" :invalid-feedback="feedback">
         <b-form-input v-model="username" placeholder="Username" autofocus ref="userField"/>
         <b-form-input v-model="password" placeholder="Password" type="password" ref="passField"/>
+        <br>
+        <b-link class="forgot" @click.prevent="request">Forgot Password</b-link>
       </b-form-group>
       <div v-if="loading">
         <b-spinner class="m-3"/>
@@ -31,7 +33,7 @@ The methods show() and hide() are intended to be public methods for the parent.
       <b-form-group v-else>
         <b-button type="submit" class="shadow-sm">Login</b-button>
         <b-button @click="register" class="shadow-sm">Create Account</b-button>
-        <b-button @click="request" class="shadow-sm">Forgot Password</b-button>
+        <!-- <b-button @click="request" class="shadow-sm">Forgot Password</b-button> -->
       </b-form-group>
     </b-form>
   </b-modal>
@@ -135,6 +137,14 @@ button {
 ::v-deep .modal-style {
   @extend %modal-corners;
   text-align: center;
+}
+
+.forgot {
+  display: inline-block;
+  width: 80%;
+  text-align: right;
+  margin-top: 0;
+  margin-bottom: 10px;
 }
 
 </style>

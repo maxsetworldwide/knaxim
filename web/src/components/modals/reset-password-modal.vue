@@ -9,6 +9,7 @@
   hide-footer
   hide-header
   content-class="modal-style">
+    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="sendReset">
       <b-form-group>
         <b-input v-model="newpass" placeholder="Password" type="password" :state="validPassword"/>
@@ -101,3 +102,30 @@ export default {
   }
 }
 </script>
+
+<style scoped lang="scss">
+
+img {
+  width: 30%;
+}
+
+input {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 80%;
+  display: inline-block;
+}
+
+button {
+  @extend %pill-buttons;
+  width: flex;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+::v-deep .modal-style {
+  @extend %modal-corners;
+  text-align: center;
+}
+
+</style>
