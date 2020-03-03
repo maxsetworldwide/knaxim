@@ -10,18 +10,17 @@ global events:
 -->
 <template>
   <b-modal
-  :id="id"
-  @hidden="onClose"
-  centered
-  hide-footer
-  hide-header
-  :no-close-on-backdrop="loading"
-  :no-close-on-esc="loading"
-  content-class="modal-style">
-    <b-form-file
-      v-model="files"
-      multiple
-    >
+    :id="id"
+    ref="modal"
+    @hidden="onClose"
+    centered
+    hide-footer
+    hide-header
+    :no-close-on-backdrop="loading"
+    :no-close-on-esc="loading"
+    content-class="modal-style"
+  >
+    <b-form-file v-model="files" multiple>
       <template #file-name="{ names }">
         <b-badge>{{ names[0] }}</b-badge>
         <b-badge v-if="names.length > 1" class="ml-1">
@@ -31,10 +30,16 @@ global events:
     </b-form-file>
 
     <div v-if="loading">
-      <b-spinner class="m-4"/>
+      <b-spinner class="m-4" />
     </div>
     <div v-else>
-      <b-button @click="upload" v-if="files.length > 0" :disabled="files.length === 0" class="shadow-sm" variant="primary">
+      <b-button
+        @click="upload"
+        v-if="files.length > 0"
+        :disabled="files.length === 0"
+        class="shadow-sm"
+        variant="primary"
+      >
         Upload
       </b-button>
     </div>
@@ -66,26 +71,33 @@ export default {
       for (let i = 0; i < this.files.length; i++) {
         proms.push(this.$store.dispatch(CREATE_FILE, { file: this.files[i] }))
       }
-      Promise.all(proms).then(() => {
-        this.loading = false
-        this.$emit('upload')
-        EventBus.$emit('file-upload')
-        this.$bvModal.hide(this.id)
-      }).catch(() => {
-        this.loading = false
-        // console.error(res)
-      })
+      Promise.all(proms)
+        .then(() => {
+          this.loading = false
+          this.$emit('upload')
+          EventBus.$emit('file-upload')
+          this.$bvModal.hide(this.id)
+        })
+        .catch(() => {
+          this.loading = false
+          // console.error(res)
+        })
     },
     onClose () {
       this.files = []
       this.$emit('close')
+    },
+    show () {
+      this.$refs['modal'].show()
+    },
+    hide () {
+      this.$refs['modal'].hide()
     }
   }
 }
 </script>
 
 <style scoped lang="scss">
-
 button {
   @extend %pill-buttons;
   width: flex;
@@ -98,5 +110,4 @@ button {
   @extend %modal-corners;
   text-align: center;
 }
-
 </style>
