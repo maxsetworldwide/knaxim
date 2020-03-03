@@ -43,7 +43,7 @@
     </b-dropdown-item> -->
 
     <b-dropdown-divider />
-    <b-dropdown-item v-b-modal.batch-url-upload>
+    <b-dropdown-item @click="showURLModal">
       <b-icon icon="window" />
       <span>URL upload</span>
       <url-upload-modal id="url-modal" ref="url-modal" />
