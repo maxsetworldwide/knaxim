@@ -43,10 +43,8 @@
     </b-dropdown-item> -->
 
     <b-dropdown-divider />
-    <b-dropdown-item @click="showURLModal">
-      <svg>
-        <use href="../assets/app.svg#cloud" />
-      </svg>
+    <b-dropdown-item v-b-modal.batch-url-upload>
+      <b-icon icon="window" />
       <span>URL upload</span>
       <url-upload-modal id="url-modal" ref="url-modal" />
     </b-dropdown-item>
@@ -102,6 +100,7 @@ export default {
     height: 25px;
     width: 25px;
     margin-right: 15px;
+    fill: $app-icon;
   }
   .dropdown-item {
     padding-left: 0.5rem;
