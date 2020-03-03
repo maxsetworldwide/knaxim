@@ -8,7 +8,7 @@
         <svg>
           <use href="../assets/app.svg#cloud" />
         </svg>
-        <span>{{ cloudtype }} Cloud</span>
+        <span>All</span>
       </b-nav-item>
 
       <b-nav-item class="mb-1"
@@ -17,7 +17,7 @@
         <svg>
           <use href="../assets/app.svg#files" />
         </svg>
-        <span>Owned</span>
+        <span>{{ currentUser.name }}</span>
       </b-nav-item>
 
       <b-nav-item class="mb-1"
@@ -63,7 +63,7 @@
         </b-nav-text>
         <b-nav-dd
           id="small-nav-dd"
-          text=" 🗂 Context"
+          :text=currentContext
           right
           >
           <b-nav-item class="mb-1"
@@ -71,7 +71,7 @@
             <svg>
               <use href="../assets/app.svg#cloud" />
             </svg>
-            <span>{{ cloudtype }} Cloud</span>
+            <span>All</span>
           </b-nav-item>
 
           <b-nav-item class="mb-1"
@@ -80,7 +80,7 @@
             <svg>
               <use href="../assets/app.svg#files" />
             </svg>
-            <span>Owned</span>
+            <span>{{ currentUser.name }}</span>
           </b-nav-item>
 
           <b-nav-item class="mb-1"
@@ -138,6 +138,25 @@ export default {
     TeamSelect
   },
   computed: {
+    currentContext () {
+      if (this.$route.name === 'home') {
+        return '🗂 All'
+      } else if (this.$route.name === 'filteredFiles') {
+        switch (this.$route.params.src) {
+          case 'recents':
+            return '🗂 Recent'
+          case 'favorites':
+            return '🗂 Favorites'
+          case 'shared':
+            return '🗂 Shared'
+          case 'owned':
+            return '🗂 ' + this.currentUser.name
+          case 'trash':
+            return '🗂 Trash'
+        }
+      }
+      return 'Unknown'
+    },
     cloudtype () {
       if (this.activeGroup) {
         return 'Team'
@@ -148,7 +167,7 @@ export default {
     groupMode () {
       return !!this.activeGroup
     },
-    ...mapGetters(['activeGroup'])
+    ...mapGetters(['activeGroup', 'currentUser'])
   }
 }
 </script>
