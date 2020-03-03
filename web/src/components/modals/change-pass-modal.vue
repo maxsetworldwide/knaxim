@@ -114,7 +114,7 @@ export default {
 <style scoped lang="scss">
 
 img {
-  width: 30%;
+  width: 50%;
 }
 
 input {
