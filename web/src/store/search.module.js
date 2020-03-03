@@ -151,7 +151,7 @@ const getters = {
     return state.matches
   },
   currentSearch (state) {
-    return state.history[0]
+    return state.history[0] || ''
   },
   searchHistory (state) {
     return state.history
