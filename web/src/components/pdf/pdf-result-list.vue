@@ -59,7 +59,12 @@ import { mapGetters } from 'vuex'
 export default {
   name: 'pdf-result-list',
   props: {
-    matchList: Array
+    matchList: {
+      type: Array,
+      default () {
+        return []
+      }
+    }
   },
   data () {
     return {

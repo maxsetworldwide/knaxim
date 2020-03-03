@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import PdfResultList from '@/components/pdf/pdf-result-list'
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -10,9 +10,22 @@ import PdfResultList from '@/components/pdf/pdf-result-list'
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
 
+import Vuex from 'vuex'
+const localVue = createLocalVue()
+localVue.use(Vuex)
+
+let store = new Vuex.Store({
+  getters: {
+    currentSearch () {
+      return 'aa'
+    }
+  }
+})
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(PdfResultList, {
     stubs: ['b-list-group'],
+    localVue,
+    store,
     propsData: {
       ...options.props
     },
