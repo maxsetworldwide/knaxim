@@ -51,7 +51,7 @@
 
         <b-row class="">
           <!-- Main Content -->
-          <b-col cols="10" class="p-0">
+          <b-col class="p-0">
             <div class="app-content">
               <router-view />
             </div>
@@ -62,7 +62,7 @@
         </b-row>
       </b-col>
 
-      <b-col v-if="!isAuthenticated" class="empty">
+      <b-col v-else class="empty">
         <h1>You aren't logged in!</h1>
         <b-button @click="showAuth">
           <h3>Login</h3>
