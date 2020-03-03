@@ -12,7 +12,7 @@
     <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="send">
       <b-form-group>
-        <b-form-input autofocus v-model="name" placeholder="Username"/>
+        <b-form-input autofocus v-model="name" placeholder="Username" autofocus/>
       </b-form-group>
       <div v-if="loading">
         <b-spinner class="m-3"/>
