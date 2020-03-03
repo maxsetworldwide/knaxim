@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils'
+import { shallowMount, createLocalVue } from '@vue/test-utils'
 import NavBasic from '@/components/nav-basic'
 
 // API options for test-utils - mount, shallowMount, etc.:
@@ -10,9 +10,39 @@ import NavBasic from '@/components/nav-basic'
 // Jasmine matchers - toBeTruthy, toBeDefined, etc.
 //   https://jasmine.github.io/api/3.5/matchers.html
 
+import Vuex from 'vuex'
+
+const localVue = createLocalVue()
+localVue.use(Vuex)
+
+let store = new Vuex.Store({
+  getters: {
+    isAuthenticated () {
+      return true
+    },
+    currentUser () {
+      return {
+        name: 'test'
+      }
+    },
+    activeGroup () {
+      return null
+    }
+  }
+})
+
+const $route = {
+  name: 'login'
+}
+
 const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   return shallowMount(NavBasic, {
     stubs: ['b-nav-item', 'b-nav-item', 'b-nav'],
+    localVue,
+    store,
+    mocks: {
+      $route
+    },
     propsData: {
       ...options.props
     },
