@@ -105,7 +105,7 @@ export default {
             return '🗂 Trash'
         }
       }
-      return 'Unknown'
+      return 'Select 🗂'
     },
     cloudtype () {
       if (this.activeGroup) {
