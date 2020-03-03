@@ -1,13 +1,13 @@
 <template>
  <!-- Settings Gear -->
  <b-navbar-nav class="header-settings">
-   <b-nav-item-dropdown class="ml-auto pl-4" no-caret>
+   <b-nav-item-dropdown class="dropleft" no-caret>
      <template #button-content>
        <svg>
          <use href="../assets/app.svg#settings" />
        </svg>
      </template>
-
+     <b-dropdown-item @click="goHome" class="d-block d-md-none">Home</b-dropdown-item>
      <b-dropdown-item @click="login">Login</b-dropdown-item>
      <b-dropdown-item @click="changePass">Change Password</b-dropdown-item>
      <b-dropdown-item @click="logout">Logout</b-dropdown-item>
@@ -36,6 +36,9 @@ export default {
     },
     changePass () {
       this.$router.push('/profile/newpassword')
+    },
+    goHome () {
+      this.$router.push('/')
     },
     logout () {
       this.$store.dispatch(LOGOUT)

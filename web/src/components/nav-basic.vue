@@ -5,12 +5,12 @@
     <b-nav vertical id="normal-nav" class="pb-4 min-max-150 d-none d-md-block">
       <b-nav-item class="mb-1" to="/" exact>
         <b-icon icon="inbox" class="icon" />
-        <span>{{ cloudtype }} Cloud</span>
+        <span>All</span>
       </b-nav-item>
 
       <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
         <b-icon icon="wallet" class="icon" />
-        <span>Owned</span>
+        <span>{{ currentUser.name }}</span>
       </b-nav-item>
 
       <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
@@ -39,15 +39,15 @@
         <b-nav-text>
           <team-select class="teamselect" />
         </b-nav-text>
-        <b-nav-dd id="small-nav-dd" text=" 🗂 Context" right>
+        <b-nav-dd id="small-nav-dd" :text="currentContext" right>
           <b-nav-item class="mb-1" to="/" exact>
             <b-icon icon="inbox" class="icon" />
-            <span>{{ cloudtype }} Cloud</span>
+            <span>All</span>
           </b-nav-item>
 
           <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
             <b-icon icon="wallet" class="icon" />
-            <span>Owned</span>
+            <span>{{ currentUser.name }}</span>
           </b-nav-item>
 
           <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
@@ -88,6 +88,25 @@ export default {
     TeamSelect
   },
   computed: {
+    currentContext () {
+      if (this.$route.name === 'home') {
+        return '🗂 All'
+      } else if (this.$route.name === 'filteredFiles') {
+        switch (this.$route.params.src) {
+          case 'recents':
+            return '🗂 Recent'
+          case 'favorites':
+            return '🗂 Favorites'
+          case 'shared':
+            return '🗂 Shared'
+          case 'owned':
+            return '🗂 ' + this.currentUser.name
+          case 'trash':
+            return '🗂 Trash'
+        }
+      }
+      return 'Unknown'
+    },
     cloudtype () {
       if (this.activeGroup) {
         return 'Team'
@@ -98,7 +117,7 @@ export default {
     groupMode () {
       return !!this.activeGroup
     },
-    ...mapGetters(['activeGroup'])
+    ...mapGetters(['activeGroup', 'currentUser'])
   }
 }
 </script>

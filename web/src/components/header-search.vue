@@ -1,5 +1,5 @@
 <template>
- <b-navbar-nav class="header-search w-100 ml-auto">
+ <b-navbar-nav class="header-search flex-grow-1 ml-auto">
   <!-- Search Bar -->
   <!-- TODO: Should the find search bar be updated when a search history is
     clicked?  Then, Fix circular refernce issue bewteen state, and model.

@@ -10,15 +10,16 @@ global events:
 -->
 <template>
   <b-modal
-  :id="id"
-  @hidden="onClose"
-  ref="modal"
-  centered
-  hide-footer
-  hide-header
-  :no-close-on-backdrop="loading"
-  :no-close-on-esc="loading"
-  content-class="modal-style">
+    :id="id"
+    @hidden="onClose"
+    ref="modal"
+    centered
+    hide-footer
+    hide-header
+    :no-close-on-backdrop="loading"
+    :no-close-on-esc="loading"
+    content-class="modal-style"
+  >
     <b-form @submit.prevent="upload">
       <b-form-input
         v-model="input"
@@ -29,7 +30,7 @@ global events:
         Be sure to include http:// or https:// at the beginning of your URL!
       </b-form-text>
       <div v-if="loading">
-        <b-spinner class="m-4"/>
+        <b-spinner class="m-4" />
       </div>
       <div v-else>
         <b-button @click="upload" :disabled="!validInput" class="shadow-sm">
@@ -64,14 +65,19 @@ export default {
         return
       }
       this.loading = true
-      await this.send({ url: this.input }).then(() => {
-        this.$emit('upload')
-        EventBus.$emit('url-upload')
-        this.$refs['modal'].hide()
-      })
+      await this.send({ url: this.input })
+      this.$emit('upload')
+      EventBus.$emit('url-upload')
+      this.$refs['modal'].hide()
     },
     onClose () {
       this.$emit('close')
+    },
+    show () {
+      this.$refs['modal'].show()
+    },
+    hide () {
+      this.$refs['modal'].hide()
     },
     ...mapActions({
       send: CREATE_WEB_FILE
@@ -89,7 +95,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 button {
   @extend %pill-buttons;
   width: flex;
@@ -102,5 +107,4 @@ button {
   @extend %modal-corners;
   text-align: center;
 }
-
 </style>

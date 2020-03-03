@@ -5,20 +5,18 @@
     toggle-class="nav-basic-add--toggle"
     class="nav-basic-add w-100"
   >
-    <!-- <b-dropdown-item>
-      <svg>
-        <use href="../assets/app.svg#folder-2" />
-      </svg>
-      <span>Folder</span>
-    </b-dropdown-item> -->
-
     <team-control #default="{ createTeam }">
-      <b-dropdown-item v-b-modal.at-modal>
+      <b-dropdown-item @click="showTeamModal">
         <svg>
           <use href="../assets/app.svg#group" />
         </svg>
         <span>Team</span>
-        <b-modal id="at-modal" title="Create Team" @ok="createTeam({ name })">
+        <b-modal
+          id="at-modal"
+          ref="at-modal"
+          title="Create Team"
+          @ok="createTeam({ name })"
+        >
           <b-input
             name="team-name"
             v-model="name"
@@ -29,12 +27,12 @@
     </team-control>
 
     <b-dropdown-divider />
-    <b-dropdown-item v-b-modal.upload>
+    <b-dropdown-item @click="showUploadModal">
       <svg>
         <use href="../assets/app.svg#folder-2" />
       </svg>
       <span>File upload</span>
-      <upload-modal id="upload" />
+      <upload-modal id="upload-modal" ref="upload-modal" />
     </b-dropdown-item>
 
     <!-- <b-dropdown-item>
@@ -48,7 +46,7 @@
     <b-dropdown-item v-b-modal.batch-url-upload>
       <b-icon icon="window" />
       <span>URL upload</span>
-      <url-upload-modal id="batch-url-upload" />
+      <url-upload-modal id="url-modal" ref="url-modal" />
     </b-dropdown-item>
   </b-dropdown>
 </template>
@@ -72,9 +70,6 @@ export default {
     }
   },
   methods: {
-    upload () {
-      this.$bvModal.show('upload')
-    },
     getUserOptions (users) {
       return users.map(member => {
         return {
@@ -82,6 +77,15 @@ export default {
           value: member.id
         }
       })
+    },
+    showTeamModal () {
+      this.$refs['at-modal'].show()
+    },
+    showUploadModal () {
+      this.$refs['upload-modal'].show()
+    },
+    showURLModal () {
+      this.$refs['url-modal'].show()
     }
   }
 }

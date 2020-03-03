@@ -22,6 +22,9 @@ let store = new Vuex.Store({
       return function (id) {
         return {}
       }
+    },
+    currentSearch () {
+      return 'aa'
     }
   },
   actions: {
