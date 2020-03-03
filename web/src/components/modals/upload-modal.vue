@@ -20,7 +20,10 @@ global events:
     :no-close-on-esc="loading"
     content-class="modal-style"
   >
-    <b-form-file v-model="files" multiple>
+    <b-form-file
+      v-model="files"
+      v-bind:class="{ 'border-blue': files.length === 0 }"
+      multiple>
       <template #file-name="{ names }">
         <b-badge>{{ names[0] }}</b-badge>
         <b-badge v-if="names.length > 1" class="ml-1">
@@ -37,7 +40,7 @@ global events:
         @click="upload"
         v-if="files.length > 0"
         :disabled="files.length === 0"
-        class="shadow-sm"
+        class="shadow-sm border-blue"
         variant="primary"
       >
         Upload
@@ -109,5 +112,9 @@ button {
 ::v-deep .modal-style {
   @extend %modal-corners;
   text-align: center;
+}
+
+.border-blue {
+  border: 1px solid blue;
 }
 </style>
