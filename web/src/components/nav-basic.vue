@@ -34,9 +34,9 @@
       </b-nav-item>
     </b-nav>
     <b-navbar class="d-block d-md-none" tag="div">
-      <b-navbar-nav fill align="center">
-        <nav-basic-add left class="small-add" />
-        <b-nav-text>
+      <b-navbar-nav fill align="center" class="small-flex-props">
+        <nav-basic-add class="small-add" />
+        <b-nav-text class="small-teamselect">
           <team-select class="teamselect" />
         </b-nav-text>
         <b-nav-dd id="small-nav-dd" :text="currentContext" right>
@@ -140,6 +140,11 @@ export default {
     }
   }
 
+  .small-flex-props {
+    align-items: baseline;
+
+  }
+
   .disabled {
     @extend %nav-disable;
   }
@@ -147,9 +152,18 @@ export default {
   .teamselect {
     width: 9em;
   }
+
   .small-add {
     padding-top: 5px;
     height: calc(100% - 5px);
+    flex-grow: 1;
+    width: 4em !important;
+    margin-right: 1em;
+  }
+
+  .small-teamselect {
+    flex-grow: 1;
+    text-align: center;
   }
 
   .icon {
