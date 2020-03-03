@@ -19,7 +19,11 @@
         </svg>
         <span>Team</span>
         <b-modal id="at-modal" title="Create Team" @ok="createTeam({ name })">
-          <b-input name="team-name" v-model="name" placeholder="Enter Team name"/>
+          <b-input
+            name="team-name"
+            v-model="name"
+            placeholder="Enter Team name"
+          />
         </b-modal>
       </b-dropdown-item>
     </team-control>
@@ -30,7 +34,7 @@
         <use href="../assets/app.svg#folder-2" />
       </svg>
       <span>File upload</span>
-      <upload-modal id="upload"/>
+      <upload-modal id="upload" />
     </b-dropdown-item>
 
     <!-- <b-dropdown-item>
@@ -42,11 +46,9 @@
 
     <b-dropdown-divider />
     <b-dropdown-item v-b-modal.batch-url-upload>
-      <svg>
-        <use href="../assets/app.svg#cloud" />
-      </svg>
+      <b-icon icon="window" />
       <span>URL upload</span>
-      <url-upload-modal id="batch-url-upload"/>
+      <url-upload-modal id="batch-url-upload" />
     </b-dropdown-item>
   </b-dropdown>
 </template>
@@ -63,8 +65,7 @@ export default {
     UrlUploadModal,
     TeamControl
   },
-  props: {
-  },
+  props: {},
   data () {
     return {
       name: ''
@@ -75,7 +76,7 @@ export default {
       this.$bvModal.show('upload')
     },
     getUserOptions (users) {
-      return users.map((member) => {
+      return users.map(member => {
         return {
           text: member.name,
           value: member.id
@@ -87,7 +88,6 @@ export default {
 </script>
 
 <style lang="scss">
-
 .nav-basic-add {
   .dropdown-menu {
     @extend %app-shadow-sm;
@@ -96,9 +96,10 @@ export default {
     height: 25px;
     width: 25px;
     margin-right: 15px;
+    fill: $app-icon;
   }
   .dropdown-item {
-    padding-left: .5rem;
+    padding-left: 0.5rem;
   }
 
   // Activating button.
@@ -129,5 +130,4 @@ export default {
     }
   }
 }
-
 </style>

@@ -1,124 +1,75 @@
 <template>
   <div class="nav-basic">
-    <nav-basic-add class="p-4 px-4 pb-4 d-none d-md-flex min-max-150"/>
+    <nav-basic-add class="p-4 px-4 pb-4 d-none d-md-flex min-max-150" />
 
     <b-nav vertical id="normal-nav" class="pb-4 min-max-150 d-none d-md-block">
-      <b-nav-item class="mb-1"
-          to="/" exact>
-        <svg>
-          <use href="../assets/app.svg#cloud" />
-        </svg>
+      <b-nav-item class="mb-1" to="/" exact>
+        <b-icon icon="inbox" class="icon" />
         <span>{{ cloudtype }} Cloud</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1"
-          to="/list/owned"
-          v-if="!groupMode">
-        <svg>
-          <use href="../assets/app.svg#files" />
-        </svg>
+      <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
+        <b-icon icon="wallet" class="icon" />
         <span>Owned</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1"
-          to="/list/shared"
-          v-if="!groupMode">
-        <svg>
-          <use href="../assets/app.svg#transfer" />
-        </svg>
+      <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
+        <b-icon icon="people" class="icon" />
         <span>Shared</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1"
-          to="/list/recents">
-        <svg>
-          <use href="../assets/app.svg#clock" />
-        </svg>
+      <b-nav-item class="mb-1" to="/list/recents">
+        <b-icon icon="clock" class="icon" />
         <span>Recent</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1"
-          to="/list/favorites"
-          v-if="!groupMode">
-        <svg>
-          <use href="../assets/app.svg#star" />
-        </svg>
+      <b-nav-item class="mb-1" to="/list/favorites" v-if="!groupMode">
+        <b-icon icon="heart" class="icon" />
         <span>Favorites</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1"
-          to="/list/trash"
-          v-if=!groupMode>
-        <svg>
-          <use href="../assets/app.svg#bin" />
-        </svg>
+      <b-nav-item class="mb-1" to="/list/trash" v-if="!groupMode">
+        <b-icon icon="camera" class="icon" />
         <span>Trash</span>
       </b-nav-item>
     </b-nav>
     <b-navbar class="d-block d-md-none" tag="div">
       <b-navbar-nav fill align="center">
-        <nav-basic-add left class="small-add"/>
+        <nav-basic-add left class="small-add" />
         <b-nav-text>
-          <team-select class="teamselect"/>
+          <team-select class="teamselect" />
         </b-nav-text>
-        <b-nav-dd
-          id="small-nav-dd"
-          text=" 🗂 Context"
-          right
-          >
-          <b-nav-item class="mb-1"
-              to="/" exact>
-            <svg>
-              <use href="../assets/app.svg#cloud" />
-            </svg>
+        <b-nav-dd id="small-nav-dd" text=" 🗂 Context" right>
+          <b-nav-item class="mb-1" to="/" exact>
+            <b-icon icon="inbox" class="icon" />
             <span>{{ cloudtype }} Cloud</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1"
-              to="/list/owned"
-              v-if="!groupMode">
-            <svg>
-              <use href="../assets/app.svg#files" />
-            </svg>
+          <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
+            <b-icon icon="wallet" class="icon" />
             <span>Owned</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1"
-              to="/list/shared"
-              v-if="!groupMode">
-            <svg>
-              <use href="../assets/app.svg#transfer" />
-            </svg>
+          <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
+            <b-icon icon="people" class="icon" />
             <span>Shared</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1"
-              to="/list/recents">
-            <svg>
-              <use href="../assets/app.svg#clock" />
-            </svg>
+          <b-nav-item class="mb-1" to="/list/recents">
+            <b-icon icon="clock" class="icon" />
             <span>Recent</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1"
-              to="/list/favorites"
-              v-if="!groupMode">
-            <svg>
-              <use href="../assets/app.svg#star" />
-            </svg>
+          <b-nav-item class="mb-1" to="/list/favorites" v-if="!groupMode">
+            <b-icon icon="heart" class="icon" />
             <span>Favorites</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1"
-              to="/list/trash"
-              v-if=!groupMode>
-            <svg>
-              <use href="../assets/app.svg#bin" />
-            </svg>
+          <b-nav-item class="mb-1" to="/list/trash" v-if="!groupMode">
+            <b-icon icon="trash" class="icon" />
             <span>Trash</span>
           </b-nav-item>
         </b-nav-dd>
-
       </b-navbar-nav>
     </b-navbar>
   </div>
@@ -131,8 +82,7 @@ import { mapGetters } from 'vuex'
 
 export default {
   name: 'nav-basic',
-  props: {
-  },
+  props: {},
   components: {
     NavBasicAdd,
     TeamSelect
@@ -166,11 +116,6 @@ export default {
         padding-top: 4px;
         padding-bottom: 4px;
         width: 100%;
-        svg {
-          height: 25px;
-          width: 25px;
-          margin-right: 15px;
-        }
       }
       @include app-nav-kit;
     }
@@ -180,18 +125,16 @@ export default {
     @extend %nav-disable;
   }
 
-  svg {
-    height: 25px;
-    width: 25px;
-    margin-right: 15px;
-  }
-
   .teamselect {
     width: 9em;
   }
   .small-add {
     padding-top: 5px;
     height: calc(100% - 5px);
+  }
+
+  .icon {
+    @extend %nav-icon;
   }
 }
 </style>

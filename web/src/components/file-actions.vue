@@ -18,7 +18,7 @@
       :disabled="!fileSelected || activeFolders.length === 0"
       @click="removeFromFolder"
     >
-      <b-icon-x-square />
+      <b-icon icon="x-square" class="icon" />
       <span>Folder-</span>
     </b-dropdown-item>
 
@@ -32,9 +32,7 @@
     </b-dropdown-item>
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="adjustFavorite">
-      <svg>
-        <use href="../assets/app.svg#star" />
-      </svg>
+      <b-icon icon="heart" class="icon" />
       <span v-if="isFavorite">UnFavorite</span>
       <span v-else>Favorite</span>
     </b-dropdown-item>
@@ -45,7 +43,7 @@
       :disabled="!fileSelected"
       @click="adjustFolder(false, '_trash_')"
     >
-      <b-icon-arrow-counterclockwise />
+      <b-icon icon="arrow-counterclockwise" class="icon" />
       <span>Restore File</span>
     </b-dropdown-item>
 
@@ -75,9 +73,7 @@
       v-on:delete-files="$emit('delete-files')"
     >
       <b-dropdown-item href="#" v-on="inputEvents" :disabled="!fileSelected">
-        <svg>
-          <use href="../assets/app.svg#bin" />
-        </svg>
+        <b-icon icon="trash" class="icon" />
         <span>Delete</span>
       </b-dropdown-item>
     </batch-delete>
@@ -249,14 +245,21 @@ export default {
   }
 
   svg {
+    @extend %nav-icon;
     width: 25px;
     height: 25px;
     margin-right: 15px;
+    fill: $app-icon;
   }
 
   .more {
     width: 40px;
     height: 40px;
+    fill: black;
+  }
+
+  .icon {
+    @extend %nav-icon;
   }
 }
 </style>

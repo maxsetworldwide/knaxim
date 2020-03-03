@@ -14,6 +14,17 @@ $app-bg4: #a4c9f9; // Hover
 $app-hl: #c9dee9;
 $app-hl1: #d6d7c0;
 
+$app-icon: #050089;
+
+// applies some sizing and spacing to b-icons to work well with dropdown items
+%nav-icon {
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: 5%;
+  margin-bottom: -4%;
+  fill: $app-icon;
+}
+
 // TODO: Tried to use and override Bootstrap/boostrap-vue, useing this as a work around.
 //  Not sure this is the best way to override .nav-link.disabled.
 %nav-disable {
