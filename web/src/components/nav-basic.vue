@@ -29,7 +29,7 @@
       </b-nav-item>
 
       <b-nav-item class="mb-1" to="/list/trash" v-if="!groupMode">
-        <b-icon icon="camera" class="icon" />
+        <b-icon icon="trash" class="icon" />
         <span>Trash</span>
       </b-nav-item>
     </b-nav>
