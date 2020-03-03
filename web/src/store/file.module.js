@@ -127,7 +127,7 @@ const getters = {
       return state.groups[getters.activeGroup.id].owned
     }
   },
-  sharedFiles (state) {
+  sharedFiles (state, getters) {
     if (!getters.activeGroup) {
       return state.user.shared
     } else {
