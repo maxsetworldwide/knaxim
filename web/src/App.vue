@@ -203,8 +203,8 @@ body {
 /* App Header */
 .app-header {
   img {
-    width: 200px;
-    height: 50px;
+    width: 280px;
+    height: 70px;
   }
 }
 
