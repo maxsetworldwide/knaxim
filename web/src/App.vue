@@ -4,18 +4,16 @@
     <b-row>
       <b-col>
         <auth ref="auth" :passkey="resetkey"></auth>
-        <b-navbar class="app-header" toggleable="md">
-          <b-navbar-brand href="/" class="pr-5">
+        <b-navbar class="app-header">
+          <b-navbar-brand href="/" class="d-none d-md-block pr-5">
             <b-img src="~@/assets/CloudEdison.png"/>
           </b-navbar-brand>
-          <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
-          <b-collapse id="nav-collapse" is-nav>
-            <!-- Search & History -->
-            <header-search />
 
-            <!-- Settings Nav -->
-            <header-settings @login="showLogin" />
-          </b-collapse>
+          <!-- Search & History -->
+          <header-search />
+
+          <!-- Settings Nav -->
+          <header-settings @login="showLogin" />
         </b-navbar>
       </b-col>
       <hr class="w-100 m-0" />
