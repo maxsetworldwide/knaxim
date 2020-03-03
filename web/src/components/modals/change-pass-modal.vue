@@ -12,7 +12,7 @@
     <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="changepass" v-if="isAuthenticated">
       <b-form-group>
-        <b-form-input v-model="oldpass" placeholder="Current Password" autofocus ref="oldPass" type="password" autofocus/>
+        <b-form-input v-model="oldpass" placeholder="Current Password" autofocus ref="oldPass" type="password"/>
         <b-form-input v-model="newpass" placeholder="New Password" ref="newPass" type="password" :state="validPassword"/>
         <b-form-text>Password must have at least 6 characters, one capital, and one number.</b-form-text>
         <b-form-input v-model="newpassconfirm" placeholder="Confirm Password" ref="confirmPass" type="password" :state="matchPassword"/>
