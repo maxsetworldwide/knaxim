@@ -6,8 +6,7 @@
         <auth ref="auth" :passkey="resetkey"></auth>
         <b-navbar class="app-header">
           <b-navbar-brand href="/" class="d-none d-md-block pr-5">
-            <b-img src="~@/assets/logo.png" alt="Knaxim Logo" />
-            Knaxim.com
+            <b-img src="~@/assets/CloudEdison.png"/>
           </b-navbar-brand>
 
           <!-- Search & History -->
@@ -204,7 +203,7 @@ body {
 /* App Header */
 .app-header {
   img {
-    width: 50px;
+    width: 200px;
     height: 50px;
   }
 }
