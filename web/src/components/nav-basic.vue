@@ -39,33 +39,33 @@
         <b-nav-text class="small-teamselect">
           <team-select class="teamselect" />
         </b-nav-text>
-        <b-nav-dd id="small-nav-dd" :text="currentContext" right>
-          <b-nav-item class="mb-1" to="/" exact>
+        <b-nav-dd ref="smallnav" id="small-nav-dd" :text="currentContext" right>
+          <b-nav-item class="mb-1" to="/" @click="hide" exact>
             <b-icon icon="inbox" class="icon" />
             <span>All</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/owned" @click="hide" v-if="!groupMode">
             <b-icon icon="wallet" class="icon" />
             <span>{{ currentUser.name }}</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/shared" @click="hide" v-if="!groupMode">
             <b-icon icon="people" class="icon" />
             <span>Shared</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/recents">
+          <b-nav-item class="mb-1" to="/list/recents" @click="hide">
             <b-icon icon="clock" class="icon" />
             <span>Recent</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/favorites" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/favorites" @click="hide" v-if="!groupMode">
             <b-icon icon="heart" class="icon" />
             <span>Favorites</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/trash" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/trash" @click="hide" v-if="!groupMode">
             <b-icon icon="trash" class="icon" />
             <span>Trash</span>
           </b-nav-item>
@@ -118,6 +118,11 @@ export default {
       return !!this.activeGroup
     },
     ...mapGetters(['activeGroup', 'currentUser'])
+  },
+  methods: {
+    hide () {
+      this.$refs.smallnav.hide()
+    }
   }
 }
 </script>
