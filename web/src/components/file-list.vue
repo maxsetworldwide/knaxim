@@ -11,19 +11,19 @@
   </div>
 
   <div v-else>
-    <p v-if="activeFolders.length > 0">
-      Open Folders:
-      <span v-for="fold in activeFolders" :key="fold"
-        >{{ fold }}
-        <span @click="closeFolder(fold)" class="removeFolder">X</span>
-      </span>
-    </p>
+    <!--
+       - <p v-if="activeFolders.length > 0">
+       -   Open Folders:
+       -   <span v-for="fold in activeFolders" :key="fold"
+       -     >{{ fold }}
+       -     <span @click="closeFolder(fold)" class="removeFolder">X</span>
+       -   </span>
+       - </p>
+       -->
     <file-table
-      :files="fileids"
-      :folders="folderRows"
+      :files="files"
       :busy="loading"
       @selection="onCheck"
-      @open-folder="openFolder"
       @open="open"
     >
       <template #action>
@@ -38,7 +38,7 @@ import UploadModal from '@/components/modals/upload-modal'
 import FileActions from '@/components/file-actions'
 import FileTable from '@/components/file-table'
 import { LOAD_FOLDERS, GET_USER } from '@/store/actions.type'
-import { ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
+// import { ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -85,28 +85,32 @@ export default {
       // console.log(this.sharedFiles)
       return filterTrash([...this.ownedFiles, ...this.sharedFiles])
     },
-    fileids () {
-      return this.files.filter(id => {
-        return this.activeFolders.reduce((acc, name) => {
-          return acc && this.folders[name].indexOf(id) > -1
-        }, true)
-      })
-    },
-    folderRows () {
-      let rows = []
-      for (let name in this.folders) {
-        if (
-          name !== '_favorites_' &&
-          name !== '_trash_' &&
-          this.activeFolders.reduce((acc, active) => {
-            return acc && active !== name
-          }, true)
-        ) {
-          rows.push(name)
-        }
-      }
-      return rows
-    },
+    /*
+     * fileids () {
+     *   return this.files.filter(id => {
+     *     return this.activeFolders.reduce((acc, name) => {
+     *       return acc && this.folders[name].indexOf(id) > -1
+     *     }, true)
+     *   })
+     * },
+     */
+    /*
+     * folderRows () {
+     *   let rows = []
+     *   for (let name in this.folders) {
+     *     if (
+     *       name !== '_favorites_' &&
+     *       name !== '_trash_' &&
+     *       this.activeFolders.reduce((acc, active) => {
+     *         return acc && active !== name
+     *       }, true)
+     *     ) {
+     *       rows.push(name)
+     *     }
+     *   }
+     *   return rows
+     * },
+     */
     promptUpload () {
       if (this.src || this.activeGroup) {
         return false
@@ -122,7 +126,7 @@ export default {
       'sharedFiles',
       'recentFiles',
       'folders',
-      'activeFolders',
+      // 'activeFolders',
       'activeGroup',
       'loading',
       'populateFiles'
@@ -134,13 +138,15 @@ export default {
     },
     open (id) {
       this.$router.push(`/file/${id}`)
-    },
-    openFolder (name) {
-      this.$store.commit(ACTIVATE_FOLDER, name)
-    },
-    closeFolder (name) {
-      this.$store.commit(DEACTIVATE_FOLDER, name)
     }
+    /*
+     * openFolder (name) {
+     *   this.$store.commit(ACTIVATE_FOLDER, name)
+     * },
+     * closeFolder (name) {
+     *   this.$store.commit(DEACTIVATE_FOLDER, name)
+     * }
+     */
   },
   watch: {
     gid (n, o) {
@@ -219,13 +225,15 @@ svg {
     fill: $app-bg4;
   }
 }
-
-.removeFolder {
-  color: red;
-}
-
-.removeFolder:hover {
-  text-decoration: underline;
-  cursor: pointer;
-}
+/*
+ *
+ * .removeFolder {
+ *   color: red;
+ * }
+ *
+ * .removeFolder:hover {
+ *   text-decoration: underline;
+ *   cursor: pointer;
+ * }
+ */
 </style>
