@@ -17,7 +17,7 @@ events:
   hide-footer
   hide-header
   content-class="modal-style">
-    <b-img src="@/assets/logo.png" alt="Knaxim Logo"/>
+    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="register">
       <b-form-group>
         <b-form-input autofocus v-model="email" placeholder="Email" :state="validEmail"/>
@@ -40,6 +40,7 @@ events:
           <b-form-checkbox
             id="checkbox-terms"
             v-model="acceptedTerms"
+            class="accept-terms"
             value="accepted"
             unchecked-value="not_accepted"
           >I understand and agree to the <a href="/APITermsOfService.pdf">Terms of Service</a> and <a href="/CustomerTermsOfService.pdf">Customer Terms of Service</a></b-form-checkbox>
@@ -157,7 +158,7 @@ export default {
 <style scoped lang="scss">
 
 img {
-  width: 30%;
+  width: 50%;
 }
 
 input {
@@ -177,6 +178,14 @@ button {
 ::v-deep .modal-style {
   @extend %modal-corners;
   text-align: center;
+}
+
+.accept-terms {
+  width: 80%;
+  margin-left: 10%;
+  margin-right: 10%;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 </style>

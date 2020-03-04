@@ -9,6 +9,7 @@
     hide-footer
     hide-header
     content-class="modal-style">
+    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
     <b-form @submit.prevent="changepass" v-if="isAuthenticated">
       <b-form-group>
         <b-form-input v-model="oldpass" placeholder="Current Password" autofocus ref="oldPass" type="password"/>
@@ -22,7 +23,7 @@
       </div>
       <b-form-group v-else :state="!fail" :invalid-feedback="feedback">
         <b-button type="submit" class="shadow-sm" :disabled="!validateForm">Change Password</b-button>
-        <b-button @click="toLogin" class="shadow-sm">To Login</b-button>
+        <b-button @click="onClose" class="shadow-sm">Close</b-button>
       </b-form-group>
     </b-form>
     <b-form @submit.prevent="toLogin" v-else>
@@ -98,9 +99,6 @@ export default {
     show () {
       this.$refs['modal'].show()
     },
-    toLogin () {
-      this.$emit('login')
-    },
     onClose () {
       this.$emit('close')
     },
@@ -112,3 +110,30 @@ export default {
 
 }
 </script>
+
+<style scoped lang="scss">
+
+img {
+  width: 50%;
+}
+
+input {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 80%;
+  display: inline-block;
+}
+
+button {
+  @extend %pill-buttons;
+  width: flex;
+  margin-right: 5px;
+  margin-left: 5px;
+}
+
+::v-deep .modal-style {
+  @extend %modal-corners;
+  text-align: center;
+}
+
+</style>
