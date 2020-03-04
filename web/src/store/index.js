@@ -37,7 +37,8 @@ export default new Vuex.Store({
   },
   // TODO: Extract all the search functionality into a module!
   state: {
-    appSideType: null
+    appSideType: null,
+    serverLoading: 0
   },
 
   getters: {
@@ -50,22 +51,32 @@ export default new Vuex.Store({
       g.authLoading ||
       g.groupLoading ||
       g.ownerLoading ||
-      g.searchLoading
+      g.searchLoading ||
+      s.serverLoading > 0
     }
   },
 
   actions: {
     async [LOAD_SERVER] ({ commit, dispatch }) {
       try {
+        commit('serverloadingchange', 1)
         let res = await UserService.completeProfile()
         dispatch(HANDLE_SERVER_STATE, res.data)
         commit(PROCESS_SERVER_STATE, res.data)
       } catch (err) {
         commit(PUSH_ERROR, new Error(`LOAD_SERVER: ${err}`))
+      } finally {
+        commit('serverloadingchange', -1)
       }
     },
     [AFTER_LOGIN] ({ dispatch }) {
       dispatch(LOAD_SERVER)
+    }
+  },
+
+  mutations: {
+    serverloadingchange (state, delta) {
+      state.serverLoading += delta
     }
   }
 })
