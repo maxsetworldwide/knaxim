@@ -6,23 +6,25 @@
       </svg>
     </template>
 
-    <b-dropdown-item href="#" :disabled="!fileSelected" @click="newFolder">
-      <svg>
-        <use href="../assets/app.svg#folder-2" />
-      </svg>
-      <span>Folder+</span>
-    </b-dropdown-item>
-
-    <b-dropdown-item
-      href="#"
-      :disabled="!fileSelected || activeFolders.length === 0"
-      @click="removeFromFolder"
-    >
-      <b-icon icon="x-square" class="icon" />
-      <span>Folder-</span>
-    </b-dropdown-item>
-
-    <b-dropdown-divider />
+    <!--
+   -     <b-dropdown-item href="#" :disabled="!fileSelected" @click="newFolder">
+   -       <svg>
+   -         <use href="../assets/app.svg#folder-2" />
+   -       </svg>
+   -       <span>Folder+</span>
+   -     </b-dropdown-item>
+   -
+   -     <b-dropdown-item
+   -       href="#"
+   -       :disabled="!fileSelected || activeFolders.length === 0"
+   -       @click="removeFromFolder"
+   -     >
+   -       <b-icon icon="x-square" class="icon" />
+   -       <span>Folder-</span>
+   -     </b-dropdown-item>
+   -
+   -     <b-dropdown-divider />
+   -->
 
     <b-dropdown-item href="#" :disabled="!fileSelected" @click="share">
       <svg>
@@ -85,11 +87,15 @@
       </svg>
       <span>Redact</span>
     </b-dropdown-item> -->
-    <folder-modal
-      ref="folderModal"
-      id="newFolderModal"
-      @new-folder="adjustFolder(true, $event)"
-    />
+
+    <!--
+       - <folder-modal
+       -   ref="folderModal"
+       -   id="newFolderModal"
+       -   @new-folder="adjustFolder(true, $event)"
+       - />
+       -->
+
     <share-modal
       ref="shareModal"
       id="file-list-share-modal"
@@ -100,7 +106,7 @@
 
 <script>
 import BatchDelete from '@/components/batch-delete'
-import FolderModal from '@/components/modals/folder-modal'
+// import FolderModal from '@/components/modals/folder-modal'
 import ShareModal from '@/components/modals/share-modal'
 import { PUT_FILE_FOLDER, REMOVE_FILE_FOLDER } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
@@ -110,7 +116,7 @@ export default {
   name: 'file-actions',
   components: {
     BatchDelete,
-    FolderModal,
+    // FolderModal,
     ShareModal
   },
   props: {
@@ -128,9 +134,11 @@ export default {
     }
   },
   methods: {
-    newFolder () {
-      this.showFolderModal()
-    },
+    /*
+     * newFolder () {
+     *   this.showFolderModal()
+     * },
+     */
     adjustFavorite () {
       this.adjustFolder(!this.isFavorite, '_favorites_')
     },
@@ -149,49 +157,51 @@ export default {
         })
       })
     },
-    removeFromFolder () {
-      const fileNames = this.checkedFiles.map(file => {
-        return file.name
-      })
-      const folders = this.activeFolders
-      const h = this.$createElement
-      function msgBody () {
-        return h('b-container', [
-          h('b-row', [
-            h('b-col', [
-              h('h5', 'Files:'),
-              h(
-                'ul',
-                fileNames.map(name => {
-                  return h('li', name)
-                })
-              )
-            ]),
-            h('b-col', [
-              h('h5', 'Folders:'),
-              h(
-                'ul',
-                folders.map(folder => {
-                  return h('li', folder)
-                })
-              )
-            ])
-          ])
-        ])
-      }
-      this.$bvModal
-        .msgBoxConfirm(msgBody(), {
-          modalClass: 'modal-msg',
-          title: 'Files will be removed from these folders:'
-        })
-        .then(val => {
-          if (val) {
-            folders.forEach(folder => {
-              this.adjustFolder(false, folder)
-            })
-          }
-        })
-    },
+    /*
+     * removeFromFolder () {
+     *   const fileNames = this.checkedFiles.map(file => {
+     *     return file.name
+     *   })
+     *   const folders = this.activeFolders
+     *   const h = this.$createElement
+     *   function msgBody () {
+     *     return h('b-container', [
+     *       h('b-row', [
+     *         h('b-col', [
+     *           h('h5', 'Files:'),
+     *           h(
+     *             'ul',
+     *             fileNames.map(name => {
+     *               return h('li', name)
+     *             })
+     *           )
+     *         ]),
+     *         h('b-col', [
+     *           h('h5', 'Folders:'),
+     *           h(
+     *             'ul',
+     *             folders.map(folder => {
+     *               return h('li', folder)
+     *             })
+     *           )
+     *         ])
+     *       ])
+     *     ])
+     *   }
+     *   this.$bvModal
+     *     .msgBoxConfirm(msgBody(), {
+     *       modalClass: 'modal-msg',
+     *       title: 'Files will be removed from these folders:'
+     *     })
+     *     .then(val => {
+     *       if (val) {
+     *         folders.forEach(folder => {
+     *           this.adjustFolder(false, folder)
+     *         })
+     *       }
+     *     })
+     * },
+     */
     share () {
       this.showShareModal()
     },
@@ -230,7 +240,7 @@ export default {
     },
     ...mapGetters([
       'getFolder',
-      'activeFolders',
+      // 'activeFolders',
       'activeGroup',
       'populateFiles'
     ])
