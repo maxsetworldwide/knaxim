@@ -1,13 +1,17 @@
 <template>
-  <b-row
-    no-gutters
-    class="w-90"
-  >
-    <b-col cols="1" class="">
-      <file-icon :folder="false" :webpage="webpage" :extention="ext"/>
-    </b-col>
-    <b-col cols="11">
-      <b-link :to="`/file/` + id">{{ name }}</b-link>
+  <b-row no-gutters class="w-90">
+    <b-col>
+      <b-row align-v="center">
+        <b-col cols="1">
+          <file-icon :folder="false" :webpage="webpage" :extention="ext" />
+        </b-col>
+        <b-col offset="1" cols="10" class="text-center ellipsis d-md-none">
+          <b-link :to="`/file/` + id">{{ name }}</b-link>
+        </b-col>
+        <b-col class="d-none d-md-flex">
+          <b-link :to="`/file/` + id">{{ name }}</b-link>
+        </b-col>
+      </b-row>
       <b-spinner v-if="matches.loading"></b-spinner>
       <ol v-else class="pl-3">
         <li v-for="(sum, indx) in rows" :key="indx">
@@ -72,8 +76,8 @@ export default {
     rows () {
       return this.matches.matched.slice(0, 4).map(row => {
         return {
-          'text': row.Content[0] || '',
-          'lineNo': row.Position
+          text: row.Content[0] || '',
+          lineNo: row.Position
         }
       })
     },
@@ -88,19 +92,25 @@ export default {
     highlight (summary) {
       summary = this.escapeSummary(summary)
       // Highlight an acronym and its subject OR every word; Largest Words First
-      const pattern = this.acr ? `${this.find}|${this.acr}`
-        : ((match) => {
-          return match.split('"').reduce((acc, phrase, indx) => {
-            if (indx % 2 === 0) {
-              return acc.concat(phrase.split(' '))
-            } else {
-              acc.push(phrase)
-              return acc
-            }
-          }, []).filter((word) => word.length > 0).sort((a, b) => b.length - a.length).join('|')
+      const pattern = this.acr
+        ? `${this.find}|${this.acr}`
+        : (match => {
+          return match
+            .split('"')
+            .reduce((acc, phrase, indx) => {
+              if (indx % 2 === 0) {
+                return acc.concat(phrase.split(' '))
+              } else {
+                acc.push(phrase)
+                return acc
+              }
+            }, [])
+            .filter(word => word.length > 0)
+            .sort((a, b) => b.length - a.length)
+            .join('|')
         })(this.find)
-        // this.find.split(' ').sort((a, b) => b.length - a.length).join('|')
-      return summary.replace(new RegExp(pattern, 'gi'), (match) => {
+      // this.find.split(' ').sort((a, b) => b.length - a.length).join('|')
+      return summary.replace(new RegExp(pattern, 'gi'), match => {
         return `<span class="lite">${match}</span>`
       })
     },
@@ -114,11 +124,11 @@ export default {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        '\'': '&#x27;',
+        "'": '&#x27;',
         '/': '&#x2F;'
       }
       const regex = new RegExp(Object.keys(replacements).join('|'), 'gi')
-      summary = summary.replace(regex, (match) => {
+      summary = summary.replace(regex, match => {
         return replacements[match]
       })
       return summary
@@ -140,20 +150,22 @@ ol {
 }
 li {
   line-height: 1.2em;
-  padding-top: .6em;
+  padding-top: 0.6em;
 }
 .expand {
   width: 25px;
   height: 25px;
 }
-svg {
-  width: 50px;
-  height: 50px;
-}
 .lite {
-  background: lightyellow
+  background: lightyellow;
 }
 .unrecognized {
   text-align: left;
+}
+.ellipsis {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
