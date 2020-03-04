@@ -8,13 +8,15 @@ import {
   NEW_SEARCH,
   SET_MATCHED_LINES,
   LOADING_MATCHED_LINES,
-  SET_MATCHES
+  SET_MATCHES,
+  DEACTIVATE_SEARCH
 } from './mutations.type'
 
 const state = {
   matches: [],
   loading: 0,
   history: [],
+  activeSearch: false,
   lines: {},
   summaryStep: 100,
   cancelSearch: false
@@ -113,7 +115,11 @@ const mutations = {
     if (state.history.unshift(find) > 10) {
       state.history.pop()
     }
+    state.activeSearch = true
     state.matches = []
+  },
+  [DEACTIVATE_SEARCH] (state) {
+    state.activeSearch = false
   },
   [SET_MATCHES] (state, matches) {
     state.matches = matches
@@ -148,10 +154,10 @@ const mutations = {
 
 const getters = {
   searchMatches (state) {
-    return state.matches
+    return state.activeSearch ? state.matches : []
   },
   currentSearch (state) {
-    return state.history[0] || ''
+    return state.activeSearch ? state.history[0] || '' : ''
   },
   searchHistory (state) {
     return state.history

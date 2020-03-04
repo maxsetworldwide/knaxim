@@ -3,32 +3,32 @@
     <nav-basic-add class="p-4 px-4 pb-4 d-none d-md-flex min-max-150" />
 
     <b-nav vertical id="normal-nav" class="pb-4 min-max-150 d-none d-md-block">
-      <b-nav-item class="mb-1" to="/" exact>
+      <b-nav-item class="mb-1" to="/" @click="noSearch" exact>
         <b-icon icon="inbox" class="icon" />
         <span>All</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1" to="/list/owned" v-if="!groupMode">
+      <b-nav-item class="mb-1" to="/list/owned" @click="noSearch" v-if="!groupMode">
         <b-icon icon="wallet" class="icon" />
         <span>{{ currentUser.name }}</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1" to="/list/shared" v-if="!groupMode">
+      <b-nav-item class="mb-1" to="/list/shared" @click="noSearch" v-if="!groupMode">
         <b-icon icon="people" class="icon" />
         <span>Shared</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1" to="/list/recents">
+      <b-nav-item class="mb-1" to="/list/recents" @click="noSearch">
         <b-icon icon="clock" class="icon" />
         <span>Recent</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1" to="/list/favorites" v-if="!groupMode">
+      <b-nav-item class="mb-1" to="/list/favorites" @click="noSearch" v-if="!groupMode">
         <b-icon icon="heart" class="icon" />
         <span>Favorites</span>
       </b-nav-item>
 
-      <b-nav-item class="mb-1" to="/list/trash" v-if="!groupMode">
+      <b-nav-item class="mb-1" to="/list/trash" @click="noSearch" v-if="!groupMode">
         <b-icon icon="trash" class="icon" />
         <span>Trash</span>
       </b-nav-item>
@@ -78,7 +78,8 @@
 <script>
 import NavBasicAdd from '@/components/nav-basic-add.vue'
 import TeamSelect from '@/components/team-select.vue'
-import { mapGetters } from 'vuex'
+import { mapGetters, mapMutations } from 'vuex'
+import { DEACTIVATE_SEARCH } from '@/store/mutations.type'
 
 export default {
   name: 'nav-basic',
@@ -121,8 +122,12 @@ export default {
   },
   methods: {
     hide () {
+      this.noSearch()
       this.$refs.smallnav.hide()
-    }
+    },
+    ...mapMutations({
+      noSearch: DEACTIVATE_SEARCH
+    })
   }
 }
 </script>

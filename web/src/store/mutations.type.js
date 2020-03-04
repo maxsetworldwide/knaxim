@@ -58,6 +58,7 @@ export const RESET_ERROR = 'resetError'
 export const LOADING_MATCHED_LINES = 'loadingMatchedLines'
 
 export const NEW_SEARCH = 'newSearch'
+export const DEACTIVATE_SEARCH = 'deactivateSearch'
 export const SEARCH_LOADING = 'searchLoading'
 export const SET_MATCHED_LINES = 'setMatchedLines'
 
