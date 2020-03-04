@@ -14,15 +14,15 @@ events:
     ref="modal"
     @hidden="onClose"
     centered
+    title="Files to Share"
     hide-footer
-    hide-header
     size="lg"
     content-class="modal-style"
   >
     <b-container>
-      <b-row align-h="center" v-if="!hideList">
+      <!-- <b-row align-h="center" v-if="!hideList">
         <h4>Files to share:</h4>
-      </b-row>
+      </b-row> -->
       <b-row align-h="center" v-if="!hideList">
         <ul class="file-list">
           <li v-for="file in files" :key="file.id">{{ file.name }}</li>
