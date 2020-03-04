@@ -6,7 +6,7 @@
         <auth ref="auth" :passkey="resetkey"></auth>
         <b-navbar class="app-header">
           <b-navbar-brand href="/" class="d-none d-md-block pr-5">
-            <b-img src="~@/assets/CloudEdison.png"/>
+            <b-img src="~@/assets/CloudEdison.png" />
           </b-navbar-brand>
 
           <!-- Search & History -->
@@ -60,6 +60,12 @@
           <!-- Side View -->
           <router-view name="sideview" />
         </b-row>
+      </b-col>
+
+      <b-col v-else-if="authLoading" class="empty">
+        <h1>Cloud Edison is Loading.</h1>
+        <h1>Please Wait...</h1>
+        <b-spinner style="width: 3em; height: 3em" />
       </b-col>
 
       <b-col v-else class="empty">
@@ -146,7 +152,12 @@ export default {
     resetkey () {
       return this.$route.params ? this.$route.params.passkey || '' : ''
     },
-    ...mapGetters(['isAuthenticated', 'currentUser', 'availableErrors'])
+    ...mapGetters([
+      'isAuthenticated',
+      'authLoading',
+      'currentUser',
+      'availableErrors'
+    ])
   },
   watch: {
     availableErrors (newErrors) {
