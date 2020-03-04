@@ -39,33 +39,33 @@
         <b-nav-text class="small-teamselect">
           <team-select class="teamselect" />
         </b-nav-text>
-        <b-nav-dd id="small-nav-dd" :text="currentContext" right>
-          <b-nav-item class="mb-1" to="/" @click="noSearch" exact>
+        <b-nav-dd ref="smallnav" id="small-nav-dd" :text="currentContext" right>
+          <b-nav-item class="mb-1" to="/" @click="hide" exact>
             <b-icon icon="inbox" class="icon" />
             <span>All</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/owned" @click="noSearch" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/owned" @click="hide" v-if="!groupMode">
             <b-icon icon="wallet" class="icon" />
             <span>{{ currentUser.name }}</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/shared" @click="noSearch" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/shared" @click="hide" v-if="!groupMode">
             <b-icon icon="people" class="icon" />
             <span>Shared</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/recents" @click="noSearch">
+          <b-nav-item class="mb-1" to="/list/recents" @click="hide">
             <b-icon icon="clock" class="icon" />
             <span>Recent</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/favorites" @click="noSearch" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/favorites" @click="hide" v-if="!groupMode">
             <b-icon icon="heart" class="icon" />
             <span>Favorites</span>
           </b-nav-item>
 
-          <b-nav-item class="mb-1" to="/list/trash" @click="noSearch" v-if="!groupMode">
+          <b-nav-item class="mb-1" to="/list/trash" @click="hide" v-if="!groupMode">
             <b-icon icon="trash" class="icon" />
             <span>Trash</span>
           </b-nav-item>
@@ -121,6 +121,10 @@ export default {
     ...mapGetters(['activeGroup', 'currentUser'])
   },
   methods: {
+    hide () {
+      this.noSearch()
+      this.$refs.smallnav.hide()
+    },
     ...mapMutations({
       noSearch: DEACTIVATE_SEARCH
     })
