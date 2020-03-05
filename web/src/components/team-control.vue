@@ -53,9 +53,17 @@ export default {
     ...mapActions([CREATE_GROUP, ADD_MEMBER, REMOVE_MEMBER, LOOKUP_OWNER, LOAD_OWNER]),
     removeGroup () {},
     addTeamMember (targetname) {
-      this[LOOKUP_OWNER]({ name: targetname }).then(id => {
-        this[ADD_MEMBER]({ newMember: id })
-      })
+      this[LOOKUP_OWNER]({ name: targetname })
+        .then(id => {
+          this[ADD_MEMBER]({ newMember: id })
+        })
+        .catch(() => {
+          this.$bvToast.toast(`${targetname} does not exist`, {
+            title: 'Unable to add member',
+            autoHideDelay: 5000,
+            appendToast: false
+          })
+        })
     },
     removeTeamMember (target) {
       this[REMOVE_MEMBER]({ newMember: target })
