@@ -1,6 +1,6 @@
 <template>
-  <b-container class="h-100">
-    <b-row>
+  <b-container class="image-viewer">
+    <b-row class="image-toolbar">
       <b-col offset="3" cols="6" offset-md="4" md="4">
         <h4 class="title text-center">{{ fileInfo.name }}</h4>
       </b-col>
@@ -58,6 +58,14 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.image-viewer {
+  height: 90%;
+}
+
+.image-toolbar {
+  height: 10%;
 }
 
 .content-row {
