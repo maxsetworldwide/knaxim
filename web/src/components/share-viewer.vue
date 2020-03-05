@@ -22,6 +22,7 @@ events:
 
 <script>
 import PermissionService from '@/service/permission'
+import { LOAD_SERVER } from '@/store/actions.type'
 
 export default {
   name: 'share-viewer',
@@ -44,6 +45,8 @@ export default {
           targets: this.uid
         })
       })).then(res => {
+        return this.$store.dispatch(LOAD_SERVER)
+      }).finally(() => {
         this.loading = false
         this.$emit('stop-share', this.uid)
       })
