@@ -11,6 +11,11 @@ const state = {
 
 const actions = {
   async [LOAD_OWNER] (context, { id, overwrite }) {
+    if (!id) {
+      let e = new Error(`LOAD_OWNER: id = ${id}`)
+      context.commit(PUSH_ERROR, e)
+      throw e
+    }
     if (overwrite || !context.state.names[id]) {
       context.commit(OWNER_LOADING, 1)
       context.commit(SET_OWNER_NAME, { id, name: 'loading...' })
@@ -79,12 +84,18 @@ const actions = {
 
 const mutations = {
   [SET_OWNER_NAME] (state, { id, name }) {
-    Vue.set(state.names, id, name)
+    if (id) {
+      Vue.set(state.names, id, name)
+    }
   },
   [PROCESS_SERVER_STATE] (state, { user, groups }) {
-    Vue.set(state.names, user.id, user.name)
+    if (user.id) {
+      Vue.set(state.names, user.id, user.name)
+    }
     for (let id in groups) {
-      Vue.set(state.names, id, groups[id].name)
+      if (id) {
+        Vue.set(state.names, id, groups[id].name)
+      }
     }
   },
   [OWNER_LOADING] (state, delta) {

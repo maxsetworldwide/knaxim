@@ -72,13 +72,13 @@ export default {
       }
       if (this.src === 'recents') {
         return filterTrash(this.recentFiles || [])
-      } else if (this.src === 'favorites') {
+      } else if (!this.activeGroup && this.src === 'favorites') {
         return filterTrash(this.folders['_favorites_'] || [])
-      } else if (this.src === 'shared') {
+      } else if (!this.activeGroup && this.src === 'shared') {
         return filterTrash(this.sharedFiles)
-      } else if (this.src === 'owned') {
+      } else if (!this.activeGroup && this.src === 'owned') {
         return filterTrash(this.ownedFiles)
-      } else if (this.src === 'trash') {
+      } else if (!this.activeGroup && this.src === 'trash') {
         return trashFolder
       }
       // console.log(this.ownedFiles)
