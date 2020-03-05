@@ -82,6 +82,7 @@ import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import ShareViewer from '@/components/share-viewer'
 import Vue from 'vue'
+import { LOAD_SERVER } from '@/store/actions.type'
 
 export default {
   name: 'share-modal',
@@ -244,6 +245,7 @@ export default {
         )
           .then(res => {
             this.getViewers()
+            return this.$store.dispatch(LOAD_SERVER)
           })
           .catch(res => {
             // console.log('share error:', res)
