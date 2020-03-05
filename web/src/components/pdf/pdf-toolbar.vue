@@ -10,54 +10,42 @@ props:
 events:
   'scale-increase': scale increase button was pressed
   'scale-decrease': scale decrease button was pressed
-  'fit-height': fit to height button was pressed
-  'fit-width': fit to width button was pressed
   'page-input', pageNumber: a page number was input and has been confirmed to
                   be a valid page input
 
 -->
 <template>
   <b-row align-v="end">
-    <b-col class="d-none d-md-flex" offset="1" cols="1">
-      <b-button @click="increaseScale">
-        <svg>
-          <use href="@/assets/app.svg#zoom-in"></use>
-        </svg>
-      </b-button>
+    <b-col cols="2">
+      <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
-    <b-col class="d-none d-md-flex" cols="1">
-      <b-button @click="decreaseScale">
-        <svg>
-          <use href="@/assets/app.svg#zoom-out"></use>
-        </svg>
-      </b-button>
-    </b-col>
-    <b-col class="d-none d-md-flex" cols="1">
-      <b-button @click="fitWidth">
-        <b-icon-arrow-left-right scale="1.4" />
-      </b-button>
-    </b-col>
-    <b-col class="d-none d-md-flex" cols="1">
-      <b-button @click="fitHeight">
-        <b-icon-arrow-up-down scale="1.4" />
-      </b-button>
-    </b-col>
-    <b-col offset="4" offset-md="0" cols="6" md="4">
-      <h4 class="title text-center">{{ file.name }}</h4>
-    </b-col>
-    <b-col class="d-none d-md-flex" cols="2">
+    <b-col class="d-none d-md-flex" md="2">
       <input
         :value="currPage"
         @input="onPageInput"
         min="1"
         :max="maxPages"
         type="number"
+        class="min-width-3em"
       />
       <span> / {{ maxPages }}</span>
     </b-col>
-
-    <b-col cols="2" md="1">
-      <file-actions singleFile :checkedFiles="[file]" />
+    <b-col offset="2" offset-md="0" cols="6" md="4">
+      <h4 class="title text-center">{{ file.name }}</h4>
+    </b-col>
+    <b-col class="d-none d-md-flex" offset="1" md="1">
+      <b-button @click="increaseScale" class="min-width-3em">
+        <svg>
+          <use href="@/assets/app.svg#zoom-in"></use>
+        </svg>
+      </b-button>
+    </b-col>
+    <b-col class="d-none d-md-flex" md="1">
+      <b-button @click="decreaseScale" class="min-width-3em">
+        <svg>
+          <use href="@/assets/app.svg#zoom-out"></use>
+        </svg>
+      </b-button>
     </b-col>
   </b-row>
 </template>
@@ -90,12 +78,6 @@ export default {
     },
     decreaseScale () {
       this.$emit('scale-decrease')
-    },
-    fitHeight () {
-      this.$emit('fit-height')
-    },
-    fitWidth () {
-      this.$emit('fit-width')
     },
     onPageInput (event) {
       const pageNumber = parseInt(event.target.value, 10)
@@ -141,5 +123,9 @@ input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.min-width-3em {
+  min-width: 3em;
 }
 </style>

@@ -14,19 +14,20 @@ events:
     ref="modal"
     @hidden="onClose"
     centered
+    title="Files to Share"
     hide-footer
-    hide-header
     size="lg"
     content-class="modal-style"
   >
     <b-container>
-      <b-row align-h="center" v-if="!hideList">
+      <!-- <b-row align-h="center" v-if="!hideList">
         <h4>Files to share:</h4>
-      </b-row>
+      </b-row> -->
       <b-row align-h="center" v-if="!hideList">
-        <ul class="file-list">
-          <li v-for="file in files" :key="file.id">{{ file.name }}</li>
+        <ul v-if="ownedFiles.length > 0" class="file-list">
+          <li v-for="file in ownedFiles" :key="file.id">{{ file.name }}</li>
         </ul>
+        <h4 v-else>No shareable files selected</h4>
       </b-row>
       <b-form @submit.prevent="share">
         <b-row align-h="center">
@@ -81,6 +82,7 @@ import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import ShareViewer from '@/components/share-viewer'
 import Vue from 'vue'
+import { LOAD_SERVER } from '@/store/actions.type'
 
 export default {
   name: 'share-modal',
@@ -121,9 +123,12 @@ export default {
   },
   computed: {
     fileIDs () {
-      return this.files.map(file => {
+      return this.ownedFiles.map(file => {
         return file.id
       })
+    },
+    ownedFiles () {
+      return this.files.filter(file => file.isOwned)
     }
   },
   methods: {
@@ -169,7 +174,7 @@ export default {
         })
     },
     getViewers () {
-      if (this.files.length === 0) {
+      if (this.ownedFiles.length === 0) {
         this.viewers = {}
         return
       }
@@ -240,6 +245,7 @@ export default {
         )
           .then(res => {
             this.getViewers()
+            return this.$store.dispatch(LOAD_SERVER)
           })
           .catch(res => {
             // console.log('share error:', res)

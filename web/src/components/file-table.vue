@@ -4,7 +4,7 @@
     striped
     hover
     selectable
-    :items="rows"
+    :items="fileRows"
     :fields="columnHeaders"
     :busy="busy"
     :sort-compare="sortCompare"
@@ -43,11 +43,11 @@
     <slot name="action"></slot>
   </template>
   <template v-slot:cell(name)="data">
-    <span v-if="data.item.isFolder" class="file-name" @click.prevent.stop="openFolder(data.value)">{{ data.value }}</span>
-    <span v-else class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
+    <!-- <span v-if="data.item.isFolder" class="file-name" @click.prevent.stop="openFolder(data.value)">{{ data.value }}</span> -->
+    <span class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
   </template>
   <template v-slot:cell(expand)="row">
-    <svg v-if="!row.item.isFolder" @click.stop="openPreview(row)">
+    <svg @click.stop="openPreview(row)">
       <use href="../assets/app.svg#expand-tri" class="triangle"/>
     </svg>
   </template>
@@ -56,7 +56,7 @@
     <span v-else>{{ filePreview[row.item.id].lines ? filePreview[row.item.id].lines.join(' ') : '' }}</span>
   </template>
   <template v-slot:cell(action)="data">
-    <file-icon :extention="(data.item.ext || '')" :folder="data.item.isFolder" :webpage="!!data.item.url"/>
+    <file-icon :extention="(data.item.ext || '')" :webpage="!!data.item.url"/>
   </template>
   </b-table>
 </template>
@@ -76,10 +76,12 @@ export default {
       type: Array,
       default: () => []
     },
-    folders: {
-      type: Array,
-      default: () => []
-    },
+    /*
+     * folders: {
+     *   type: Array,
+     *   default: () => []
+     * },
+     */
     busy: Boolean
   },
   data () {
@@ -132,20 +134,19 @@ export default {
         }
       }
     },
-    rows () {
-      return [...this.folderRows, ...this.fileRows]
-    },
-    folderRows () {
-      let id = 0
-      return this.folders.map(name => {
-        id++
-        return {
-          isFolder: true,
-          name,
-          id
-        }
-      })
-    },
+    /*
+     * folderRows () {
+     *   let id = 0
+     *   return this.folders.map(name => {
+     *     id++
+     *     return {
+     *       isFolder: true,
+     *       name,
+     *       id
+     *     }
+     *   })
+     * },
+     */
     fileRows () {
       // console.log(this.populateFiles)
       return this.populateFiles(this.files).filter(f => f).map(file => {
@@ -155,7 +156,7 @@ export default {
         return {
           id: file.id,
           url: file.url,
-          isFolder: false,
+          // isFolder: false,
           name: splitname[0],
           ext: splitname[1],
           owner: this.ownerNames[file.owner],
@@ -192,7 +193,8 @@ export default {
       this.$refs.table.selectAllRows()
     },
     onCheck (items) {
-      items = items.filter(r => !r.isFolder).map(r => r.id)
+      // items = items.filter(r => !r.isFolder).map(r => r.id)
+      items = items.map(r => r.id)
       if (items.length > 0) {
         this.selected = true
       } else {
@@ -209,9 +211,11 @@ export default {
         return null
       }
     },
-    openFolder (name) {
-      this.$emit('open-folder', name)
-    },
+    /*
+     * openFolder (name) {
+     *   this.$emit('open-folder', name)
+     * },
+     */
     open (id) {
       this.$emit('open', id)
     },

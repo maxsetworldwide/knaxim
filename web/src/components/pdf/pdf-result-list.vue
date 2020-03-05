@@ -16,19 +16,21 @@ events:
   <div class="list h-100 w-100 d-none d-md-inline">
     <b-list-group v-if="matchList.length > 0">
       <span class="text-center">
-        <b-form-checkbox
-          v-b-tooltip.hover="{
-            title: 'Toggle Sentence Highlighting',
-            placement: 'top',
-            boundary: 'window'
-          }"
-          v-model="sentenceHighlight"
-          @change="$emit('highlight', $event)"
-          switch
-          inline
-          class="pl-4"
-          size="lg"
-        />
+        <!--
+           - <b-form-checkbox
+           -   v-b-tooltip.hover="{
+           -     title: 'Toggle Sentence Highlighting',
+           -     placement: 'top',
+           -     boundary: 'window'
+           -   }"
+           -   v-model="sentenceHighlight"
+           -   @change="$emit('highlight', $event)"
+           -   switch
+           -   inline
+           -   class="pl-4"
+           -   size="lg"
+           - />
+           -->
         <span class="title">Matches:</span>
       </span>
       <b-list-group-item

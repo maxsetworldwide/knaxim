@@ -60,6 +60,12 @@
         </b-row>
       </b-col>
 
+      <b-col v-else-if="authLoading" class="empty">
+        <h1>Cloud Edison is Loading.</h1>
+        <h1>Please Wait...</h1>
+        <b-spinner style="width: 3em; height: 3em" />
+      </b-col>
+
       <b-col v-else class="empty">
         <h1>You aren't logged in!</h1>
         <b-button @click="showAuth">
@@ -144,7 +150,12 @@ export default {
     resetkey () {
       return this.$route.params ? this.$route.params.passkey || '' : ''
     },
-    ...mapGetters(['isAuthenticated', 'currentUser', 'availableErrors'])
+    ...mapGetters([
+      'isAuthenticated',
+      'authLoading',
+      'currentUser',
+      'availableErrors'
+    ])
   },
   watch: {
     availableErrors (newErrors) {
@@ -201,8 +212,8 @@ body {
 /* App Header */
 .app-header {
   img {
-    width: 280px;
-    height: 70px;
+    width: 300px;
+    height: 75px;
   }
 }
 

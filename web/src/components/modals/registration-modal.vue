@@ -25,7 +25,7 @@ events:
         <b-form-group>
           <b-form-input v-model="username" placeholder="Username" :state="validUser"/>
           <b-form-invalid-feedback>
-            {{ nameTaken ? 'Name taken!' : 'Username must be at least 6 characters long.' }}
+            {{ nameTaken ? 'Name taken!' : 'Username must be between 6 and 12 characters long.' }}
           </b-form-invalid-feedback>
         </b-form-group>
         <b-form-group>
@@ -134,7 +134,7 @@ export default {
       if (this.username.length === 0) {
         return null
       }
-      return this.username.length >= 6 && !this.nameTaken
+      return this.username.length >= 6 && this.username.length <= 12 && !this.nameTaken
     },
     validPassword () {
       if (this.password.length === 0) {

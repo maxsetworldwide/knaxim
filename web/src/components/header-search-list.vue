@@ -1,7 +1,9 @@
 <template>
   <b-spinner v-if="loading"></b-spinner>
   <b-container v-else fluid class="header-search-list">
-    <header-search-row v-for="(row, indx) in rows" :key="indx"
+    <header-search-row
+      v-for="(row, indx) in rows"
+      :key="indx"
       :webpage="row.webpage"
       :name="row.name"
       :ext="row.ext"
@@ -44,18 +46,24 @@ export default {
   },
   computed: {
     rows () {
-      return this.searchMatches.map((file) => {
-        let splits = file.name.split('.')
-        let row = {
-          id: file.id,
-          name: file.name,
-          webpage: file.name.includes('/'),
-          ext: splits.length > 1 ? splits[splits.length - 1] : ''
-        }
-        return row
-      })
+      return this.searchMatches
+        .map(file => {
+          let splits = file.name.split('.')
+          let row = {
+            id: file.id,
+            name: file.name,
+            webpage: file.name.includes('/'),
+            ext: splits.length > 1 ? splits[splits.length - 1] : ''
+          }
+          return row
+        })
+        .sort((a, b) => {
+          const aLen = this.searchLines[a.id].matched.length || 0
+          const bLen = this.searchLines[b.id].matched.length || 0
+          return bLen - aLen
+        })
     },
-    ...mapGetters(['searchMatches', 'activeGroup', 'loading'])
+    ...mapGetters(['searchMatches', 'searchLines', 'activeGroup', 'loading'])
   }
 }
 </script>
@@ -74,7 +82,7 @@ export default {
   }
   li {
     line-height: 1.2em;
-    padding-top: .6em;
+    padding-top: 0.6em;
   }
   .expand {
     width: 25px;
@@ -85,7 +93,7 @@ export default {
     height: 50px;
   }
   .lite {
-    background: lightyellow
+    background: lightyellow;
   }
   .unrecognized {
     text-align: left;
