@@ -112,7 +112,7 @@ export default {
      * },
      */
     promptUpload () {
-      if (this.src || this.activeGroup) {
+      if (this.src || this.activeGroup || this.loading) {
         return false
       }
       return this.files.length === 0
