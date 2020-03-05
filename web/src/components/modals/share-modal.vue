@@ -24,9 +24,10 @@ events:
         <h4>Files to share:</h4>
       </b-row> -->
       <b-row align-h="center" v-if="!hideList">
-        <ul class="file-list">
-          <li v-for="file in files" :key="file.id">{{ file.name }}</li>
+        <ul v-if="ownedFiles.length > 0" class="file-list">
+          <li v-for="file in ownedFiles" :key="file.id">{{ file.name }}</li>
         </ul>
+        <h4 v-else>No shareable files selected</h4>
       </b-row>
       <b-form @submit.prevent="share">
         <b-row align-h="center">
@@ -121,9 +122,12 @@ export default {
   },
   computed: {
     fileIDs () {
-      return this.files.map(file => {
+      return this.ownedFiles.map(file => {
         return file.id
       })
+    },
+    ownedFiles () {
+      return this.files.filter(file => file.isOwned)
     }
   },
   methods: {
@@ -169,7 +173,7 @@ export default {
         })
     },
     getViewers () {
-      if (this.files.length === 0) {
+      if (this.ownedFiles.length === 0) {
         this.viewers = {}
         return
       }
