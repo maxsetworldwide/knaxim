@@ -52,22 +52,23 @@ const actions = {
           UserService.lookup({ name }).then(res => res.data.id),
           GroupService.lookup({ name }).then(res => res.data.id)
         ])
-        for (let result in lookedup) {
+        for (let result of lookedup) {
           if (result.status === 'fulfilled') {
             foundid = result.value
             break
           }
         }
-        if (foundid) {
+        if (!foundid) {
+          throw new Error(`unable to find owner ${name}: ${lookedup[0].reason} ${lookedup[1].reason}`)
+        } else {
           commit(SET_OWNER_NAME, {
             id: foundid,
             name
           })
-        } else {
-          throw new Error(`unable to find owner: ${name}`)
         }
       } catch (e) {
         commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`))
+        throw e
       } finally {
         commit(OWNER_LOADING, -1)
       }
