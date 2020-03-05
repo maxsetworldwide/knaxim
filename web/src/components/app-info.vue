@@ -1,5 +1,5 @@
 <template>
-  <b-col cols="2">
+  <b-col cols="2" v-if="expandedSearchMatches && expandedSearchMatches.length > 0">
     <div class="app-info d-none d-md-inline">
       <div class="header-search-list w-75 ml-auto">
         <!-- Search History Items  -->
