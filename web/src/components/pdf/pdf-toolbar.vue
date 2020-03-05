@@ -16,31 +16,32 @@ events:
 -->
 <template>
   <b-row align-v="end">
-    <b-col cols="2" offset-md="1" md="1">
+    <b-col cols="2">
       <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
-    <b-col class="d-none d-md-flex" cols="2">
+    <b-col class="d-none d-md-flex" md="2">
       <input
         :value="currPage"
         @input="onPageInput"
         min="1"
         :max="maxPages"
         type="number"
+        class="min-width-3em"
       />
       <span> / {{ maxPages }}</span>
     </b-col>
-    <b-col offset="4" offset-md="0" cols="6" md="4">
+    <b-col offset="2" offset-md="0" cols="6" md="4">
       <h4 class="title text-center">{{ file.name }}</h4>
     </b-col>
-    <b-col class="d-none d-md-flex" offset="1" cols="1">
-      <b-button @click="increaseScale">
+    <b-col class="d-none d-md-flex" offset="1" md="1">
+      <b-button @click="increaseScale" class="min-width-3em">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
         </svg>
       </b-button>
     </b-col>
-    <b-col class="d-none d-md-flex" cols="1">
-      <b-button @click="decreaseScale">
+    <b-col class="d-none d-md-flex" md="1">
+      <b-button @click="decreaseScale" class="min-width-3em">
         <svg>
           <use href="@/assets/app.svg#zoom-out"></use>
         </svg>
@@ -122,5 +123,9 @@ input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.min-width-3em {
+  min-width: 3em;
 }
 </style>
