@@ -7,6 +7,7 @@
   <div class="h-100">
     <b-container class="h-100" fluid>
       <pdf-toolbar
+        class="pdf-toolbar"
         :currPage="currPage"
         :maxPages="pages.length"
         :file="getFile"
@@ -16,7 +17,7 @@
         @fit-width="fitToWidth"
         @page-input="pageInput"
       />
-      <b-row class="h-100 pdf-row" align-h="start">
+      <b-row class="pdf-row" align-h="start">
         <b-col v-if="currentSearch.length > 0" cols="2">
           <pdf-result-list
             class="h-100 result-list"
@@ -204,6 +205,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.pdf-toolbar {
+  height: 5%;
+}
+
 .pdf-doc {
   position: absolute;
   overflow: auto;
@@ -220,6 +225,7 @@ export default {
 
 .pdf-row {
   margin-top: 25px;
+  height: 90%;
 }
 
 .result-list {

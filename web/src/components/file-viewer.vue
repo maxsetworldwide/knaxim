@@ -1,5 +1,5 @@
 <template>
-  <div class="h-100 overflow-hidden">
+  <div class="h-100">
     <pdf-doc
       v-if="viewExists"
       :fileID="id"
