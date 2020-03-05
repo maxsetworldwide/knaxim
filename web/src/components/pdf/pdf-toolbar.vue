@@ -16,7 +16,7 @@ events:
 -->
 <template>
   <b-row align-v="end">
-    <b-col cols="2" md="2">
+    <b-col cols="2" offset-md="1" md="1">
       <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
     <b-col class="d-none d-md-flex" cols="2">
