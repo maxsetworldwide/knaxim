@@ -120,7 +120,7 @@ const getters = {
       id: active,
       name: names[active],
       members: members[active],
-      owners: owners[active]
+      owner: owners[active]
     }
   },
   availableGroups ({ ids, names, members, owners }) {

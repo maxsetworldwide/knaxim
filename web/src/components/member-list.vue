@@ -17,9 +17,10 @@
            pill
            variant="outline-danger"
            size="sm"
+           v-if="currentUser.id === owner.id"
           >remove</b-button>
         </b-list-group-item>
-        <b-list-group-item>
+        <b-list-group-item v-if="currentUser.id === owner.id">
           <b-button v-b-modal.add-modal
           variant="primary" size="sm">Add</b-button>
         </b-list-group-item>
@@ -55,7 +56,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['activeGroup'])
+    ...mapGetters(['activeGroup', 'currentUser'])
   },
   methods: {
   }
