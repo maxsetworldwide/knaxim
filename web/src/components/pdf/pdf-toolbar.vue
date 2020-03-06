@@ -123,6 +123,8 @@ input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: absolute;
+  bottom: 0;
 }
 
 .min-width-3em {
