@@ -63,7 +63,7 @@ export default {
 
 .header-search-list {
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: hidden;
 }
 </style>
