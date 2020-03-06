@@ -62,7 +62,7 @@
         </b-row>
       </b-col>
 
-      <b-col v-else-if="authLoading" class="empty">
+      <b-col v-else-if="loading" class="empty">
         <h1>Cloud Edison is Loading.</h1>
         <h1>Please Wait...</h1>
         <b-spinner style="width: 3em; height: 3em" />
@@ -154,7 +154,7 @@ export default {
     },
     ...mapGetters([
       'isAuthenticated',
-      'authLoading',
+      'loading',
       'currentUser',
       'availableErrors'
     ])
