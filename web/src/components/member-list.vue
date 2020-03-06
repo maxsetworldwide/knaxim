@@ -1,7 +1,7 @@
 <template>
   <team-control v-if="!!activeGroup" #default="{ owner, members, addMember, removeMember }">
     <b-col class="member-list" cols="2">
-      <b-list-group>
+      <b-list-group  class="team-members">
         <b-list-group-item>
           <svg>
             <use href="../assets/app.svg#group" />
@@ -68,6 +68,12 @@ export default {
     svg {
       height: 50px;
       width: 50px;
+    }
+
+    .team-members {
+      position: absolute;
+      max-height: 100%;
+      overflow-y: auto;
     }
   }
 </style>
