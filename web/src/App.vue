@@ -21,31 +21,44 @@
 
     <b-row>
       <!-- Side Nav -->
-      <b-col v-if="isAuthenticated" md="2">
-        <b-row cols="1">
+      <b-col v-if="isAuthenticated" class="flex-grow-0 d-none d-md-block">
+        <b-row>
           <b-col>
-            <nav-basic @team-selected="gotoTeam" />
-          </b-col>
+            <b-row>
+              <b-col>
+                <nav-basic @team-selected="gotoTeam" />
+              </b-col>
+            </b-row>
 
-          <b-col class="d-none d-md-block">
-            <storage-info />
-          </b-col>
+            <b-row>
+              <b-col>
+                <storage-info class=""/>
+              </b-col>
+            </b-row>
 
-          <b-col class="d-none d-md-block">
-            <header-search-history />
+            <b-row>
+              <b-col>
+                <header-search-history class="d-none d-md-block"/>
+              </b-col>
+            </b-row>
           </b-col>
         </b-row>
       </b-col>
 
-      <b-col v-if="isAuthenticated" class="overflow-auto" md="10">
+      <b-col v-if="isAuthenticated" class="overflow-auto">
         <!-- Sub Header -->
         <b-row class="d-none d-md-flex">
           <b-col>
             <team-select
-              v-if="isAuthenticated"
               class="teamselect"
               @team-selected="gotoTeam"
             />
+          </b-col>
+        </b-row>
+
+        <b-row class="d-flex d-md-none">
+          <b-col>
+            <nav-basic @team-selected="gotoTeam" />
           </b-col>
         </b-row>
 

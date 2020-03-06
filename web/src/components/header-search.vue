@@ -76,7 +76,7 @@ export default {
       this.showList = !this.showList
       // acronym ref is not available until afer it is visible
       this.$nextTick(() => {
-        this.$refs.acronym.search()
+        this.$refs.acronym.search({ acronym: this.find })
       })
     },
     searchWithAcronym (item) {
