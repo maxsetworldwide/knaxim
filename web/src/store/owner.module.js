@@ -19,23 +19,41 @@ const actions = {
     if (overwrite || !context.state.names[id]) {
       context.commit(OWNER_LOADING, 1)
       context.commit(SET_OWNER_NAME, { id, name: 'loading...' })
-      let response = null
-      try {
-        response = await UserService.info({ id })
-        context.commit(SET_OWNER_NAME, { id, name: response.data.name })
-      } catch (err) {
-        try {
-          response = await GroupService.info({ id })
-          context.commit(SET_OWNER_NAME, { id, name: response.data.name })
-        } catch (errr) {
-          context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${err} + ${errr}`))
-          context.commit(SET_OWNER_NAME, { id, name: 'Unknown' })
-          return 'Unknown'
-        }
-      } finally {
-        context.commit(OWNER_LOADING, -1)
+
+      let results = await Promise.allSettled([
+        UserService.info({ id }).then(r => r.data.name),
+        GroupService.info({ gid: id }).then(r => r.data.name)
+      ])
+
+      let name = 'Unknown'
+      if (results[0].status === 'fulfilled') {
+        name = results[0].value
+      } else if (results[1].status === 'fulfilled') {
+        name = results[1].value
+      } else {
+        context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${results[0].reason} + ${results[1].reason}`))
       }
-      return response.data.name
+      context.commit(SET_OWNER_NAME, { id, name })
+      context.commit(OWNER_LOADING, -1)
+      return name
+
+      // let response = null
+      // try {
+      //   response = await UserService.info({ id })
+      //   context.commit(SET_OWNER_NAME, { id, name: response.data.name })
+      // } catch (err) {
+      //   try {
+      //     response = await GroupService.info({ gid: id })
+      //     context.commit(SET_OWNER_NAME, { id, name: response.data.name })
+      //   } catch (errr) {
+      //     context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${err} + ${errr}`))
+      //     context.commit(SET_OWNER_NAME, { id, name: 'Unknown' })
+      //     return 'Unknown'
+      //   }
+      // } finally {
+      //   context.commit(OWNER_LOADING, -1)
+      // }
+      // return response.data.name
     } else {
       return context.state.names[id]
     }
