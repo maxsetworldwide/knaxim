@@ -48,8 +48,8 @@
   </template>
   <template v-slot:cell(expand)="row">
     <div @click.stop="openPreview(row)">
-      <b-icon v-if="!row.detailsShowing" icon="chevron-down" />
-      <b-icon v-else icon="chevron-up" />
+      <b-icon v-if="!row.detailsShowing" icon="chevron-down" class="expand"/>
+      <b-icon v-else icon="chevron-up" class="expand"/>
     </div>
   </template>
   <template v-slot:row-details="row">
@@ -251,11 +251,11 @@ export default {
     width: 8%;
   }
 
-  .triangle {
-    fill: gray;
+  .expand {
+    fill: $app-icon;
 
     &:hover {
-      fill: $app-bg4;
+      fill: $app-icon-hl;
     }
   }
 </style>
