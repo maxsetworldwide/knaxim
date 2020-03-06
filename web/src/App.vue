@@ -49,12 +49,10 @@
           </b-col>
         </b-row>
 
-        <b-row class="">
+        <b-row class="app-content">
           <!-- Main Content -->
           <b-col class="p-0">
-            <div class="app-content">
-              <router-view />
-            </div>
+            <router-view />
           </b-col>
 
           <!-- Side View -->

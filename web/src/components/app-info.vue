@@ -1,5 +1,9 @@
 <template>
-  <b-col cols="2" v-if="expandedSearchMatches && expandedSearchMatches.length > 0">
+  <b-col
+    class="h-100"
+    cols="2"
+    v-if="expandedSearchMatches && expandedSearchMatches.length > 0"
+  >
     <div class="app-info d-none d-md-inline">
       <div class="header-search-list w-75 ml-auto">
         <!-- Search History Items  -->
@@ -55,5 +59,11 @@ export default {
   .active-item {
     color: black;
   }
+}
+
+.header-search-list {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 </style>
