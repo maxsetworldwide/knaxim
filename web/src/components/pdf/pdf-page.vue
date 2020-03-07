@@ -53,6 +53,7 @@ export default {
       textSpans: [],
       textContentItemsStr: [],
       joinedContent: '',
+      joinedContentLower: '',
       matches: [],
       sentenceBounds: [],
       staleTextLayer: true
@@ -153,8 +154,9 @@ export default {
           return ''
         }
       })
-      this.joinedContent = this.textContentItemsStr.join('').toLowerCase()
-      const { textSpans, joinedContent } = this
+      this.joinedContent = this.textContentItemsStr.join('')
+      this.joinedContentLower = this.joinedContent.toLowerCase()
+      const { textSpans, joinedContentLower } = this
       this.sentenceBounds = findSentences()
       const sentenceBounds = this.sentenceBounds
 
@@ -214,7 +216,7 @@ export default {
         do {
           minOffset = -1
           punct.forEach(p => {
-            const candidate = joinedContent.indexOf(p, globalOffset)
+            const candidate = joinedContentLower.indexOf(p, globalOffset)
             if (
               candidate !== -1 &&
               (candidate <= minOffset || minOffset === -1)
@@ -252,10 +254,10 @@ export default {
             span = nextStart.span
           }
         } while (minOffset > 0)
-        const offsetToEnd = joinedContent.length - globalOffset
+        const offsetToEnd = joinedContentLower.length - globalOffset
         if (offsetToEnd > 0) {
           const final = getSpanFromJump(
-            joinedContent.length - globalOffset,
+            joinedContentLower.length - globalOffset,
             globalOffset,
             span,
             localOffset
@@ -283,7 +285,7 @@ export default {
         let nextTermLength = -1
         search.forEach(currTerm => {
           if (currTerm.length === 0) return
-          let candidateOffset = joinedContent.indexOf(currTerm, globalIdx)
+          let candidateOffset = joinedContentLower.indexOf(currTerm, globalIdx)
           if (
             (candidateOffset <= minOffset && candidateOffset !== -1) ||
             (minOffset === -1 && candidateOffset !== -1)
