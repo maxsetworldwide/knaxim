@@ -5,7 +5,7 @@
       <b-col>
         <auth ref="auth" :passkey="resetkey"></auth>
         <b-navbar class="app-header">
-          <b-navbar-brand href="/" class="d-none d-md-block pr-5">
+          <b-navbar-brand href="https://cloudedison.com" class="d-none d-md-block pr-5">
             <b-img src="~@/assets/CloudEdison.png" />
           </b-navbar-brand>
 
