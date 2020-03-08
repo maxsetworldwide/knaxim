@@ -47,9 +47,10 @@
     <span class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
   </template>
   <template v-slot:cell(expand)="row">
-    <svg @click.stop="openPreview(row)">
-      <use href="../assets/app.svg#expand-tri" class="triangle"/>
-    </svg>
+    <div @click.stop="openPreview(row)">
+      <b-icon v-if="!row.detailsShowing" icon="chevron-down" class="expand"/>
+      <b-icon v-else icon="chevron-up" class="expand"/>
+    </div>
   </template>
   <template v-slot:row-details="row">
     <b-spinner v-if="filePreview[row.item.id].loading" class="align-middle"></b-spinner>
@@ -250,11 +251,11 @@ export default {
     width: 8%;
   }
 
-  .triangle {
-    fill: gray;
+  .expand {
+    fill: $app-icon;
 
     &:hover {
-      fill: $app-bg4;
+      fill: $app-icon-hl;
     }
   }
 </style>
