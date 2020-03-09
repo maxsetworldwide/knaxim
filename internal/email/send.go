@@ -22,7 +22,7 @@ A request for a password reset has been recieved for your account named %s. Foll
 
 https://%s/reset/%s
 
-Knaxim Team
+CloudEdison Team
 `, "\n", "\r\n")
 
 // SendResetEmail sends an email with a reset link
