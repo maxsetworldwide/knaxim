@@ -14,7 +14,7 @@ func sendEmail(to []string, msg []byte) error {
 
 var resetEmail = strings.ReplaceAll(`To: %s
 From: %s
-Subject: Knaxim Reset Password
+Subject: CloudEdison Reset Password
 MIME-version: 1.0
 Content-Type: text/plain; charset=\"UTF-8\"
 
@@ -22,7 +22,7 @@ A request for a password reset has been recieved for your account named %s. Foll
 
 https://%s/reset/%s
 
-Knaxim Team
+CloudEdison Team
 `, "\n", "\r\n")
 
 // SendResetEmail sends an email with a reset link
