@@ -42,10 +42,10 @@
     "Total": "24h"
   },
 	"Email": {
-		"from": "noreply@cloudedison.org",
+		"from": "noreply@cloudedison.com",
 		"server": "sub5.mail.dreamhost.com:587",
 		"cred": {
-			"Username": "server@cloudedison.org",
+			"Username": "server@cloudedison.com",
 			"Password": "ebrv8tk3",
 			"Host": "sub5.mail.dreamhost.com"
 		}

@@ -54,10 +54,13 @@ export default {
       if (this.name.length < 6) {
         return
       }
-      this.loading = true
-      this[SEND_RESET_REQUEST]({ name: this.name }).then(() => {
-        this.toLogin()
-      })
+      this.sendRequest({ name: this.name })
+        .then(() => {
+          this.toLogin()
+        })
+        .catch(err => {
+          console.log(err)
+        })
     },
     toLogin () {
       this.close()
@@ -68,9 +71,9 @@ export default {
     hide () {
       this.name = ''
       this.$refs['modal'].hide()
-    }
-  },
-  ...mapActions([SEND_RESET_REQUEST])
+    },
+    ...mapActions({ sendRequest: SEND_RESET_REQUEST })
+  }
 }
 </script>
 
