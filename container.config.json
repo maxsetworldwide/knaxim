@@ -42,11 +42,11 @@
     "Total": "24h"
   },
 	"Email": {
-		"from": "noreply@maxset.org",
+		"from": "noreply@cloudedison.org",
 		"server": "sub5.mail.dreamhost.com:587",
 		"cred": {
-			"Username": "ai@maxset.org",
-			"Password": "anM5x3B8",
+			"Username": "server@cloudedison.org",
+			"Password": "ebrv8tk3",
 			"Host": "sub5.mail.dreamhost.com"
 		}
 	}
