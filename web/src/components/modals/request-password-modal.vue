@@ -58,9 +58,6 @@ export default {
         .then(() => {
           this.toLogin()
         })
-        .catch(err => {
-          console.log(err)
-        })
     },
     toLogin () {
       this.close()
