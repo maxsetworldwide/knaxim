@@ -19,12 +19,14 @@ events:
     <canvas :ref="canvasID" v-bind="canvasAttrs" />
     <!-- <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" /> -->
     <pdf-text-layer
+      @rendered="staleTextLayer = false"
       v-bind="{
         sentenceHighlight,
         textContent,
         page,
         textLayerDimStyle,
-        scale
+        scale,
+        staleTextLayer
       }"
     />
   </div>
@@ -61,7 +63,8 @@ export default {
       canvasOffsetLeft: 0,
       canvasOffsetTop: 0,
       textContent: null,
-      canvas: null
+      canvas: null,
+      staleTextLayer: true
     }
   },
   computed: {
@@ -115,9 +118,6 @@ export default {
       return `width: ${pixelWidth}px; height:${pixelHeight}px`
     },
     textLayerDimStyle () {
-      if (this.page.pageIndex === 0) {
-        console.log('updating textLayerDimStyle')
-      }
       const { canvasOffsetTop, canvasOffsetLeft } = this
       const viewport = this.actualSizeViewport
       const height = viewport.height
@@ -128,9 +128,6 @@ export default {
         top: canvasOffsetTop + 'px',
         height: height + 'px',
         width: width + 'px'
-      }
-      if (this.page.pageIndex === 0) {
-        console.log({ result })
       }
       return result
     },
@@ -191,10 +188,15 @@ export default {
     },
     scale () {
       this.updateElementBounds()
-      this.staleTextLayer = true
     },
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
+    canvasOffsetTop () {
+      this.staleTextLayer = true
+    },
+    canvasOffsetLeft () {
+      this.staleTextLayer = true
+    },
     page (newPage, oldPage) {
       this.destroyPage(oldPage)
     }

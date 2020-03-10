@@ -16,7 +16,8 @@ export default {
     textContent: Object,
     page: Object,
     textLayerDimStyle: Object,
-    scale: Number
+    scale: Number,
+    staleTextLayer: Boolean
   },
   data () {
     return {
@@ -26,8 +27,7 @@ export default {
       joinedContent: '',
       joinedContentLower: '',
       matches: [],
-      sentenceBounds: [],
-      staleTextLayer: true
+      sentenceBounds: []
     }
   },
   computed: {
@@ -284,7 +284,7 @@ export default {
         if (this.page.pageIndex === 0) {
           console.log('rendering text')
         }
-        this.staleTextLayer = false
+        // this.staleTextLayer = false
         this.$refs[this.textLayerID].innerHTML = ''
         this.textSpans = []
         this.textContentItemsStr = []
@@ -297,6 +297,7 @@ export default {
           textDivs: this.textSpans,
           textContentItemsStr: this.textContentItemsStr
         })
+        this.$emit('rendered')
         this.matches = this.findMatches()
         this.highlightMatches()
         this.sendMatches()
@@ -488,7 +489,12 @@ export default {
   watch: {
     textContent: 'renderText',
     sentenceHighlight: 'renderText',
-    textLayerDimStyle: 'renderText'
+    // textLayerDimStyle: 'renderText'
+    staleTextLayer (val) {
+      if (val) {
+        this.renderText()
+      }
+    }
   }
 }
 </script>
