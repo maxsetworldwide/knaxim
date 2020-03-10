@@ -22,7 +22,6 @@ events:
       @rendered="staleTextLayer = false"
       v-bind="{
         sentenceHighlight,
-        textContent,
         page,
         textLayerDimStyle,
         scale,
@@ -62,9 +61,9 @@ export default {
       elementHeight: 0,
       canvasOffsetLeft: 0,
       canvasOffsetTop: 0,
-      textContent: null,
+      // textContent: null,
       canvas: null,
-      staleTextLayer: true
+      staleTextLayer: false
     }
   },
   computed: {
@@ -191,10 +190,10 @@ export default {
     },
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
-    canvasOffsetTop () {
+    canvasOffsetTop (val, old) {
       this.staleTextLayer = true
     },
-    canvasOffsetLeft () {
+    canvasOffsetLeft (val, old) {
       this.staleTextLayer = true
     },
     page (newPage, oldPage) {
@@ -212,9 +211,9 @@ export default {
   mounted () {
     this.canvas = this.$refs[this.canvasID]
     this.updateElementBounds()
-    this.page.getTextContent().then(content => {
-      this.textContent = content
-    })
+    const { offsetTop, offsetLeft } = this.canvas
+    this.canvasOffsetTop = offsetTop
+    this.canvasOffsetLeft = offsetLeft
   },
   updated () {
     const { canvas } = this

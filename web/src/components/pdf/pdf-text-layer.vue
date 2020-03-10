@@ -13,7 +13,6 @@ export default {
       type: Boolean,
       default: true
     },
-    textContent: Object,
     page: Object,
     textLayerDimStyle: Object,
     scale: Number,
@@ -21,6 +20,7 @@ export default {
   },
   data () {
     return {
+      textContent: null,
       renderTextLayerTask: null,
       textSpans: [],
       textContentItemsStr: [],
@@ -281,8 +281,8 @@ export default {
     },
     renderText () {
       if (this.textContent) {
-        if (this.page.pageIndex === 0) {
-          console.log('rendering text')
+        if (this.page.pageIndex === 3) {
+          console.trace('rendering text')
         }
         // this.staleTextLayer = false
         this.$refs[this.textLayerID].innerHTML = ''
@@ -486,11 +486,17 @@ export default {
       }
     }
   },
+  mounted () {
+    this.page.getTextContent().then(content => {
+      this.textContent = content
+      this.$nextTick(() => {
+        this.renderText()
+      })
+    })
+  },
   watch: {
-    textContent: 'renderText',
     sentenceHighlight: 'renderText',
-    // textLayerDimStyle: 'renderText'
-    staleTextLayer (val) {
+    staleTextLayer (val, old) {
       if (val) {
         this.renderText()
       }
