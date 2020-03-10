@@ -16,7 +16,7 @@ export default {
     page: Object,
     textLayerDimStyle: Object,
     scale: Number,
-    staleTextLayer: Boolean
+    refreshTextLayer: Boolean
   },
   data () {
     return {
@@ -284,7 +284,6 @@ export default {
         if (this.page.pageIndex === 3) {
           console.trace('rendering text')
         }
-        // this.staleTextLayer = false
         this.$refs[this.textLayerID].innerHTML = ''
         this.textSpans = []
         this.textContentItemsStr = []
@@ -496,7 +495,7 @@ export default {
   },
   watch: {
     sentenceHighlight: 'renderText',
-    staleTextLayer (val, old) {
+    refreshTextLayer (val) {
       if (val) {
         this.renderText()
       }
@@ -530,7 +529,7 @@ export default {
   -o-transform-origin: 0% 0%;
   -ms-transform-origin: 0% 0%;
   transform-origin: 0% 0%;
-  background: red;
+  background: red; //debug
 }
 
 .text-layer ::selection {

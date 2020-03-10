@@ -19,13 +19,13 @@ events:
     <canvas :ref="canvasID" v-bind="canvasAttrs" />
     <!-- <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" /> -->
     <pdf-text-layer
-      @rendered="staleTextLayer = false"
+      @rendered="refreshTextLayer = false"
       v-bind="{
         sentenceHighlight,
         page,
         textLayerDimStyle,
         scale,
-        staleTextLayer
+        refreshTextLayer
       }"
     />
   </div>
@@ -61,9 +61,8 @@ export default {
       elementHeight: 0,
       canvasOffsetLeft: 0,
       canvasOffsetTop: 0,
-      // textContent: null,
       canvas: null,
-      staleTextLayer: false
+      refreshTextLayer: false
     }
   },
   computed: {
@@ -187,7 +186,7 @@ export default {
     },
     scale () {
       this.updateElementBounds()
-      this.staleTextLayer = true
+      this.refreshTextLayer = true
     },
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
