@@ -187,15 +187,10 @@ export default {
     },
     scale () {
       this.updateElementBounds()
+      this.staleTextLayer = true
     },
     scrollTop: 'updateElementBounds',
     clientHeight: 'updateElementBounds',
-    canvasOffsetTop (val, old) {
-      this.staleTextLayer = true
-    },
-    canvasOffsetLeft (val, old) {
-      this.staleTextLayer = true
-    },
     page (newPage, oldPage) {
       this.destroyPage(oldPage)
     }
@@ -231,5 +226,3 @@ export default {
   margin: 0 auto;
 }
 </style>
-
-<style lang="scss"></style>
