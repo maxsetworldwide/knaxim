@@ -35,21 +35,6 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
       setDimStyle () {
         return true
       },
-      findMatches () {
-        return true
-      },
-      sendMatches () {
-        return true
-      },
-      renderText () {
-        return true
-      },
-      highlightMatches () {
-        return true
-      },
-      appendTextChild () {
-        return true
-      },
       drawPage () {
         return true
       },
@@ -71,6 +56,12 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
           height: 768,
           style: 'no',
           class: 'pdf-page'
+        }
+      },
+      actualSizeViewport () {
+        return {
+          height: 0,
+          width: 0
         }
       },
       ...options.computed
