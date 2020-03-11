@@ -236,7 +236,7 @@ export default {
     isTrash () {
       return this.checkedFiles.reduce((acc, file) => {
         return acc && this.trashFolder.includes(file.id)
-      }, true)
+      }, this.checkedFiles.length > 0)
     },
     ...mapGetters([
       'getFolder',
