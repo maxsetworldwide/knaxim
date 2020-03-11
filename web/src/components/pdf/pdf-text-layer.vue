@@ -66,9 +66,6 @@ export default {
   methods: {
     renderText () {
       if (this.textContent) {
-        if (this.page.pageIndex === 3) {
-          console.trace('rendering text')
-        }
         this.$refs[this.textLayerID].innerHTML = ''
         this.textSpans = []
         this.textContentItemsStr = []
@@ -554,7 +551,6 @@ export default {
   -o-transform-origin: 0% 0%;
   -ms-transform-origin: 0% 0%;
   transform-origin: 0% 0%;
-  background: red; //debug
 }
 
 .text-layer ::selection {
