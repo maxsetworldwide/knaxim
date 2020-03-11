@@ -372,7 +372,7 @@ func (ob *Ownerbase) Update(u database.Owner) (err error) {
 		return srverror.New(err, 500, "Database Error O5", "error updating owner")
 	}
 	if result.MatchedCount == 0 {
-		return database.ErrNotFound.Extend(u.GetID().String())
+		return database.ErrNotFound.Extend("no owner to update", u.GetID().String())
 	}
 	ob.gotten[u.GetID().String()] = nil
 	return nil

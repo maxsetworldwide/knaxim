@@ -194,7 +194,7 @@ func (db *Storebase) UpdateMeta(fs *database.FileStore) error {
 		return srverror.New(err, 500, "Database Error S12", "error updating file store metadata")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound.Extend("FileStore", fs.ID.String())
+		return database.ErrNotFound.Extend("no FileStore to update", fs.ID.String())
 	}
 	return nil
 }

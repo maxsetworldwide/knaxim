@@ -221,7 +221,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 		if perr != nil {
 			return nil, perr
 		}
-		return nil, database.ErrNotFound
+		return nil, database.ErrNoResults.Extend("no tags found for files")
 	}
 	out := make(map[string][]tag.Tag)
 	for _, match := range matches {
