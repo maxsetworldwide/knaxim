@@ -8,11 +8,12 @@ props:
     container, usually containing the left and top of the corresponding canvas,
     and the height and width of the page's viewport.
   scale: the zoom level of the document
-  refreshTextLayer: a boolean telling the component to rerender text, usually
-    done when changing scale. Flip this from false to true for the rerender to
-    occur. This is done as opposed to a method call so Vue's usage of computed
-    properties is utilized, and so we can make sure things like the canvas
-    properties inside textLayerDimStyle are correct before rendering.
+
+public methods:
+  refresh(): request the component to rerender text, usually done when changing
+    scale. This only marks the component to rerender on next update. This is
+    partly done so expensive operations are not done during parent execution,
+    and so we can ensure all dimensional data is updated before rendering.
 
 events:
   'rendered': emitted upon completed rendering of the text
@@ -35,8 +36,7 @@ export default {
     },
     page: Object,
     textLayerDimStyle: Object,
-    scale: Number,
-    refreshTextLayer: Boolean
+    scale: Number
   },
   data () {
     return {
@@ -47,7 +47,8 @@ export default {
       joinedContent: '',
       joinedContentLower: '',
       matches: [],
-      sentenceBounds: []
+      sentenceBounds: [],
+      refreshTextLayer: false
     }
   },
   computed: {
@@ -78,10 +79,14 @@ export default {
           textContentItemsStr: this.textContentItemsStr
         })
         this.$emit('rendered')
+        this.refreshTextLayer = false
         this.matches = this.findMatches()
         this.highlightMatches()
         this.sendMatches()
       }
+    },
+    refresh () {
+      this.refreshTextLayer = true
     },
     findMatches () {
       if (this.currentSearch.length === 0) return []
