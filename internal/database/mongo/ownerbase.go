@@ -429,13 +429,17 @@ func (ob *Ownerbase) GetTotalSpace(id database.OwnerID) (int64, error) {
 	case database.GroupI:
 		return 0, nil
 	case database.UserI:
-		if v.GetRole("guest") {
-			return 0, nil
-		} else if v.GetRole("admin") {
-			return math.MaxInt64, nil
-		} else {
-			return 50 << 20, nil
+		customspace := v.GetTotalSpace()
+		if customspace == 0 {
+			if v.GetRole("guest") {
+				return 0, nil
+			} else if v.GetRole("admin") {
+				return math.MaxInt64, nil
+			} else {
+				return 50 << 20, nil
+			}
 		}
+		return customspace, nil
 	default:
 		return 0, database.ErrNotFound.Extend("unrecognized user")
 	}

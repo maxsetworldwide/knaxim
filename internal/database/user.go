@@ -24,6 +24,7 @@ type UserI interface {
 	SetRole(string, bool)
 	GetEmail() string
 	ChangeEmail(string)
+	GetTotalSpace() int64
 }
 
 // UserCredentialI interface representing types that can be used to validate user
@@ -41,6 +42,7 @@ type User struct {
 	CookieInactivity time.Time       `json:"ci" bson:"ci"`
 	CookieTimeout    time.Time       `json:"ct" bson:"ct"`
 	Roles            map[string]bool `json:"roles,omitempty" bson:"roles,omitempty"`
+	Space            int64           `json:"space,omitempty" bson:"space,omitempty"`
 }
 
 // NewUser with username, email and password
@@ -221,6 +223,11 @@ func (u *User) GetRoles() []string {
 // SetRole assigns user to role if v is true, removes role if v is false
 func (u *User) SetRole(k string, v bool) {
 	u.Roles[k] = v
+}
+
+// GetTotalSpace returns current Total Space value of user
+func (u *User) GetTotalSpace() int64 {
+	return u.Space
 }
 
 // UserCredential is a salt and hashed of a password
