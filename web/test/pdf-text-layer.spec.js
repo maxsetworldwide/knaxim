@@ -19,7 +19,7 @@ const testWord = 'weWantThisStringToAppearInTheDocument'
 const testTextContent = {
   items: [
     {
-      str: `${testWord} and the next will be highlighted: ${highlightString}`,
+      str: `${testWord}. and the next will be highlighted. Here it is: ${highlightString}`,
       dir: 'ltr',
       width: 90,
       height: 10,
@@ -84,6 +84,11 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   })
 }
 
+/*
+ * was using wrapper.vm.$nextTick to await DOM changes, but required two+ to
+ * work, so using flushQueue() to make this work despite number of ticks
+ * required
+ */
 function flushQueue () {
   return new Promise(resolve => setTimeout(resolve, 0))
 }
@@ -95,14 +100,16 @@ describe('PdfTextLayer', () => {
   })
   it('emits rendered', async () => {
     const wrapper = shallowMountFa()
-    await wrapper.vm.$nextTick()
+    await flushQueue()
     expect(wrapper.emitted().rendered).toBeTruthy()
+  })
+  it('renders only once on load', async () => {
+    const wrapper = shallowMountFa()
+    await flushQueue()
+    expect(wrapper.emitted().rendered.length).toBe(1)
   })
   it('renders provided text', async () => {
     const wrapper = shallowMountFa()
-    /* was using wrapper.vm.$nextTick, but required two to work, so using
-     * flushQueue() to make this work despite number of ticks required
-     */
     await flushQueue()
     expect(wrapper.html()).toContain(testWord)
   })
@@ -111,5 +118,26 @@ describe('PdfTextLayer', () => {
     await flushQueue()
     const expectedString = `<span class="${highlightClassName}">${highlightString}</span>`
     expect(wrapper.html()).toContain(expectedString)
+  })
+  it('emits matches', async () => {
+    const wrapper = shallowMountFa()
+    await flushQueue()
+    expect(wrapper.emitted().matches).toBeTruthy()
+  })
+  it('returns correct matches', async () => {
+    const wrapper = shallowMountFa()
+    await flushQueue()
+    const matches = wrapper.emitted().matches[0][0].matches
+    const sentence = matches[0].sentence.text
+    expect(matches.length).toEqual(1)
+    expect(sentence).toContain(highlightString)
+  })
+  it('re-renders text when requested', async () => {
+    const wrapper = shallowMountFa()
+    await flushQueue()
+    const numRenders = wrapper.emitted().rendered.length
+    wrapper.vm.refresh()
+    await flushQueue()
+    expect(wrapper.emitted().rendered.length).toEqual(numRenders + 1)
   })
 })
