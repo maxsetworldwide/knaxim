@@ -60,6 +60,29 @@ export default {
     ...mapGetters(['currentSearch'])
   },
   methods: {
+    renderText () {
+      if (this.textContent) {
+        if (this.page.pageIndex === 3) {
+          console.trace('rendering text')
+        }
+        this.$refs[this.textLayerID].innerHTML = ''
+        this.textSpans = []
+        this.textContentItemsStr = []
+        pdfjs.renderTextLayerTask = pdfjs.renderTextLayer({
+          textContent: this.textContent,
+          viewport: this.page.getViewport({
+            scale: this.scale / this.pixelRatio
+          }),
+          container: this.$refs[this.textLayerID],
+          textDivs: this.textSpans,
+          textContentItemsStr: this.textContentItemsStr
+        })
+        this.$emit('rendered')
+        this.matches = this.findMatches()
+        this.highlightMatches()
+        this.sendMatches()
+      }
+    },
     findMatches () {
       if (this.currentSearch.length === 0) return []
       const search = compileSearchTerms(this.currentSearch)
@@ -88,10 +111,7 @@ export default {
         }
         result = result
           .filter(term => term.length > 0) // just in case
-          .map(term => {
-            // form this similar to above?
-            return term.toLowerCase()
-          })
+          .map(term => term.toLowerCase())
         return result
       }
 
@@ -298,29 +318,6 @@ export default {
         pageNum: this.page.pageIndex,
         matches: matchContexts
       })
-    },
-    renderText () {
-      if (this.textContent) {
-        if (this.page.pageIndex === 3) {
-          console.trace('rendering text')
-        }
-        this.$refs[this.textLayerID].innerHTML = ''
-        this.textSpans = []
-        this.textContentItemsStr = []
-        pdfjs.renderTextLayerTask = pdfjs.renderTextLayer({
-          textContent: this.textContent,
-          viewport: this.page.getViewport({
-            scale: this.scale / this.pixelRatio
-          }),
-          container: this.$refs[this.textLayerID],
-          textDivs: this.textSpans,
-          textContentItemsStr: this.textContentItemsStr
-        })
-        this.$emit('rendered')
-        this.matches = this.findMatches()
-        this.highlightMatches()
-        this.sendMatches()
-      }
     },
     highlightMatches () {
       const sentSet = this.matches.reduce((acc, curr) => {
