@@ -132,7 +132,7 @@ describe('PdfTextLayer', () => {
     expect(matches.length).toEqual(1)
     expect(sentence).toContain(highlightString)
   })
-  it('re-renders text when requested', async () => {
+  it('re-renders text when requested, and only once', async () => {
     const wrapper = shallowMountFa()
     await flushQueue()
     const numRenders = wrapper.emitted().rendered.length
