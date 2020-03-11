@@ -16,7 +16,6 @@ events:
 <template>
   <div>
     <canvas :ref="canvasID" v-bind="canvasAttrs" />
-    <!-- <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" /> -->
     <pdf-text-layer
       ref="text-layer"
       @matches="$emit('matches', $event)"
