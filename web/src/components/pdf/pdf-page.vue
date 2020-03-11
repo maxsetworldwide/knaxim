@@ -19,6 +19,7 @@ events:
     <!-- <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" /> -->
     <pdf-text-layer
       ref="text-layer"
+      @matches="$emit('matches', $event)"
       v-bind="{
         sentenceHighlight,
         page,
@@ -131,9 +132,6 @@ export default {
     },
     pixelRatio () {
       return window.devicePixelRatio || 1
-    },
-    sentenceStyle () {
-      return this.sentenceHighlight ? 'sentenceOn' : 'sentenceOff'
     }
   },
   methods: {

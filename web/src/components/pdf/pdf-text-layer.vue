@@ -58,6 +58,9 @@ export default {
     pixelRatio () {
       return window.devicePixelRatio || 1
     },
+    sentenceStyle () {
+      return this.sentenceHighlight ? 'sentenceOn' : 'sentenceOff'
+    },
     ...mapGetters(['currentSearch'])
   },
   methods: {
