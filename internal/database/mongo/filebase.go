@@ -109,7 +109,7 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 			for _, fid := range fids {
 				ids = append(ids, fid.String())
 			}
-			return nil, database.ErrNoResults.Extend(ids...)
+			return nil, database.ErrNoResults.Extend("GetAll files: ").Extend(ids...)
 		}
 		return nil, srverror.New(err, 500, "Database Error F3.1", "Unable to get files")
 	}
