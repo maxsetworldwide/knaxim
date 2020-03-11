@@ -11,7 +11,6 @@ props:
 
 events:
   'visible', pageNum: emitted when this page becomes visible (1 indexed)
-  'matches', { pageNum, matches }: emitted upon finishing the search for matches
 
 -->
 <template>

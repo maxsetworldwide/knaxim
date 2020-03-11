@@ -1,3 +1,23 @@
+<!--
+pdf-text-layer: container for the retrievable text content of a pdf
+
+props:
+  sentenceHighlight: option to highlight the sentence that each match resides in
+  page: the pdfjs page object to render text of
+  textLayerDimStyle: an object representing the dimensions of the text
+    container, usually containing the left and top of the corresponding canvas,
+    and the height and width of the page's viewport.
+  scale: the zoom level of the document
+  refreshTextLayer: a boolean telling the component to rerender text, usually
+    done when changing scale. Flip this from false to true for the rerender to
+    occur. This is done as opposed to a method call so Vue's usage of computed
+    properties is utilized, and so we can make sure things like the canvas
+    properties inside textLayerDimStyle are correct before rendering.
+
+events:
+  'rendered': emitted upon completed rendering of the text
+  'matches', { pageNum, matches }: emitted upon finishing the search for matches
+-->
 <template>
   <div :style="textLayerDimStyle" class="text-layer" :ref="textLayerID" />
 </template>
