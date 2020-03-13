@@ -74,6 +74,15 @@ var testFiles = []testFile{
 	},
 }
 
+func sliceContains(slice []string, s string) bool {
+	for _, candidate := range slice {
+		if candidate == s {
+			return true
+		}
+	}
+	return false
+}
+
 func TestMain(m *testing.M) {
 	testRouter = mux.NewRouter().PathPrefix("/api").Subrouter()
 	testRouter.Use(Recovery)
@@ -139,8 +148,17 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
+		// fmt.Printf("i:%d, ID:%+#v", i, testFiles[i].file.GetID())
+		if i > 0 {
+			perm := file.file.(database.PermissionI)
+			var targetUser database.UserI
+			targetUser, err = userbase.FindUserName(testUsers["users"][i-1]["name"])
+			if err != nil {
+				return
+			}
+			perm.SetPerm(targetUser, "view", true)
+		}
 	}
-
 	return nil
 }
 

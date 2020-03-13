@@ -53,15 +53,6 @@ func sendAcronymRequest(t *testing.T, query string) acronymResult {
 	return matches
 }
 
-func sliceContains(slice []string, s string) bool {
-	for _, candidate := range slice {
-		if candidate == s {
-			return true
-		}
-	}
-	return false
-}
-
 type acronymResult struct {
 	Matched []string `json:"matched"`
 }
