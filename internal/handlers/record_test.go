@@ -12,7 +12,7 @@ const userIdx = 0
 
 func setupRecord(t *testing.T) {
 	AttachRecord(testRouter.PathPrefix("/record").Subrouter())
-	cookies = testlogin(t, userIdx)
+	cookies = testlogin(t, userIdx, false)
 }
 
 func TestRecordAPI(t *testing.T) {

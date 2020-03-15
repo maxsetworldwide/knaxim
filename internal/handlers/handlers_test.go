@@ -27,6 +27,7 @@ import (
 var testRouter *mux.Router
 
 var cookies []*http.Cookie
+var admincookies []*http.Cookie
 
 var testUsers = map[string][]map[string]string{
 	"users": []map[string]string{
@@ -71,6 +72,16 @@ var testFiles = []testFile{
 		},
 		ctype:   "text/plain",
 		content: "This is the second file.",
+	},
+}
+
+var adminFiles = []testFile{
+	testFile{
+		file: &database.File{
+			Name: "admin.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is an admin's file.",
 	},
 }
 
@@ -139,6 +150,33 @@ func populateDB() (err error) {
 			v.Own = user
 		}
 	}
+	for i, admindata := range testUsers["admin"] {
+		admin := database.NewUser(admindata["name"], admindata["password"], admindata["email"])
+		admin.SetRole("admin", true)
+		if admin.ID, err = userbase.Reserve(admin.ID, admin.Name); err != nil {
+			return err
+		}
+		if err = userbase.Insert(admin); err != nil {
+			return err
+		}
+		admindata["id"] = admin.GetID().String()
+		switch v := adminFiles[i].file.(type) {
+		case *database.File:
+			v.Own = admin
+		case *database.WebFile:
+			v.Own = admin
+		}
+	}
+	for i, file := range adminFiles {
+		adminFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
+		if err != nil {
+			return
+		}
+		err = processContent(setupctx, nil, adminFiles[i].file, adminFiles[i].store)
+		if err != nil {
+			return
+		}
+	}
 	for i, file := range testFiles {
 		testFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
 		if err != nil {
@@ -168,10 +206,16 @@ func responseBodyString(res *httptest.ResponseRecorder) string {
 	return buf.String()
 }
 
-func testlogin(t *testing.T, i int) []*http.Cookie {
+func testlogin(t *testing.T, i int, admin bool) []*http.Cookie {
+	var userColl string
+	if admin {
+		userColl = "admin"
+	} else {
+		userColl = "users"
+	}
 	ldata := map[string]string{
-		"name": testUsers["users"][i]["name"],
-		"pass": testUsers["users"][i]["password"],
+		"name": testUsers[userColl][i]["name"],
+		"pass": testUsers[userColl][i]["password"],
 	}
 	loginbody, _ := json.Marshal(ldata)
 	loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))

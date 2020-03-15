@@ -17,7 +17,7 @@ import (
 func setupFileAPI(t *testing.T) {
 	AttachFile(testRouter.PathPrefix("/file").Subrouter())
 	config.V.FileLimit = math.MaxInt64
-	cookies = testlogin(t, 0)
+	cookies = testlogin(t, 0, false)
 }
 
 var uploadFileContent = "This is the text content of a text file for upload"
