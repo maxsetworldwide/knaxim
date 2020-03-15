@@ -151,7 +151,7 @@ func setPermissionPublic(permval bool) func(http.ResponseWriter, *http.Request) 
 		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
 		filebase := r.Context().Value(database.FILE).(database.Filebase)
 		permobj := pullPerm(w, r)
-		if !permobj.GetOwner().Match(user) && user.GetRole("admin") {
+		if !permobj.GetOwner().Match(user) || !user.GetRole("admin") {
 			panic(srverror.Basic(403, "Permission Denied", user.GetID().String()))
 		}
 		permobj.SetPerm(database.Public, "view", permval)
