@@ -9,12 +9,11 @@ const ApiService = {
    * init - Set default http client settings.
    */
   init () {
-    Vue.use(VueAxios, axios)
     // config values are set in .env.[dev, test, production] files.
     // they can be overridden with a similar file with a .local extension.
-    Vue.axios.defaults.baseURL = process.env.VUE_APP_API_URL
-    Vue.axios.defaults.withCredentials = true
-    Vue.axios.defaults.transformRequest = [
+    axios.defaults.baseURL = process.env.VUE_APP_API_URL
+    axios.defaults.withCredentials = true
+    axios.defaults.transformRequest = [
       function (data, header) {
         let fdata = new FormData()
         for (let key in data) {
@@ -26,7 +25,7 @@ const ApiService = {
       }
     ]
 
-    Vue.axios.defaults.transformResponse = [
+    axios.defaults.transformResponse = [
       function (data) {
         try {
           return JSON.parse(data)
@@ -35,26 +34,27 @@ const ApiService = {
         }
       }
     ]
+    Vue.use(VueAxios, axios)
   },
 
   query (resource, params) {
-    return Vue.axios.get(resource, { params: params })
+    return axios.get(resource, { params: params })
   },
 
   get (resource, slug = '') {
-    return Vue.axios.get(`${resource}` + (slug ? `/${slug}` : ''))
+    return axios.get(`${resource}` + (slug ? `/${slug}` : ''))
   },
 
   post (resource, params) {
-    return Vue.axios.post(`${resource}`, params)
+    return axios.post(`${resource}`, params)
   },
 
   put (resource, params) {
-    return Vue.axios.put(`${resource}`, params)
+    return axios.put(`${resource}`, params)
   },
 
   delete (resource, params) {
-    return Vue.axios.delete(resource, { data: params })
+    return axios.delete(`${resource}`, { data: params })
   }
 }
 

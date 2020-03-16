@@ -8,9 +8,9 @@ export const testAction = (action, payload, expectedMutations, done, context = {
     const mutation = expectedMutations[count]
 
     try {
-      expect(type).to.equal(mutation.type)
+      expect(type).toBe(mutation.type)
       if (payload) {
-        expect(payload).to.deep.equal(mutation.payload)
+        expect(payload).toEqual(mutation.payload)
       }
     } catch (error) {
       done(error)
@@ -24,16 +24,16 @@ export const testAction = (action, payload, expectedMutations, done, context = {
 
   // call the action with mocked store and arguments
   let result = action({ ...context, commit }, payload)
-  if (result.finally) { // if action returned a promise
+  if (result && result.finally) { // if action returned a promise
     result.finally(() => {
       if (expectedMutations.length === 0) {
-        expect(count).to.equal(0)
+        expect(count).toBe(0)
         done()
       }
     })
   } else {
     if (expectedMutations.length === 0) {
-      expect(count).to.equal(0)
+      expect(count).toBe(0)
       done()
     }
   }
