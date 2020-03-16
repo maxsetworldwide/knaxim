@@ -1,6 +1,6 @@
 
 // helper for testing action with expected mutations
-exports.testAction = (action, payload, state, expectedMutations, done) => {
+export const testAction = (action, payload, expectedMutations, done, context = {}) => {
   let count = 0
 
   // mock commit
@@ -23,11 +23,18 @@ exports.testAction = (action, payload, state, expectedMutations, done) => {
   }
 
   // call the action with mocked store and arguments
-  action({ commit, state }, payload)
-
-  // check if no mutations should have been dispatched
-  if (expectedMutations.length === 0) {
-    expect(count).to.equal(0)
-    done()
+  let result = action({ ...context, commit }, payload)
+  if (result.finally) { // if action returned a promise
+    result.finally(() => {
+      if (expectedMutations.length === 0) {
+        expect(count).to.equal(0)
+        done()
+      }
+    })
+  } else {
+    if (expectedMutations.length === 0) {
+      expect(count).to.equal(0)
+      done()
+    }
   }
 }
