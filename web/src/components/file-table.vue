@@ -44,7 +44,7 @@
   </template>
   <template v-slot:cell(name)="data">
     <!-- <span v-if="data.item.isFolder" class="file-name" @click.prevent.stop="openFolder(data.value)">{{ data.value }}</span> -->
-    <span class="file-name" @click="open(data.item.id)">{{ data.value }}</span>
+    <span class="file-name" :class="{ trash: trashmode }" @click="open(data.item.id)">{{ data.value }}</span>
   </template>
   <template v-slot:cell(expand)="row">
     <div @click.stop="openPreview(row)">
@@ -83,7 +83,8 @@ export default {
      *   default: () => []
      * },
      */
-    busy: Boolean
+    busy: Boolean,
+    trashmode: Boolean
   },
   data () {
     return {
@@ -257,5 +258,9 @@ export default {
     &:hover {
       fill: $app-icon-hl;
     }
+  }
+
+  .trash {
+    color: red;
   }
 </style>

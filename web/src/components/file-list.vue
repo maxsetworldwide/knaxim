@@ -23,6 +23,7 @@
     <file-table
       :files="files"
       :busy="loading"
+      :trashmode="src === 'trash'"
       @selection="onCheck"
       @open="open"
     >

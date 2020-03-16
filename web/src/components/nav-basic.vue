@@ -30,7 +30,7 @@
 
       <b-nav-item class="mb-1" to="/list/trash" @click="noSearch" v-if="!groupMode">
         <b-icon icon="trash" class="icon" />
-        <span>Trash</span>
+        <span>Trash Can</span>
       </b-nav-item>
     </b-nav>
     <b-navbar class="d-block d-md-none" tag="div">
@@ -67,7 +67,7 @@
 
           <b-nav-item class="mb-1" to="/list/trash" @click="hide" v-if="!groupMode">
             <b-icon icon="trash" class="icon" />
-            <span>Trash</span>
+            <span>Trash Can</span>
           </b-nav-item>
         </b-nav-dd>
       </b-navbar-nav>
