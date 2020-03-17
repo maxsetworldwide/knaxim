@@ -41,5 +41,13 @@ describe('Acronym Store', function () {
       )
       mock.restore()
     })
+    it('Populates as empty with non string value', function (done) {
+      testAction(
+        a[ACRONYMS],
+        { acronym: 5 },
+        [{ type: SET_ACRONYMS, payload: { acronyms: [] } }],
+        done
+      )
+    })
   })
 })
