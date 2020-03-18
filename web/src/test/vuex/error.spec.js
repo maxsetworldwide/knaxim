@@ -50,13 +50,12 @@ describe('Error Store', function () {
         errorLoop: Promise.resolve(true)
       }
     })
-    it('returns next error', function (done) {
-      testAction(
+    it('returns next error', async function () {
+      await testAction(
         a[GET_ERROR],
         {},
-        [{ type: POP_ERROR, payload: new Error('1') }],
-        done,
-        { state: this.state }
+        { mutations: [{ type: POP_ERROR, payload: new Error('1') }] },
+        this.state
       )
     })
     it('loops through errors', async function () {

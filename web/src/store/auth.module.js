@@ -59,6 +59,7 @@ const actions = {
       dispatch(AFTER_LOGIN)
       out = res.data
     } catch (err) {
+      commit(PUSH_ERROR, new Error(`LOGIN: ${err}`))
       throw err
     } finally {
       commit(AUTH_LOADING, -1)
@@ -148,12 +149,10 @@ const actions = {
 const mutations = {
   [SET_USER] (state, user) {
     state.user = user
-    state.errors = null
   },
 
   [PURGE_AUTH] (state) {
     state.user = null
-    state.errors = null
   },
 
   [PROCESS_SERVER_STATE] (state, { user }) {
@@ -162,7 +161,6 @@ const mutations = {
       name: user.name,
       data: user.data
     }
-    state.errors = null
   },
 
   [AUTH_LOADING] (state, delta) {

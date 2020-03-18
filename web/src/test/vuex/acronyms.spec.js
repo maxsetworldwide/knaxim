@@ -26,27 +26,27 @@ describe('Acronym Store', function () {
 
   describe('Actions', function () {
     let a = modul.actions
-    it('Populates Associated Acronyms', function (done) {
+    it('Populates Associated Acronyms', async function () {
       let mock = new MockAdapter(axios)
       mock.onGet('/acronym/aaa').reply(200, { matched: ['triple A'] }, { 'Content-Type': 'application/json' })
-      testAction(
+      await testAction(
         a[ACRONYMS],
         { acronym: 'aaa' },
-        [
-          { type: LOADING_ACRONYMS, payload: 1 },
-          { type: SET_ACRONYMS, payload: { acronyms: ['triple A'] } },
-          { type: LOADING_ACRONYMS, payload: -1 }
-        ],
-        done
+        {
+          mutations: [
+            { type: LOADING_ACRONYMS, payload: 1 },
+            { type: SET_ACRONYMS, payload: { acronyms: ['triple A'] } },
+            { type: LOADING_ACRONYMS, payload: -1 }
+          ]
+        }
       )
       mock.restore()
     })
-    it('Populates as empty with non string value', function (done) {
-      testAction(
+    it('Populates as empty with non string value', async function () {
+      await testAction(
         a[ACRONYMS],
         { acronym: 5 },
-        [{ type: SET_ACRONYMS, payload: { acronyms: [] } }],
-        done
+        { mutations: [{ type: SET_ACRONYMS, payload: { acronyms: [] } }] }
       )
     })
   })
