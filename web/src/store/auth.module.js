@@ -73,15 +73,16 @@ const actions = {
    * @param {object} context  State
    * @return {Promise}
    */
-  [LOGOUT] (context) {
+  async [LOGOUT] (context) {
     context.commit(PURGE_AUTH)
     context.commit(AUTH_LOADING, 1)
-    UserService.logout().then(({ data }) => {
-    }).catch((err) => {
-      context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
-    }).finally(() => {
-      context.commit(AUTH_LOADING, -1)
-    })
+    await UserService.logout()
+      .catch((err) => {
+        context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
+      })
+      .finally(() => {
+        context.commit(AUTH_LOADING, -1)
+      })
   },
 
   /**

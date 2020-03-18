@@ -66,6 +66,8 @@ export const testAction = async (
   } catch (err) {
     if (expected.reject !== undefined) {
       expect(err).toEqual(expected.reject)
+    } else {
+      fail(err)
     }
   }
 

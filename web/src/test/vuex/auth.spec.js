@@ -1,13 +1,13 @@
 import modul from '@/store/auth.module'
 import {
   LOGIN,
-  AFTER_LOGIN
-// LOGOUT,
-// REGISTER,
-// GET_USER,
-// CHANGE_PASSWORD,
-// SEND_RESET_REQUEST,
-// RESET_PASSWORD
+  AFTER_LOGIN,
+  LOGOUT,
+  REGISTER,
+  GET_USER,
+  CHANGE_PASSWORD,
+  SEND_RESET_REQUEST,
+  RESET_PASSWORD
 } from '@/store/actions.type'
 import {
   SET_USER,
@@ -88,6 +88,120 @@ describe('Authentication store', function () {
           resolve: {
             id: 'id'
           }
+        }
+      )
+    })
+    it('logs out', async function () {
+      mock.onDelete('user').reply(200)
+      await testAction(
+        a[LOGOUT],
+        {},
+        {
+          mutations: [
+            { type: PURGE_AUTH },
+            { type: AUTH_LOADING, payload: 1 },
+            { type: AUTH_LOADING, payload: -1 }
+          ]
+        }
+      )
+    })
+    it('creates new user', async function () {
+      mock.onPut('user', {
+        name: 'name',
+        pass: 'pass',
+        email: 'email'
+      }).reply(
+        200,
+        { id: 'id' }
+      )
+      await testAction(
+        a[REGISTER],
+        {
+          email: 'email',
+          login: 'name',
+          password: 'pass'
+        },
+        {
+          mutations: [
+            { type: AUTH_LOADING, payload: 1 },
+            { type: AUTH_LOADING, payload: -1 }
+          ],
+          resolve: { id: 'id' }
+        }
+      )
+    })
+    it('changes password', async function () {
+      mock.onPost('user/pass', {
+        oldpass: 'oldpass',
+        newpass: 'newpass'
+      }).reply(200)
+      await testAction(
+        a[CHANGE_PASSWORD],
+        {
+          oldpass: 'oldpass',
+          newpass: 'newpass'
+        },
+        {
+          mutations: [
+            { type: AUTH_LOADING, payload: 1 },
+            { type: AUTH_LOADING, payload: -1 }
+          ],
+          actions: [
+            { type: LOGOUT }
+          ]
+        }
+      )
+    })
+    it('sends reset request', async function () {
+      mock.onPut('user/reset', {
+        name: 'name'
+      }).reply(200)
+      await testAction(
+        a[SEND_RESET_REQUEST],
+        {
+          name: 'name'
+        },
+        {
+          mutations: [
+            { type: AUTH_LOADING, payload: 1 },
+            { type: AUTH_LOADING, payload: -1 }
+          ]
+        }
+      )
+    })
+    it('reset password', async function () {
+      mock.onPost('user/reset', {
+        key: 'key',
+        newpass: 'newpass'
+      }).reply(200)
+      await testAction(
+        a[RESET_PASSWORD],
+        {
+          passkey: 'key',
+          newpass: 'newpass'
+        },
+        {
+          mutations: [
+            { type: AUTH_LOADING, payload: 1 },
+            { type: AUTH_LOADING, payload: -1 }
+          ]
+        }
+      )
+    })
+    it('get user', async function () {
+      mock.onGet('user').reply(200, { id: 'id' })
+      await testAction(
+        a[GET_USER],
+        {
+          quiet: true
+        },
+        {
+          mutations: [
+            { type: AUTH_LOADING, payload: 1 },
+            { type: SET_USER, payload: { id: 'id' } },
+            { type: AUTH_LOADING, payload: -1 }
+          ],
+          resolve: { id: 'id' }
         }
       )
     })
