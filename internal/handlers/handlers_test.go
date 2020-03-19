@@ -41,6 +41,11 @@ var testUsers = map[string][]map[string]string{
 			"password": "2Password!",
 			"email":    "second@example.com",
 		},
+		map[string]string{
+			"name":     "fileUser",
+			"password": "filePassword",
+			"email":    "third@example.com",
+		},
 	},
 	"admin": []map[string]string{
 		map[string]string{
@@ -72,6 +77,13 @@ var testFiles = []testFile{
 		},
 		ctype:   "text/plain",
 		content: "This is the second file.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "third.txt",
+		},
+		ctype:   "text/plain",
+		content: "This is the third file.",
 	},
 }
 
@@ -107,9 +119,11 @@ func TestMain(m *testing.M) {
 	AttachUser(testRouter.PathPrefix("/user").Subrouter())
 	// probably attach all handlers together so they're in one place
 	var configTimeout config.Duration
-	configTimeout.Duration = time.Duration(9999999999)
+	configTimeout.Duration = time.Duration(10 * time.Second)
 	config.V.UserTimeouts.Inactivity = configTimeout
 	config.V.UserTimeouts.Total = configTimeout
+	config.V.MinFileTimeout = configTimeout
+	config.V.MaxFileTimeout = configTimeout
 
 	os.Exit(m.Run())
 }
