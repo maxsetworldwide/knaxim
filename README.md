@@ -31,6 +31,11 @@ combination of server/knaxim and maxsetdev/knaxim-client
 
 242 Error Processing File - attempted to access data relating to file that failed to be properly processed
 
+### 3xx
+> This class of status code indicates that the client must take additional action to complete the request.
+
+303 See Other - The request can be found via a different API call. The alternate request should be specified in the body. Example of this usage is when a file view is requested, but no view exists, redirecting the client to the sentence view API call.
+
 ### 4xx
 >    The 4xx class of status code is intended for cases in which the client seems to have erred.
 
