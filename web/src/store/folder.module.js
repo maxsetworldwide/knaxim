@@ -142,8 +142,7 @@ const mutations = {
         return ele !== fid
       })
       context.user = nuser
-    }
-    if (context.group[group] && context.group[group][name]) {
+    } else if (context.group[group] && context.group[group][name]) {
       let ngroup = context.group
       ngroup[group][name] = context.group[group][name].filter((ele) => {
         return ele !== fid
