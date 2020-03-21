@@ -53,6 +53,11 @@ var testUsers = map[string][]map[string]string{
 			"password": "adminPass!",
 			"email":    "admin@example.com",
 		},
+		map[string]string{ // will own public files
+			"name":     "adminTwo",
+			"password": "adminPass!",
+			"email":    "admintwo@example.com",
+		},
 	},
 }
 
@@ -94,6 +99,44 @@ var adminFiles = []testFile{
 		},
 		ctype:   "text/plain",
 		content: "this is an admin's file.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "secrets.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is the second admin's file.",
+	},
+}
+
+var publicFiles = []testFile{
+	testFile{
+		file: &database.File{
+			Name: "public1.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is a public file.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public2.txt",
+		},
+		ctype:   "text/plain",
+		content: "This is public file number two. It has two sentences!",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public3.txt",
+		},
+		ctype:   "text/plain",
+		content: "The quick brown fox jumped over the lazy dog.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public4.txt",
+		},
+		ctype:   "text/plain",
+		content: "Public files can come in all shapes and sizes!",
 	},
 }
 
@@ -187,6 +230,34 @@ func populateDB() (err error) {
 			return
 		}
 		err = processContent(setupctx, nil, adminFiles[i].file, adminFiles[i].store)
+		if err != nil {
+			return
+		}
+	}
+	var publicOwnerID database.OwnerID
+	publicOwnerID, err = database.DecodeObjectIDString(testUsers["admin"][1]["id"])
+	if err != nil {
+		return
+	}
+	var publicOwner database.Owner
+	publicOwner, err = userbase.Get(publicOwnerID)
+	if err != nil {
+		return
+	}
+	for i, file := range publicFiles {
+		switch f := file.file.(type) {
+		case *database.File:
+			f.Own = publicOwner
+		case *database.WebFile:
+			f.Own = publicOwner
+		}
+		file.file.SetPerm(database.Public, "view", true)
+		publicFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
+		if err != nil {
+			fmt.Printf("injest file failed")
+			return
+		}
+		err = processContent(setupctx, nil, publicFiles[i].file, publicFiles[i].store)
 		if err != nil {
 			return
 		}
