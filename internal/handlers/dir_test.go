@@ -21,7 +21,7 @@ type creationResponse struct {
 
 const dirname = "testdir"
 
-func TestDir(t *testing.T) {
+func TestDirAPI(t *testing.T) {
 	setupDir(t)
 	file := testFiles[0]
 	fid := file.file.GetID()

@@ -57,7 +57,7 @@ type acronymResult struct {
 	Matched []string `json:"matched"`
 }
 
-func TestAcronym(t *testing.T) {
+func TestAcronymAPI(t *testing.T) {
 	setupAcronym(t)
 	for _, acr := range acronymEntries {
 		result := sendAcronymRequest(t, acr.key)
