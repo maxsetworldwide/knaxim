@@ -15,14 +15,14 @@ describe('Folder Store', function () {
     this.state = JSON.parse(JSON.stringify(modul.state))
   })
   describe('Mutations', function () {
-    const m = modul.Mutations
+    const m = modul.mutations
     it('clears active folders on changing groups', function () {
       this.state.active.push('to be removed')
       m[ACTIVATE_GROUP](this.state)
       expect(this.state.active).toEqual([])
     })
     it('activates a folder', function () {
-      this.state.active.push('first').push('second')
+      this.state.active.push('first', 'second')
       m[ACTIVATE_FOLDER](this.state, 'second')
       expect(this.state.active).toEqual(['second', 'first'])
     })
@@ -99,5 +99,75 @@ describe('Folder Store', function () {
       })
     })
   })
-  describe('Actions', function () {})
+  describe('Actions', function () {
+    const a = modul.actions
+    const mock = new MockAdapter(axios)
+    afterEach(function () {
+      mock.reset()
+    })
+    afterAll(function () {
+      mock.restore()
+    })
+    it('loads folders', async function () {
+      mock
+        .onGet('dir', { group: 'group' }).reply(200, {
+          folders: ['a', 'b']
+        })
+        .onGet('dir').reply(200, {
+          folders: ['c', 'd']
+        })
+      await testAction(
+        a[LOAD_FOLDERS],
+        {},
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            { type: FOLDER_LOADING, payload: -1 }
+          ],
+          actions: [
+            { type: LOAD_FOLDER,
+              payload: {
+                name: 'c',
+                group: undefined,
+                overwrite: undefined
+              }
+            },
+            { type: LOAD_FOLDER,
+              payload: {
+                name: 'd',
+                group: undefined,
+                overwrite: undefined
+              }
+            }
+          ]
+        }
+      )
+      await testAction(
+        a[LOAD_FOLDERS],
+        { group: 'group', overwrite: true },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            { type: FOLDER_LOADING, payload: -1 }
+          ],
+          actions: [
+            { type: LOAD_FOLDER,
+              payload: {
+                name: 'a',
+                group: 'group',
+                overwrite: true
+              }
+            },
+            { type: LOAD_FOLDER,
+              payload: {
+                name: 'b',
+                group: 'group',
+                overwrite: true
+              }
+            }
+          ]
+        }
+      )
+    })
+  })
 })
