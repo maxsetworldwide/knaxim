@@ -108,9 +108,9 @@ describe('Folder Store', function () {
     afterAll(function () {
       mock.restore()
     })
-    it('loads folders', async function () {
+    it('gets all folders', async function () {
       mock
-        .onGet('dir', { group: 'group' }).reply(200, {
+        .onGet('dir', { params: { group: 'group' } }).reply(200, {
           folders: ['a', 'b']
         })
         .onGet('dir').reply(200, {
@@ -163,6 +163,194 @@ describe('Folder Store', function () {
                 name: 'b',
                 group: 'group',
                 overwrite: true
+              }
+            }
+          ]
+        }
+      )
+    })
+    it('loads a folder', async function () {
+      mock
+        .onGet('dir/a', { params: { group: 'group' } }).reply(200, {
+          name: 'a',
+          files: ['gfid', 'gfid2']
+        })
+        .onGet('dir/a').reply(200, {
+          name: 'a',
+          files: ['fid', 'fid2']
+        })
+        .onGet('dir/b').reply(200, {
+          name: 'b',
+          files: ['fid3', 'fid4']
+        })
+      await testAction(
+        a[LOAD_FOLDER],
+        {
+          name: 'a',
+          group: 'group'
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            {
+              type: SET_FOLDER,
+              payload: {
+                group: 'group',
+                name: 'a',
+                files: ['gfid', 'gfid2']
+              }
+            },
+            { type: FOLDER_LOADING, payload: -1 }
+          ]
+        },
+        {},
+        {
+          getFolder: function () { return [] }
+        }
+      )
+      await testAction(
+        a[LOAD_FOLDER],
+        {
+          name: 'a'
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            {
+              type: SET_FOLDER,
+              payload: {
+                group: undefined,
+                name: 'a',
+                files: ['fid', 'fid2']
+              }
+            },
+            { type: FOLDER_LOADING, payload: -1 }
+          ]
+        },
+        {},
+        {
+          getFolder: function () { return [] }
+        }
+      )
+      await testAction(
+        a[LOAD_FOLDER],
+        {
+          name: 'b'
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            {
+              type: SET_FOLDER,
+              payload: {
+                group: undefined,
+                name: 'b',
+                files: ['fid3', 'fid4']
+              }
+            },
+            { type: FOLDER_LOADING, payload: -1 }
+          ]
+        },
+        {},
+        {
+          getFolder: function () { return [] }
+        }
+      )
+    })
+    it('adds file to folder', async function () {
+      mock
+        .onPost('dir/a/content', { group: 'group', id: 'fid' }).reply(200)
+      await testAction(
+        a[PUT_FILE_FOLDER],
+        {
+          fid: 'fid',
+          name: 'a',
+          group: 'group'
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            { type: FOLDER_LOADING, payload: -1 }
+          ],
+          actions: [
+            {
+              type: LOAD_FOLDER,
+              payload: {
+                group: 'group',
+                name: 'a',
+                overwrite: true
+              }
+            },
+            {
+              type: LOAD_SERVER
+            }
+          ]
+        }
+      )
+    })
+    it('removes file from folder', async function () {
+      mock
+        .onDelete('dir/a/content', {
+          id: 'fid',
+          group: 'group'
+        }).reply(200)
+      await testAction(
+        a[REMOVE_FILE_FOLDER],
+        {
+          fid: 'fid',
+          name: 'a',
+          group: 'group'
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            { type: FOLDER_LOADING, payload: -1 }
+          ],
+          actions: [
+            {
+              type: LOAD_FOLDER,
+              payload: {
+                group: 'group',
+                name: 'a',
+                overwrite: true
+              }
+            },
+            { type: LOAD_SERVER }
+          ]
+        }
+      )
+    })
+    it('handle the server state', async function () {
+      await testAction(
+        a[HANDLE_SERVER_STATE],
+        {
+          user: {
+            folders: ['a', 'b']
+          },
+          groups: {
+            group: { folders: ['c', 'd'] }
+          }
+        },
+        {
+          mutations: [
+            { type: FOLDER_LOADING, payload: 1 },
+            { type: FOLDER_LOADING, payload: -1 }
+          ],
+          actions: [
+            { type: LOAD_FOLDER, payload: { name: 'a' } },
+            { type: LOAD_FOLDER, payload: { name: 'b' } },
+            {
+              type: LOAD_FOLDER,
+              payload: {
+                name: 'c',
+                group: 'group'
+              }
+            },
+            {
+              type: LOAD_FOLDER,
+              payload: {
+                name: 'd',
+                group: 'group'
               }
             }
           ]
