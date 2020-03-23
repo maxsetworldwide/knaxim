@@ -10,7 +10,7 @@ import (
 
 func setupGroup(t *testing.T) {
 	AttachGroup(testRouter.PathPrefix("/group").Subrouter())
-	cookies = testlogin(t, 0)
+	cookies = testlogin(t, 0, false)
 }
 
 func TestGroupAPI(t *testing.T) {

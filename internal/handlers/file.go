@@ -584,8 +584,11 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 	} else {
 		view, err := r.Context().Value(database.VIEW).(database.Viewbase).Get(fid.StoreID)
 		if err != nil {
-			// 302 or 303
-			panic(err)
+			if fs.Perr != nil {
+				panic(srverror.Basic(fs.Perr.Status, fs.Perr.Message))
+			} else {
+				panic(srverror.Basic(303, "No View, use sentence view"))
+			}
 		}
 		rdr, err = view.Reader()
 		if err != nil {

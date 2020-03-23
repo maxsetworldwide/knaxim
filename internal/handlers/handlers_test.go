@@ -27,6 +27,7 @@ import (
 var testRouter *mux.Router
 
 var cookies []*http.Cookie
+var admincookies []*http.Cookie
 
 var testUsers = map[string][]map[string]string{
 	"users": []map[string]string{
@@ -40,12 +41,22 @@ var testUsers = map[string][]map[string]string{
 			"password": "2Password!",
 			"email":    "second@example.com",
 		},
+		map[string]string{
+			"name":     "fileUser",
+			"password": "filePassword",
+			"email":    "third@example.com",
+		},
 	},
 	"admin": []map[string]string{
 		map[string]string{
 			"name":     "admin",
 			"password": "adminPass!",
 			"email":    "admin@example.com",
+		},
+		map[string]string{ // will own public files
+			"name":     "adminTwo",
+			"password": "adminPass!",
+			"email":    "admintwo@example.com",
 		},
 	},
 }
@@ -72,6 +83,70 @@ var testFiles = []testFile{
 		ctype:   "text/plain",
 		content: "This is the second file.",
 	},
+	testFile{
+		file: &database.File{
+			Name: "third.txt",
+		},
+		ctype:   "text/plain",
+		content: "This is the third file.",
+	},
+}
+
+var adminFiles = []testFile{
+	testFile{
+		file: &database.File{
+			Name: "admin.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is an admin's file.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "secrets.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is the second admin's file.",
+	},
+}
+
+var publicFiles = []testFile{
+	testFile{
+		file: &database.File{
+			Name: "public1.txt",
+		},
+		ctype:   "text/plain",
+		content: "this is a public file.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public2.txt",
+		},
+		ctype:   "text/plain",
+		content: "This is public file number two. It has two sentences!",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public3.txt",
+		},
+		ctype:   "text/plain",
+		content: "The quick brown fox jumped over the lazy dog.",
+	},
+	testFile{
+		file: &database.File{
+			Name: "public4.txt",
+		},
+		ctype:   "text/plain",
+		content: "Public files can come in all shapes and sizes!",
+	},
+}
+
+func sliceContains(slice []string, s string) bool {
+	for _, candidate := range slice {
+		if candidate == s {
+			return true
+		}
+	}
+	return false
 }
 
 func TestMain(m *testing.M) {
@@ -87,9 +162,11 @@ func TestMain(m *testing.M) {
 	AttachUser(testRouter.PathPrefix("/user").Subrouter())
 	// probably attach all handlers together so they're in one place
 	var configTimeout config.Duration
-	configTimeout.Duration = time.Duration(9999999999)
+	configTimeout.Duration = time.Duration(10 * time.Second)
 	config.V.UserTimeouts.Inactivity = configTimeout
 	config.V.UserTimeouts.Total = configTimeout
+	config.V.MinFileTimeout = configTimeout
+	config.V.MaxFileTimeout = configTimeout
 
 	os.Exit(m.Run())
 }
@@ -130,6 +207,61 @@ func populateDB() (err error) {
 			v.Own = user
 		}
 	}
+	for i, admindata := range testUsers["admin"] {
+		admin := database.NewUser(admindata["name"], admindata["password"], admindata["email"])
+		admin.SetRole("admin", true)
+		if admin.ID, err = userbase.Reserve(admin.ID, admin.Name); err != nil {
+			return err
+		}
+		if err = userbase.Insert(admin); err != nil {
+			return err
+		}
+		admindata["id"] = admin.GetID().String()
+		switch v := adminFiles[i].file.(type) {
+		case *database.File:
+			v.Own = admin
+		case *database.WebFile:
+			v.Own = admin
+		}
+	}
+	for i, file := range adminFiles {
+		adminFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
+		if err != nil {
+			return
+		}
+		err = processContent(setupctx, nil, adminFiles[i].file, adminFiles[i].store)
+		if err != nil {
+			return
+		}
+	}
+	var publicOwnerID database.OwnerID
+	publicOwnerID, err = database.DecodeObjectIDString(testUsers["admin"][1]["id"])
+	if err != nil {
+		return
+	}
+	var publicOwner database.Owner
+	publicOwner, err = userbase.Get(publicOwnerID)
+	if err != nil {
+		return
+	}
+	for i, file := range publicFiles {
+		switch f := file.file.(type) {
+		case *database.File:
+			f.Own = publicOwner
+		case *database.WebFile:
+			f.Own = publicOwner
+		}
+		file.file.SetPerm(database.Public, "view", true)
+		publicFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
+		if err != nil {
+			fmt.Printf("injest file failed")
+			return
+		}
+		err = processContent(setupctx, nil, publicFiles[i].file, publicFiles[i].store)
+		if err != nil {
+			return
+		}
+	}
 	for i, file := range testFiles {
 		testFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
 		if err != nil {
@@ -139,8 +271,17 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
+		// fmt.Printf("i:%d, ID:%+#v", i, testFiles[i].file.GetID())
+		if i > 0 {
+			perm := file.file.(database.PermissionI)
+			var targetUser database.UserI
+			targetUser, err = userbase.FindUserName(testUsers["users"][i-1]["name"])
+			if err != nil {
+				return
+			}
+			perm.SetPerm(targetUser, "view", true)
+		}
 	}
-
 	return nil
 }
 
@@ -150,10 +291,16 @@ func responseBodyString(res *httptest.ResponseRecorder) string {
 	return buf.String()
 }
 
-func testlogin(t *testing.T, i int) []*http.Cookie {
+func testlogin(t *testing.T, i int, admin bool) []*http.Cookie {
+	var userColl string
+	if admin {
+		userColl = "admin"
+	} else {
+		userColl = "users"
+	}
 	ldata := map[string]string{
-		"name": testUsers["users"][i]["name"],
-		"pass": testUsers["users"][i]["password"],
+		"name": testUsers[userColl][i]["name"],
+		"pass": testUsers[userColl][i]["password"],
 	}
 	loginbody, _ := json.Marshal(ldata)
 	loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))

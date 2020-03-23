@@ -24,7 +24,7 @@ var acronymEntries = []acronymEntry{
 func setupAcronym(t *testing.T) {
 	t.Helper()
 	AttachAcronym(testRouter.PathPrefix("/acronym").Subrouter())
-	cookies = testlogin(t, 0)
+	cookies = testlogin(t, 0, false)
 	ab := config.DB.Acronym(nil)
 	for _, acr := range acronymEntries {
 		if err := ab.Put(acr.key, acr.val); err != nil {
@@ -53,20 +53,11 @@ func sendAcronymRequest(t *testing.T, query string) acronymResult {
 	return matches
 }
 
-func sliceContains(slice []string, s string) bool {
-	for _, candidate := range slice {
-		if candidate == s {
-			return true
-		}
-	}
-	return false
-}
-
 type acronymResult struct {
 	Matched []string `json:"matched"`
 }
 
-func TestAcronym(t *testing.T) {
+func TestAcronymAPI(t *testing.T) {
 	setupAcronym(t)
 	for _, acr := range acronymEntries {
 		result := sendAcronymRequest(t, acr.key)
