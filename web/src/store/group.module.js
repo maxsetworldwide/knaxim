@@ -100,9 +100,13 @@ const mutations = {
     state.active = id
   },
   [PROCESS_SERVER_STATE] (state, { groups }) {
+    state.ids = []
+    state.names = {}
+    state.members = {}
+    state.owners = {}
     for (let id in groups) {
       let { name, owner, members } = groups[id]
-      if (state.ids.reduce((a, i) => { return a && i !== id }, true)) { state.ids.push(id) }
+      state.ids.push(id)
       Vue.set(state.names, id, name || '')
       Vue.set(state.members, id, members || [])
       Vue.set(state.owners, id, owner || '')

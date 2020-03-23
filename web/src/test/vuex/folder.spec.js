@@ -1,5 +1,5 @@
 import { LOAD_FOLDERS, LOAD_FOLDER, PUT_FILE_FOLDER, REMOVE_FILE_FOLDER, HANDLE_SERVER_STATE, LOAD_SERVER } from '@/store/actions.type'
-import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER, PUSH_ERROR } from '@/store/mutations.type'
+import { FOLDER_LOADING, SET_FOLDER, FOLDER_ADD, FOLDER_REMOVE, ACTIVATE_GROUP, ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
 import { testAction } from './util'
 import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
