@@ -123,14 +123,15 @@ const mutations = {
         context.user[name] = []
       }
       context.user[name].push(fid)
+    } else {
+      if (!context.group[group]) {
+        context.group[group] = {}
+      }
+      if (!context.group[group][name]) {
+        context.group[group][name] = []
+      }
+      context.group[group][name].push(fid)
     }
-    if (!context.group[group]) {
-      context.group[group] = {}
-    }
-    if (!context.group[group][name]) {
-      context.group[group][name] = []
-    }
-    context.group[group][name].push(fid)
   },
   [FOLDER_REMOVE] (context, { group, name, fid }) {
     if (!group) {
@@ -142,8 +143,7 @@ const mutations = {
         return ele !== fid
       })
       context.user = nuser
-    }
-    if (context.group[group] && context.group[group][name]) {
+    } else if (context.group[group] && context.group[group][name]) {
       let ngroup = context.group
       ngroup[group][name] = context.group[group][name].filter((ele) => {
         return ele !== fid
