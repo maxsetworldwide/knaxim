@@ -78,7 +78,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .header-search-list {
   .line-no {
     max-width: 3em;

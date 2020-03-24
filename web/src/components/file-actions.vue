@@ -248,7 +248,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .file-actions {
   .dropdown {
     height: 35px;
