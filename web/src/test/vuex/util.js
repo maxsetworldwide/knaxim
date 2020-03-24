@@ -55,6 +55,7 @@ export const testAction = async (
       fail(err)
     }
     aCount++
+    return Promise.resolve(true)
   }
 
   // call the action with mocks and arguments
