@@ -1,6 +1,11 @@
 <template>
   <b-spinner v-if="loading"></b-spinner>
   <b-container v-else fluid class="header-search-list">
+    <b-row>
+      <b-col>
+        <file-actions :checkedFiles="found"/>
+      </b-col>
+    </b-row>
     <header-search-row
       v-for="(row, indx) in rows"
       :key="indx"
@@ -16,12 +21,14 @@
 
 <script>
 import headerSearchRow from '@/components/header-search-row'
+import fileActions from '@/components/file-actions'
 import { SEARCH } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 
 export default {
   components: {
-    headerSearchRow
+    headerSearchRow,
+    fileActions
   },
   props: {
     find: {
@@ -63,12 +70,15 @@ export default {
           return bLen - aLen
         })
     },
-    ...mapGetters(['searchMatches', 'searchLines', 'activeGroup', 'loading'])
+    found () {
+      return this.populateFiles(this.searchMatches.map(f => f.id))
+    },
+    ...mapGetters(['searchMatches', 'searchLines', 'activeGroup', 'loading', 'populateFiles'])
   }
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .header-search-list {
   .line-no {
     max-width: 3em;

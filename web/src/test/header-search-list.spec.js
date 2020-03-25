@@ -12,7 +12,13 @@ let actions = {
   }
 }
 let store = new Vuex.Store({
-  actions
+  actions,
+  getters: {
+    searchMatches: () => [],
+    searchLines: () => {},
+    loading: () => false,
+    populateFiles: () => () => {}
+  }
 })
 
 // API options for test-utils - mount, shallowMount, etc.:
