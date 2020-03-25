@@ -21,8 +21,9 @@ func (buf *buffer) Write(data []byte) (n int, err error) {
 	defer buf.lock.Unlock()
 	for buf.maxsize > 0 && buf.maxsize < len(buf.data)+len(b) {
 		if buf.maxsize > len(buf.data) {
-			buf.data = append(buf.data, b[0:buf.maxsize-len(buf.data)]...)
-			b = b[buf.maxsize-len(buf.data):]
+			shift := buf.maxsize - len(buf.data)
+			buf.data = append(buf.data, b[0:shift]...)
+			b = b[shift:]
 		}
 		if buf.availableSpace == nil {
 			buf.availableSpace = sync.NewCond(buf.lock)

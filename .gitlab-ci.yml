@@ -159,3 +159,13 @@ golint:
     key: lint
     paths:
       - .cache/go
+
+asyncreader:
+  stage: test
+  tags:
+    - golang
+  dependencies:
+    - serverBuild
+  script:
+    cd pkg/asyncreader
+    go test -v
