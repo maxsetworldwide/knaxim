@@ -25,7 +25,7 @@ func TestStream(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		results[i] = new(bytes.Buffer)
 		go func(b *bytes.Buffer, r io.Reader, indx int) {
-			wg.Done()
+			defer wg.Done()
 			if copied, err := io.Copy(b, r); err != nil {
 				t.Errorf("failed to read %d's data(%d): %s", indx, copied, err)
 			}
