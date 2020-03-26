@@ -83,7 +83,7 @@ const actions = {
         .finally(() => commit(LOADING_MATCHED_LINES, { id, delta: -1 }))
     })
   },
-  async [LOAD_FILE_MATCH_LINES] ({ commit, dispatch, state }, { find, id, limit }) {
+  async [LOAD_FILE_MATCH_LINES] ({ commit, state }, { find, id, limit }) {
     try {
       commit(LOADING_MATCHED_LINES, { id, delta: 1 })
       commit(SET_MATCHED_LINES, { id, matched: [] })

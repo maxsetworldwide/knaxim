@@ -96,6 +96,16 @@ pkgPassentropy:
   dependencies:
     - serverBuild
 
+pkgSrverror:
+  stage: test
+  tags:
+    - golang
+  script:
+    - cd pkg/srverror
+    - go test -v
+  dependencies:
+    - serverBuild
+
 databaseTypes:
   stage: test
   tags:

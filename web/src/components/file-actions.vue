@@ -236,7 +236,7 @@ export default {
     isTrash () {
       return this.checkedFiles.reduce((acc, file) => {
         return acc && this.trashFolder.includes(file.id)
-      }, true)
+      }, this.checkedFiles.length > 0)
     },
     ...mapGetters([
       'getFolder',
@@ -248,7 +248,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .file-actions {
   .dropdown {
     height: 35px;

@@ -21,19 +21,19 @@ const getters = {
 }
 
 const actions = {
-  [ACRONYMS] (state, { acronym }) {
+  [ACRONYMS] ({ commit }, { acronym }) {
     if (typeof acronym !== 'string' || acronym.length < 1) {
-      state.commit(SET_ACRONYMS, { acronyms: [] })
+      commit(SET_ACRONYMS, { acronyms: [] })
       return
     }
-    state.commit(LOADING_ACRONYMS, 1)
+    commit(LOADING_ACRONYMS, 1)
     return AcronymService.get({ acronym }).then(data => {
       const { matched } = data.data || []
-      state.commit(SET_ACRONYMS, { acronyms: matched })
+      commit(SET_ACRONYMS, { acronyms: matched })
       return matched
     })
-      .catch(err => state.commit(PUSH_ERROR, new Error(`ACRONYMS: ${err}`)))
-      .finally(() => state.commit(LOADING_ACRONYMS, -1))
+      .catch(err => commit(PUSH_ERROR, new Error(`ACRONYMS: ${err}`)))
+      .finally(() => commit(LOADING_ACRONYMS, -1))
   }
 }
 

@@ -59,6 +59,7 @@ const actions = {
       dispatch(AFTER_LOGIN)
       out = res.data
     } catch (err) {
+      commit(PUSH_ERROR, new Error(`LOGIN: ${err}`))
       throw err
     } finally {
       commit(AUTH_LOADING, -1)
@@ -72,15 +73,16 @@ const actions = {
    * @param {object} context  State
    * @return {Promise}
    */
-  [LOGOUT] (context) {
+  async [LOGOUT] (context) {
     context.commit(PURGE_AUTH)
     context.commit(AUTH_LOADING, 1)
-    UserService.logout().then(({ data }) => {
-    }).catch((err) => {
-      context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
-    }).finally(() => {
-      context.commit(AUTH_LOADING, -1)
-    })
+    await UserService.logout()
+      .catch((err) => {
+        context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
+      })
+      .finally(() => {
+        context.commit(AUTH_LOADING, -1)
+      })
   },
 
   /**
@@ -148,12 +150,10 @@ const actions = {
 const mutations = {
   [SET_USER] (state, user) {
     state.user = user
-    state.errors = null
   },
 
   [PURGE_AUTH] (state) {
     state.user = null
-    state.errors = null
   },
 
   [PROCESS_SERVER_STATE] (state, { user }) {
@@ -162,7 +162,6 @@ const mutations = {
       name: user.name,
       data: user.data
     }
-    state.errors = null
   },
 
   [AUTH_LOADING] (state, delta) {
