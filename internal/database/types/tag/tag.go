@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -99,7 +100,7 @@ func (t Tag) Update(oth Tag) Tag {
 	}
 	for tk, mapping := range oth.Data {
 		if newt.Data[tk] == nil {
-			newt.Data[tk] = make(map[string]string)
+			newt.Data[tk] = make(map[string]interface{})
 		}
 		for k, v := range mapping {
 			newt.Data[tk][k] = v
@@ -109,7 +110,7 @@ func (t Tag) Update(oth Tag) Tag {
 }
 
 // Data maps a tag type to an abitrary collection of string to string mappings
-type Data map[Type]map[string]string
+type Data map[Type]map[string]interface{}
 
 // Copy generates a new Data object with the same values as the original
 func (d Data) Copy() Data {
@@ -118,7 +119,7 @@ func (d Data) Copy() Data {
 	}
 	newd := make(Data)
 	for tk, mapping := range d {
-		newd[tk] = make(map[string]string)
+		newd[tk] = make(map[string]interface{})
 		for k, v := range mapping {
 			newd[tk][k] = v
 		}
@@ -140,7 +141,7 @@ func (d Data) Contains(oth Data) bool {
 
 // MarshalBSON converts Data into a bson representation
 func (d Data) MarshalBSON() ([]byte, error) {
-	form := make(map[string]map[string]string)
+	form := make(map[string]map[string]interface{})
 	for typ, fields := range d {
 		form[typ.String()] = fields
 	}
@@ -150,7 +151,7 @@ func (d Data) MarshalBSON() ([]byte, error) {
 // UnmarshalBSON converts bson representation back into Data
 func (d *Data) UnmarshalBSON(b []byte) error {
 	*d = make(Data)
-	var form map[string]map[string]string
+	var form map[string]map[string]interface{}
 	err := bson.Unmarshal(b, &form)
 	if err != nil {
 		return err
@@ -163,4 +164,16 @@ func (d *Data) UnmarshalBSON(b []byte) error {
 		(*d)[t] = fields
 	}
 	return nil
+}
+
+// StoreTag is a Tag of
+type StoreTag struct {
+	Tag   `bson:",inline"`
+	Store types.StoreID `bson:"sid"`
+}
+
+type FileTag struct {
+	Tag   `bson:",inline"`
+	File  types.FileID  `bson:"file"`
+	Owner types.OwnerID `bson:"owner"`
 }

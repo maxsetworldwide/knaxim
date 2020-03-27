@@ -1,12 +1,10 @@
-package database
+package types
 
 import (
 	"bytes"
 	"io"
 	"strings"
 	"testing"
-
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestFileStore(t *testing.T) {
@@ -42,8 +40,8 @@ func TestFileStore(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	fid := filehash.FileID{
-		StoreID: filehash.StoreID{
+	fid := FileID{
+		StoreID: StoreID{
 			Hash:  10,
 			Stamp: 10,
 		},
@@ -113,8 +111,8 @@ func TestFile(t *testing.T) {
 }
 
 func TestWeb(t *testing.T) {
-	fid := filehash.FileID{
-		StoreID: filehash.StoreID{
+	fid := FileID{
+		StoreID: StoreID{
 			Hash:  10,
 			Stamp: 10,
 		},

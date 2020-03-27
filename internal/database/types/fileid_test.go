@@ -1,4 +1,4 @@
-package filehash
+package types
 
 import (
 	"encoding/json"

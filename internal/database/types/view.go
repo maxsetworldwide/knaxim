@@ -1,25 +1,24 @@
 // basing off of database/file.go
 
-package database
+package types
 
 import (
 	"bytes"
 	"compress/gzip"
 	"io"
 
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 // ViewStore represents the PDF representation of a File
 type ViewStore struct {
-	ID      filehash.StoreID `json:"id" bson:"id"`
-	Content []byte           `json:"content" bson:"-"`
+	ID      StoreID `json:"id" bson:"id"`
+	Content []byte  `json:"content" bson:"-"`
 }
 
 // NewViewStore builds ViewStore from a StoreID and Reader of
 // pdf representation
-func NewViewStore(id filehash.StoreID, r io.Reader) (*ViewStore, error) {
+func NewViewStore(id StoreID, r io.Reader) (*ViewStore, error) {
 	store := new(ViewStore)
 
 	contentBuf := new(bytes.Buffer)

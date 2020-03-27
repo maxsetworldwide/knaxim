@@ -2,11 +2,9 @@ package database
 
 import (
 	"context"
-	"errors"
 
 	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
-	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 // ContextKey is used to store connections to a database in the values of a context
@@ -21,19 +19,6 @@ const (
 	TAG
 	ACRONYM
 	VIEW
-)
-
-// Error types for use across different database implementations
-var (
-	ErrNotFound       = srverror.New(errors.New("Not Found in Database"), 404, "Not Found")
-	ErrNoResults      = srverror.Basic(204, "Empty", "No results found")
-	ErrNameTaken      = srverror.New(errors.New("Id is already in use"), 409, "Name Already Taken")
-	ErrCorruptData    = srverror.New(errors.New("unable to decode data from the database"), 500, "Database Error 010")
-	ErrPermission     = srverror.New(errors.New("User does not have appropriate permission"), 403, "Permission Denied")
-	ErrIDNotReserved  = srverror.Basic(500, "Database Error 011", "ID has not been reserved for Insert")
-	ErrIDUnrecognized = srverror.Basic(400, "Unrecognized ID")
-
-	FileLoadInProgress = &ProcessingError{Status: 202, Message: "Processing File"}
 )
 
 // Database is the root Database interface

@@ -1,4 +1,4 @@
-package database
+package types
 
 import (
 	"crypto/rand"
@@ -238,7 +238,7 @@ type UserCredential struct {
 
 var staticPassSalt = []byte("6`9McFWZ7]{HLR`[D7'")
 
-func hash(pass, salt []byte) []byte {
+func hashpass(pass, salt []byte) []byte {
 	h := sha256.New()
 	h.Write(staticPassSalt)
 	h.Write(pass)
@@ -253,7 +253,7 @@ func NewUserCredential(pass string) UserCredential {
 	n.Salt = make([]byte, 32)
 	rand.Read(n.Salt)
 
-	n.Hash = hash([]byte(pass), n.Salt)
+	n.Hash = hashpass([]byte(pass), n.Salt)
 
 	return n
 }
@@ -270,7 +270,7 @@ func (up UserCredential) Valid(credential map[string]interface{}) bool {
 	default:
 		return false
 	}
-	h := hash(pass, up.Salt)
+	h := hashpass(pass, up.Salt)
 	if len(h) != len(up.Hash) {
 		return false
 	}

@@ -1,10 +1,10 @@
-package database_test
+package types_test
 
 import (
 	"testing"
 
-	. "git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
+	. "git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestPermission(t *testing.T) {

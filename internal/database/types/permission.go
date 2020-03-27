@@ -1,4 +1,4 @@
-package database
+package types
 
 import (
 	"encoding/json"
@@ -18,7 +18,13 @@ type PermissionI interface {
 	PermTypes() []string
 	SetPerm(Owner, string, bool)
 	CopyPerm(Owner) PermissionI
-	Populate(Ownerbase) error
+	Populate(PermissionPopulator) error
+}
+
+// PermissionPopulator is an iterface type for Populating Permission Objects with Populate Actions
+// Most likely used with database.Ownerbase type
+type PermissionPopulator interface {
+	Get(OwnerID) (Owner, error)
 }
 
 // Permission is to be used as an abstract class of objects that are owned
@@ -161,7 +167,7 @@ func (p *Permission) UnmarshalBSON(b []byte) error {
 }
 
 // Populate loads owners from the database after decoding Permission object from json or bson
-func (p *Permission) Populate(ub Ownerbase) error {
+func (p *Permission) Populate(ub PermissionPopulator) error {
 	var err error
 	p.Own, err = ub.Get(p.ownid)
 	if err != nil {

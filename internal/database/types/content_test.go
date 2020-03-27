@@ -1,16 +1,14 @@
-package database
+package types
 
 import (
 	"io"
 	"strings"
 	"testing"
-
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestContent(t *testing.T) {
 	t.Parallel()
-	sid := filehash.StoreID{
+	sid := StoreID{
 		Hash:  10,
 		Stamp: 10,
 	}
