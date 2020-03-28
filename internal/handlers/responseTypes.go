@@ -3,16 +3,15 @@ package handlers
 import (
 	"net/http"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/util"
 )
 
 // FileInfo json response type of file information
 type FileInfo struct {
-	File  database.FileI `json:"file"`
-	Count int64          `json:"count,omitempty"` //sentence count
-	Size  int64          `json:"size,omitempty"`  //size of original file in bytes
+	File  types.FileI `json:"file"`
+	Count int64       `json:"count,omitempty"` //sentence count
+	Size  int64       `json:"size,omitempty"`  //size of original file in bytes
 }
 
 // SearchResponse json response of matched files to a search
@@ -21,9 +20,9 @@ type SearchResponse struct {
 }
 
 // BuildSearchResponse contructs SearchResponse from a list of matched fileids
-func BuildSearchResponse(r *http.Request, fids []filehash.FileID) SearchResponse {
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
-	var files []database.FileI
+func BuildSearchResponse(r *http.Request, fids []types.FileID) SearchResponse {
+	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	var files []types.FileI
 	var lengths map[string]int64
 	errch := make(chan error, 2)
 	go func() {
@@ -35,7 +34,7 @@ func BuildSearchResponse(r *http.Request, fids []filehash.FileID) SearchResponse
 		var err error
 		lengths = make(map[string]int64)
 		for _, fid := range fids {
-			lengths[fid.String()], err = r.Context().Value(database.CONTENT).(database.Contentbase).Len(fid.StoreID)
+			lengths[fid.String()], err = r.Context().Value(types.CONTENT).(types.Contentbase).Len(fid.StoreID)
 			if err != nil {
 				errch <- err
 				return
@@ -63,14 +62,14 @@ func BuildSearchResponse(r *http.Request, fids []filehash.FileID) SearchResponse
 
 // DirInformation is the json encoding for folder information
 type DirInformation struct {
-	Name  string            `json:"name"`
-	Files []filehash.FileID `json:"files"`
+	Name  string         `json:"name"`
+	Files []types.FileID `json:"files"`
 }
 
 // FileContent is the json encoding for lines from a file
 type FileContent struct {
-	Length int                    `json:"size"`
-	Vals   []database.ContentLine `json:"lines"`
+	Length int                 `json:"size"`
+	Vals   []types.ContentLine `json:"lines"`
 }
 
 // GroupInformation is the json encoding object for Groups
@@ -82,7 +81,7 @@ type GroupInformation struct {
 }
 
 // BuildGroupInfo contructs Group Response Object from Group
-func BuildGroupInfo(grp database.GroupI) GroupInformation {
+func BuildGroupInfo(grp types.GroupI) GroupInformation {
 	return GroupInformation{
 		ID:    grp.GetID().String(),
 		Name:  grp.GetName(),
@@ -109,14 +108,14 @@ type UserInfo struct {
 }
 
 // BuildUserInfo builds user info from user object
-func BuildUserInfo(r *http.Request, u database.UserI) UserInfo {
-	actor := r.Context().Value(USER).(database.UserI)
+func BuildUserInfo(r *http.Request, u types.UserI) UserInfo {
+	actor := r.Context().Value(USER).(types.UserI)
 	var ui UserInfo
 	ui.ID = u.GetID().String()
 	ui.Name = u.GetName()
 	if actor.Equal(u) {
 		ui.Roles = u.GetRoles()
-		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+		userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
 		var err error
 		if ui.Data.Current, err = userbase.GetSpace(u.GetID()); err != nil {
 			util.VerboseRequest(r, "unable to get current files")

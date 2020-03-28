@@ -7,12 +7,12 @@ import (
 	"io"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 // InjestFile builds a file and file store from data and adds to database
-func InjestFile(ctx context.Context, file database.FileI, contenttype string, stream io.Reader, db database.Database) (fs *database.FileStore, err error) {
+func InjestFile(ctx context.Context, file types.FileI, contenttype string, stream io.Reader, db database.Database) (fs *types.FileStore, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fs = nil
@@ -26,7 +26,7 @@ func InjestFile(ctx context.Context, file database.FileI, contenttype string, st
 			}
 		}
 	}()
-	fs, err = database.NewFileStore(stream)
+	fs, err = types.NewFileStore(stream)
 	if err != nil {
 		panic(err)
 	}
@@ -76,7 +76,7 @@ func InjestFile(ctx context.Context, file database.FileI, contenttype string, st
 	{
 		fb := db.File(ctx)
 		defer fb.Close(ctx)
-		tempID, err := fb.Reserve(filehash.NewFileID(fs.ID))
+		tempID, err := fb.Reserve(types.NewFileID(fs.ID))
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +90,7 @@ func InjestFile(ctx context.Context, file database.FileI, contenttype string, st
 }
 
 //
-// func generateContentTags(ctx context.Context, fs *database.FileStore, db database.Database) {
+// func generateContentTags(ctx context.Context, fs *types.FileStore, db types.Database) {
 // 	go func() {
 // 		rcontent, err := fs.Reader()
 // 		if err != nil {

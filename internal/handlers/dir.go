@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/internal/database/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 
@@ -39,15 +37,15 @@ var dirflag = "d"
 
 func getDirs(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	var owner database.Owner
+	var owner types.Owner
 	if gr := r.Context().Value(GROUP); gr != nil {
-		owner = gr.(database.Owner)
+		owner = gr.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
 
 	var dirs []string
-	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(
+	if tags, err := r.Context().Value(types.TAG).(types.Tagbase).SearchData(
 		tag.USER,
 		tag.Data{
 			tag.USER: map[string]string{
@@ -67,21 +65,21 @@ func getDirs(out http.ResponseWriter, r *http.Request) {
 func createDir(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
+	filebase := r.Context().Value(types.FILE).(types.Filebase)
 	nname := r.FormValue("newname")
 	if !validDirName(nname) {
 		panic(srverror.Basic(400, "Invalid Directory Name"))
 	}
-	var owner database.Owner
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
-	var files []database.FileI
+	var files []types.FileI
 	if r.Form["content"] != nil {
 		for _, fidstr := range r.Form["content"] {
-			fid, err := filehash.DecodeFileID(fidstr)
+			fid, err := types.DecodeFileID(fidstr)
 			if err != nil {
 				util.VerboseRequest(r, "unable to decode: %s, because: %v", fidstr, err)
 				continue
@@ -106,7 +104,7 @@ func createDir(out http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
-	tagbase := r.Context().Value(database.TAG).(database.Tagbase)
+	tagbase := r.Context().Value(types.TAG).(types.Tagbase)
 	for _, file := range files {
 		err := tagbase.UpsertFile(file.GetID(), dirtag)
 		if err != nil {
@@ -122,13 +120,13 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	vals := mux.Vars(r)
-	var owner database.Owner
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
-	tagbase := r.Context().Value(database.TAG).(database.Tagbase)
+	tagbase := r.Context().Value(types.TAG).(types.Tagbase)
 	tagfilter := tag.Tag{
 		Word: vals["id"],
 		Type: tag.USER,
@@ -140,7 +138,7 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	filematches, _, err := tagbase.GetFiles([]tag.Tag{tagfilter})
 	if err != nil {
-		if se := err.(srverror.Error); se.Status() == database.ErrNoResults.Status() {
+		if se := err.(srverror.Error); se.Status() == types.ErrNoResults.Status() {
 			w.WriteHeader(se.Status())
 		} else {
 			panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
@@ -155,12 +153,12 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 	return func(out http.ResponseWriter, r *http.Request) {
 		w := out.(*srvjson.ResponseWriter)
 
-		tagbase := r.Context().Value(database.TAG).(database.Tagbase)
-		var owner database.Owner
+		tagbase := r.Context().Value(types.TAG).(types.Tagbase)
+		var owner types.Owner
 		if group := r.Context().Value(GROUP); group != nil {
-			owner = group.(database.Owner)
+			owner = group.(types.Owner)
 		} else {
-			owner = r.Context().Value(USER).(database.Owner)
+			owner = r.Context().Value(USER).(types.Owner)
 		}
 		vals := mux.Vars(r)
 		dirtagname := vals["id"]
@@ -171,9 +169,9 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 		if len(fidstrs) == 0 {
 			panic(srverror.Basic(400, "missing file ids"))
 		}
-		var fids []filehash.FileID
+		var fids []types.FileID
 		for _, fidstr := range fidstrs {
-			fid, err := filehash.DecodeFileID(fidstr)
+			fid, err := types.DecodeFileID(fidstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt File ID"))
 			}
@@ -207,12 +205,12 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 func searchDir(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
-	var tagbase = r.Context().Value(database.TAG).(database.Tagbase)
-	var owner database.Owner
+	var tagbase = r.Context().Value(types.TAG).(types.Tagbase)
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
 	vals := mux.Vars(r)
 	filters := make([]tag.Tag, 0, 1+len(r.Form["find"]))
@@ -235,14 +233,14 @@ func searchDir(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
-	matches := make([]filehash.FileID, 0, len(fids))
+	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	matches := make([]types.FileID, 0, len(fids))
 	for _, fid := range fids {
 		file, err := filebase.Get(fid)
-		if err != nil && err != database.ErrNotFound {
+		if err != nil && err != types.ErrNotFound {
 			panic(err)
 		}
-		if err == database.ErrNotFound {
+		if err == types.ErrNotFound {
 			continue
 		}
 		if file.GetOwner().Match(owner) || file.CheckPerm(owner, "view") {
@@ -255,14 +253,14 @@ func searchDir(out http.ResponseWriter, r *http.Request) {
 func deleteDir(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
-	var owner database.Owner
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
 	vals := mux.Vars(r)
-	fids, _, err := r.Context().Value(database.TAG).(database.Tagbase).GetFiles([]tag.Tag{tag.Tag{
+	fids, _, err := r.Context().Value(types.TAG).(types.Tagbase).GetFiles([]tag.Tag{tag.Tag{
 		Word: vals["id"],
 		Type: tag.USER,
 		Data: tag.Data{
@@ -275,7 +273,7 @@ func deleteDir(out http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	for _, fid := range fids {
-		err := r.Context().Value(database.TAG).(database.Tagbase).UpsertFile(fid, tag.Tag{
+		err := r.Context().Value(types.TAG).(types.Tagbase).UpsertFile(fid, tag.Tag{
 			Word: vals["id"],
 			Type: tag.USER,
 			Data: tag.Data{

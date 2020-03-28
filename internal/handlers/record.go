@@ -3,9 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 	"github.com/gorilla/mux"
@@ -25,10 +22,10 @@ func AttachRecord(r *mux.Router) {
 }
 
 func changeRecordName(w http.ResponseWriter, r *http.Request) {
-	user := r.Context().Value(USER).(database.Owner)
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
+	user := r.Context().Value(USER).(types.Owner)
+	filebase := r.Context().Value(types.FILE).(types.Filebase)
 	vals := mux.Vars(r)
-	fid, err := filehash.DecodeFileID(vals["id"])
+	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad File ID"))
 	}
@@ -51,15 +48,15 @@ func changeRecordName(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendMatchedRecords(out http.ResponseWriter, r *http.Request, matches []database.FileI) {
+func sendMatchedRecords(out http.ResponseWriter, r *http.Request, matches []types.FileI) {
 	w := out.(*srvjson.ResponseWriter)
 	output := make(map[string]FileInfo)
 	for _, match := range matches {
-		count, err := r.Context().Value(database.CONTENT).(database.Contentbase).Len(match.GetID().StoreID)
+		count, err := r.Context().Value(types.CONTENT).(types.Contentbase).Len(match.GetID().StoreID)
 		if err != nil {
 			panic(err)
 		}
-		store, err := r.Context().Value(database.STORE).(database.Storebase).Get(match.GetID().StoreID)
+		store, err := r.Context().Value(types.STORE).(types.Storebase).Get(match.GetID().StoreID)
 		if err != nil {
 			panic(err)
 		}
@@ -69,13 +66,13 @@ func sendMatchedRecords(out http.ResponseWriter, r *http.Request, matches []data
 }
 
 func getOwnedRecords(w http.ResponseWriter, r *http.Request) {
-	var owner database.Owner
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
+	filebase := r.Context().Value(types.FILE).(types.Filebase)
 	recs, err := filebase.GetOwned(owner.GetID())
 	if err != nil {
 		panic(err)
@@ -85,13 +82,13 @@ func getOwnedRecords(w http.ResponseWriter, r *http.Request) {
 
 func getPermissionRecords(key string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var owner database.Owner
+		var owner types.Owner
 		if group := r.Context().Value(GROUP); group != nil {
-			owner = group.(database.Owner)
+			owner = group.(types.Owner)
 		} else {
-			owner = r.Context().Value(USER).(database.Owner)
+			owner = r.Context().Value(USER).(types.Owner)
 		}
-		filebase := r.Context().Value(database.FILE).(database.Filebase)
+		filebase := r.Context().Value(types.FILE).(types.Filebase)
 		recs, err := filebase.GetPermKey(owner.GetID(), key)
 		if err != nil {
 			panic(err)
