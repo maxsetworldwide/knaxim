@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
-var fid = filehash.FileID{
+var fid = types.FileID{
 	StoreID: sid,
 	Stamp:   []byte{'a', 'b'},
 }

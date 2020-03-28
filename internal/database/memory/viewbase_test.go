@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 var contentString = "View version of a file for the memory database"

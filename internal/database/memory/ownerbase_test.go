@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 var test1 = database.NewUser("testuser1", "testuserpass1", "test1@test.test")
@@ -41,8 +42,8 @@ func TestOwners(t *testing.T) {
 	defer ob.Close(nil)
 	t.Parallel()
 
-	newUser := database.NewUser("testuser3", "testuserpass3", "test3@test.test")
-	newGroup := database.NewGroup("group3", newUser)
+	newUser := types.NewUser("testuser3", "testuserpass3", "test3@test.test")
+	newGroup := types.NewGroup("group3", newUser)
 	t.Run("Reserve", func(t *testing.T) {
 		var err error
 		newUser.ID, err = ob.Reserve(newUser.ID, newUser.Name)

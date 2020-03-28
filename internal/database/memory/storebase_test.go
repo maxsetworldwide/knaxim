@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 var sid = filehash.StoreID{

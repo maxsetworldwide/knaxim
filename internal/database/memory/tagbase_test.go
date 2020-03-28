@@ -3,7 +3,7 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
 func TestTag(t *testing.T) {

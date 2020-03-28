@@ -1,8 +1,8 @@
 package memory
 
 import (
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
 // Tagbase wraps database and provides tag operations
@@ -11,7 +11,7 @@ type Tagbase struct {
 }
 
 // UpsertFile adds tags attached to fileid
-func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
+func (tb *Tagbase) UpsertFile(fid types.FileID, tags ...tag.Tag) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if tb.TagFiles[fid.String()] == nil {
@@ -28,7 +28,7 @@ func (tb *Tagbase) UpsertFile(fid filehash.FileID, tags ...tag.Tag) error {
 }
 
 // UpsertStore add tags attached to storeids
-func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
+func (tb *Tagbase) UpsertStore(sid types.StoreID, tags ...tag.Tag) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if tb.TagStores[sid.String()] == nil {
@@ -45,10 +45,10 @@ func (tb *Tagbase) UpsertStore(sid filehash.StoreID, tags ...tag.Tag) error {
 }
 
 // FileTags returns all tags associated with a particular fileid
-func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, error) {
+func (tb *Tagbase) FileTags(fids ...types.FileID) (map[string][]tag.Tag, error) {
 	lock.RLock()
 	defer lock.RUnlock()
-	storeids := make([]filehash.StoreID, 0, len(fids))
+	storeids := make([]types.StoreID, 0, len(fids))
 	for _, fid := range fids {
 		storeids = append(storeids, fid.StoreID)
 	}
@@ -84,7 +84,7 @@ func (tb *Tagbase) FileTags(fids ...filehash.FileID) (map[string][]tag.Tag, erro
 
 // GetFiles returns all fileids and storeids associated with particular
 // tags, optionally allows only searching over certain FileIDs
-func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) (fileids []filehash.FileID, storeids []filehash.StoreID, err error) {
+func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...types.FileID) (fileids []types.FileID, storeids []types.StoreID, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	if len(context) == 0 {
@@ -102,11 +102,11 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) (file
 					continue STORES
 				}
 			}
-			sid, _ := filehash.DecodeStoreID(sidstr)
+			sid, _ := types.DecodeStoreID(sidstr)
 			storeids = append(storeids, sid)
 		}
 		for fidstr := range tb.TagFiles {
-			fid, _ := filehash.DecodeFileID(fidstr)
+			fid, _ := types.DecodeFileID(fidstr)
 			context = append(context, fid)
 		}
 	}
