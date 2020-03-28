@@ -9,7 +9,8 @@ import (
 	"os/signal"
 
 	"git.maxset.io/web/knaxim/internal/config"
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/internal/handlers"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
@@ -56,12 +57,12 @@ func setup() {
 		log.Fatalf("database init error: %v\n", err)
 	}
 	if config.V.GuestUser != nil {
-		guestUser := database.NewUser(config.V.GuestUser.Name, config.V.GuestUser.Pass, config.V.GuestUser.Email)
+		guestUser := types.NewUser(config.V.GuestUser.Name, config.V.GuestUser.Pass, config.V.GuestUser.Email)
 		guestUser.SetRole("Guest", true)
 		userbase := config.DB.Owner(setupctx)
 		if preexisting, err := userbase.FindUserName(config.V.GuestUser.Name); preexisting != nil {
 			log.Printf("Guest User Already Exists")
-		} else if se, ok := err.(srverror.Error); !ok || se.Status() == database.ErrNotFound.Status() {
+		} else if se, ok := err.(srverror.Error); !ok || se.Status() == errors.ErrNotFound.Status() {
 			if guestUser.ID, err = userbase.Reserve(guestUser.ID, guestUser.Name); err != nil {
 				log.Fatalf("unable to reserve guestUser: %v", err)
 			}
