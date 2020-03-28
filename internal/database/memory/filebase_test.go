@@ -3,7 +3,6 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
@@ -26,8 +25,8 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect storeid reserved: %v", storedid)
 	}
 
-	file := &database.File{
-		Permission: database.Permission{
+	file := &types.File{
+		Permission: types.Permission{
 			Own: test1,
 		},
 		ID:   fid,
@@ -84,7 +83,7 @@ func TestFiles(t *testing.T) {
 	}
 
 	t.Log("MatchStore")
-	matched, err := fb.MatchStore(test1.GetID(), []filehash.StoreID{sid})
+	matched, err := fb.MatchStore(test1.GetID(), []types.StoreID{sid})
 	if err != nil {
 		t.Fatalf("unable to match sid: %s", err)
 	}
