@@ -23,13 +23,21 @@ const (
 const (
 	// USER indicates a custom tag created by a user, ie a folder
 	USER Type = (1 << 24) << iota
+	// DATE is to record a mapping of a date to a file made by a user.
+	DATE
 )
 
 // ALLTYPES is the compound of all possible tag types
 const ALLTYPES = Type(math.MaxUint32)
 
+// ALLSTORE are all the types of tags that are associated with a FileStore
+const ALLSTORE = CONTENT | TOPIC | ACTION | RESOURCE | PROCESS
+
+// ALLFILE are all the types of tags that are associated with a File
+const ALLFILE = USER | DATE
+
 // ALLSYNTH is the combination of TOPIC, ACTION, RESOURCE, and PROCESS
-const ALLSYNTH = Type(60)
+const ALLSYNTH = TOPIC | ACTION | RESOURCE | PROCESS
 
 func (t Type) String() string {
 	switch t {
@@ -49,6 +57,10 @@ func (t Type) String() string {
 		return "alltypes"
 	case ALLSYNTH:
 		return "allsynth"
+	case ALLSTORE:
+		return "allstore"
+	case ALLFILE:
+		return "allfile"
 	default:
 		return fmt.Sprintf("%X", uint32(t))
 	}
@@ -166,14 +178,50 @@ func (d *Data) UnmarshalBSON(b []byte) error {
 	return nil
 }
 
-// StoreTag is a Tag of
+func (d Data) FilterType(t Type) Data {
+	out := make(Data)
+	for k, v := range d {
+		if k&t > 0 && k&^t == 0 {
+			out[k] = v
+		}
+	}
+	return out
+}
+
+// StoreTag is a Tag tied to a FileStore
 type StoreTag struct {
 	Tag   `bson:",inline"`
 	Store types.StoreID `bson:"sid"`
 }
 
+// FileTag is a Tag tied to a File
 type FileTag struct {
 	Tag   `bson:",inline"`
 	File  types.FileID  `bson:"file"`
 	Owner types.OwnerID `bson:"owner"`
+}
+
+// StoreTag builds StoreTag from FileTag
+func (ft FileTag) StoreTag() StoreTag {
+	return StoreTag{
+		Tag: Tag{
+			Word: ft.Tag.Word,
+			Type: ft.Tag.Type & ALLSTORE,
+			Data: ft.Tag.Data.FilterType(ALLSTORE),
+		},
+		Store: ft.File.StoreID,
+	}
+}
+
+// Pure filters out elements that are represented with StoreTag
+func (ft FileTag) Pure() FileTag {
+	return FileTag{
+		Tag: Tag{
+			Word: ft.Tag.Word,
+			Type: ft.Tag.Type & ALLFILE,
+			Data: ft.Tag.Data.FilterType(ALLFILE),
+		},
+		File:  ft.File,
+		Owner: ft.Owner,
+	}
 }

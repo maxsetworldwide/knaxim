@@ -74,11 +74,17 @@ type Contentbase interface {
 // Tagbase is a database connection for the tag operations
 type Tagbase interface {
 	Database
-	UpsertFile(types.FileID, ...tag.Tag) error
-	UpsertStore(types.StoreID, ...tag.Tag) error
-	FileTags(...types.FileID) (map[string][]tag.Tag, error)
-	GetFiles([]tag.Tag, ...types.FileID) ([]types.FileID, []types.StoreID, error)
-	SearchData(tag.Type, tag.Data) ([]tag.Tag, error)
+	// UpsertFile(types.FileID, ...tag.Tag) error
+	// UpsertStore(types.StoreID, ...tag.Tag) error
+	// FileTags(...types.FileID) (map[string][]tag.Tag, error)
+	// GetFiles([]tag.Tag, ...types.FileID) ([]types.FileID, []types.StoreID, error)
+	// SearchData(tag.Type, tag.Data) ([]tag.Tag, error)
+
+	Upsert(...tag.FileTag) error
+	Get(types.FileID, types.OwnerID) ([]tag.FileTags, error)
+	GetAll(tag.Type, types.OwnerID) ([]tag.FileTags, error)
+	SearchOwned(types.OwnerID, ...tag.Tag) ([]types.FileID, error)
+	SearchFiles([]types.FileID, ...tag.FileTag) ([]types.FileID, error)
 }
 
 // Acronymbase is a database connection for the acronym operations
