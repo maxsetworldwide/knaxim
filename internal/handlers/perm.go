@@ -4,11 +4,13 @@ import (
 	"errors"
 	"net/http"
 
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"github.com/gorilla/mux"
 )
 
@@ -59,7 +61,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) types.PermissionI {
 	vals := mux.Vars(r)
 	var permobj types.PermissionI
 	if vals["type"] == "group" {
-		userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		id, err := types.DecodeObjectIDString(vals["id"])
 		if err != nil {
 			panic(srverror.New(err, 400, "Bad Group ID"))
@@ -75,7 +77,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) types.PermissionI {
 			panic(srverror.Basic(404, "Not Found", g.GetID().String()))
 		}
 	} else if vals["type"] == "file" {
-		filebase := r.Context().Value(types.FILE).(types.Filebase)
+		filebase := r.Context().Value(types.FILE).(database.Filebase)
 		id, err := types.DecodeFileID(vals["id"])
 		if err != nil {
 			panic(srverror.New(err, 400, "Bad File ID"))
@@ -119,7 +121,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 			if id.Type == 'p' {
 				panic(srverror.Basic(400, "Cannot Manipulate Public Permission"))
 			}
-			target, err := r.Context().Value(types.OWNER).(types.Ownerbase).Get(id)
+			target, err := r.Context().Value(types.OWNER).(database.Ownerbase).Get(id)
 			if err != nil {
 				util.VerboseRequest(r, "Failed to get owner from id to change permission for")
 				panic(err)
@@ -129,9 +131,9 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 		var err error
 		switch v := permobj.(type) {
 		case types.Owner:
-			err = r.Context().Value(types.OWNER).(types.Ownerbase).Update(v)
+			err = r.Context().Value(types.OWNER).(database.Ownerbase).Update(v)
 		case types.FileI:
-			err = r.Context().Value(types.FILE).(types.Filebase).Update(v)
+			err = r.Context().Value(types.FILE).(database.Filebase).Update(v)
 		default:
 			err = errInvalidPerm
 		}
@@ -146,8 +148,8 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 func setPermissionPublic(permval bool) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(USER).(types.UserI)
-		userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
-		filebase := r.Context().Value(types.FILE).(types.Filebase)
+		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
+		filebase := r.Context().Value(types.FILE).(database.Filebase)
 		permobj := pullPerm(w, r)
 		if !permobj.GetOwner().Match(user) || !user.GetRole("admin") {
 			panic(srverror.Basic(403, "Permission Denied", user.GetID().String()))

@@ -18,9 +18,9 @@ import (
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
-	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/process"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"github.com/gorilla/mux"
 )
 
@@ -62,29 +62,29 @@ var testUsers = map[string][]map[string]string{
 }
 
 type testFile struct {
-	file    database.FileI
-	store   *database.FileStore
+	file    types.FileI
+	store   *types.FileStore
 	ctype   string
 	content string
 }
 
 var testFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "first.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is the first test file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "second.txt",
 		},
 		ctype:   "text/plain",
 		content: "This is the second file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "third.txt",
 		},
 		ctype:   "text/plain",
@@ -94,14 +94,14 @@ var testFiles = []testFile{
 
 var adminFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "admin.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is an admin's file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "secrets.txt",
 		},
 		ctype:   "text/plain",
@@ -111,28 +111,28 @@ var adminFiles = []testFile{
 
 var publicFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public1.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is a public file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public2.txt",
 		},
 		ctype:   "text/plain",
 		content: "This is public file number two. It has two sentences!",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public3.txt",
 		},
 		ctype:   "text/plain",
 		content: "The quick brown fox jumped over the lazy dog.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public4.txt",
 		},
 		ctype:   "text/plain",
@@ -192,7 +192,7 @@ func populateDB() (err error) {
 	userbase := config.DB.Owner(setupctx)
 	defer userbase.Close(setupctx)
 	for i, userdata := range testUsers["users"] {
-		user := database.NewUser(userdata["name"], userdata["password"], userdata["email"])
+		user := types.NewUser(userdata["name"], userdata["password"], userdata["email"])
 		if _, err = userbase.Reserve(user.ID, user.Name); err != nil {
 			return
 		}
@@ -201,14 +201,14 @@ func populateDB() (err error) {
 		}
 		userdata["id"] = user.GetID().String()
 		switch v := testFiles[i].file.(type) {
-		case *database.File:
+		case *types.File:
 			v.Own = user
-		case *database.WebFile:
+		case *types.WebFile:
 			v.Own = user
 		}
 	}
 	for i, admindata := range testUsers["admin"] {
-		admin := database.NewUser(admindata["name"], admindata["password"], admindata["email"])
+		admin := types.NewUser(admindata["name"], admindata["password"], admindata["email"])
 		admin.SetRole("admin", true)
 		if admin.ID, err = userbase.Reserve(admin.ID, admin.Name); err != nil {
 			return err
@@ -218,9 +218,9 @@ func populateDB() (err error) {
 		}
 		admindata["id"] = admin.GetID().String()
 		switch v := adminFiles[i].file.(type) {
-		case *database.File:
+		case *types.File:
 			v.Own = admin
-		case *database.WebFile:
+		case *types.WebFile:
 			v.Own = admin
 		}
 	}
@@ -234,24 +234,24 @@ func populateDB() (err error) {
 			return
 		}
 	}
-	var publicOwnerID database.OwnerID
-	publicOwnerID, err = database.DecodeObjectIDString(testUsers["admin"][1]["id"])
+	var publicOwnerID types.OwnerID
+	publicOwnerID, err = types.DecodeObjectIDString(testUsers["admin"][1]["id"])
 	if err != nil {
 		return
 	}
-	var publicOwner database.Owner
+	var publicOwner types.Owner
 	publicOwner, err = userbase.Get(publicOwnerID)
 	if err != nil {
 		return
 	}
 	for i, file := range publicFiles {
 		switch f := file.file.(type) {
-		case *database.File:
+		case *types.File:
 			f.Own = publicOwner
-		case *database.WebFile:
+		case *types.WebFile:
 			f.Own = publicOwner
 		}
-		file.file.SetPerm(database.Public, "view", true)
+		file.file.SetPerm(types.Public, "view", true)
 		publicFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
 		if err != nil {
 			fmt.Printf("injest file failed")
@@ -273,8 +273,8 @@ func populateDB() (err error) {
 		}
 		// fmt.Printf("i:%d, ID:%+#v", i, testFiles[i].file.GetID())
 		if i > 0 {
-			perm := file.file.(database.PermissionI)
-			var targetUser database.UserI
+			perm := file.file.(types.PermissionI)
+			var targetUser types.UserI
 			targetUser, err = userbase.FindUserName(testUsers["users"][i-1]["name"])
 			if err != nil {
 				return

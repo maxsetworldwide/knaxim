@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/email"
 	"git.maxset.io/web/knaxim/internal/util"
@@ -47,7 +49,7 @@ func sendReset(w http.ResponseWriter, r *http.Request) {
 	if len(username) == 0 {
 		panic(srverror.Basic(400, "Missing Username"))
 	}
-	ob := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ob := r.Context().Value(types.OWNER).(database.Ownerbase)
 	user, err := ob.FindUserName(username)
 	if err != nil {
 		panic(err)
@@ -69,7 +71,7 @@ func updateCredentialsReset(w http.ResponseWriter, r *http.Request) {
 	updateCredentialsResetLock.Lock()
 	defer updateCredentialsResetLock.Unlock()
 	key := r.FormValue("key")
-	ob := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ob := r.Context().Value(types.OWNER).(database.Ownerbase)
 	id, err := ob.CheckResetKey(key)
 	if err != nil {
 		panic(err)
@@ -106,7 +108,7 @@ func lookupUser(out http.ResponseWriter, r *http.Request) {
 	if len(userName) == 0 {
 		panic(srverror.Basic(400, "No user name"))
 	}
-	user, err := r.Context().Value(types.OWNER).(types.Ownerbase).FindUserName(userName)
+	user, err := r.Context().Value(types.OWNER).(database.Ownerbase).FindUserName(userName)
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +128,7 @@ func getUserData(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	user := r.Context().Value(USER).(types.UserI)
-	userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	var du dataUsage
 	var err error
@@ -142,7 +144,7 @@ func getUserData(out http.ResponseWriter, r *http.Request) {
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	if !validUserName(r.FormValue("name")) || passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 || !validEmail(r.FormValue("email")) {
 		panic(srverror.Basic(400, "Bad Request", fmt.Sprintf("invalid values: user: %s, email: %s, pass: %s", r.FormValue("name"), r.FormValue("email"), r.FormValue("pass"))))
 	}
@@ -161,7 +163,7 @@ func createAdmin(w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("adminkey") != config.V.AdminKey {
 		panic(srverror.Basic(400, "Bad Request", "incorrect admin key", r.FormValue("adminkey"), config.V.AdminKey))
 	}
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	if !validUserName(r.FormValue("name")) || passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 || !validEmail(r.FormValue("email")) {
 		panic(srverror.Basic(400, "Bad Request", "invalid values"))
 	}
@@ -180,7 +182,7 @@ func createAdmin(w http.ResponseWriter, r *http.Request) {
 func userInfo(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(types.UserI)
-	userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	if r.FormValue("id") != "" {
 		oid, err := types.DecodeObjectIDString(r.FormValue("id"))
 		if err != nil {
@@ -207,7 +209,7 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	user := r.Context().Value(USER).(types.Owner)
-	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	if err := r.ParseForm(); err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
 	}
@@ -236,7 +238,7 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 	for _, v := range viewable {
 		fids = append(fids, v.GetID())
 	}
-	fids, _, err = r.Context().Value(types.TAG).(types.Tagbase).GetFiles(filters, fids...)
+	fids, _, err = r.Context().Value(types.TAG).(database.Tagbase).GetFiles(filters, fids...)
 	if err != nil {
 		panic(err)
 	}
@@ -245,7 +247,7 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 }
 
 func loginUser(w http.ResponseWriter, r *http.Request) {
-	userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	user, err := userbase.FindUserName(r.PostFormValue("name"))
 	if err != nil {
 		util.VerboseRequest(r, "request username: %s", r.PostFormValue("name"))
@@ -271,7 +273,7 @@ func loginUser(w http.ResponseWriter, r *http.Request) {
 
 func signoutUser(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(USER).(types.UserI)
-	userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	user.NewCookies(time.Time{}, time.Time{})
 	if err := userbase.Update(user); err != nil {
 		panic(err)
@@ -281,7 +283,7 @@ func signoutUser(w http.ResponseWriter, r *http.Request) {
 
 func updateCredentials(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(USER).(types.UserI)
-	userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	if !user.GetLock().Valid(map[string]interface{}{"pass": r.FormValue("oldpass")}) {
 		panic(srverror.Basic(404, "Not Found"))
 	}

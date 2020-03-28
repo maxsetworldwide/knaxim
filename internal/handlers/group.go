@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
@@ -21,7 +23,7 @@ func groupMiddleware(next http.Handler) http.Handler {
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
-			group, err := r.Context().Value(types.OWNER).(types.Ownerbase).Get(groupid)
+			group, err := r.Context().Value(types.OWNER).(database.Ownerbase).Get(groupid)
 			if err != nil {
 				panic(err)
 			}
@@ -42,7 +44,7 @@ func groupidMiddleware(checkmembership bool) mux.MiddlewareFunc {
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
-			group, err := r.Context().Value(types.OWNER).(types.Ownerbase).Get(groupid)
+			group, err := r.Context().Value(types.OWNER).(database.Ownerbase).Get(groupid)
 			if err != nil {
 				panic(err)
 			}
@@ -93,7 +95,7 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 	} else {
 		owner = r.Context().Value(USER).(types.Owner)
 	}
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	newname := r.FormValue("newname")
 	if !validGroupName(newname) {
 		panic(srverror.Basic(400, "Bad Request", "invalid group name", newname))
@@ -114,7 +116,7 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 func getGroups(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 	user := r.Context().Value(USER).(types.UserI)
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	ogroups, mgroups, err := ownerbase.GetGroups(user.GetID())
 	if err != nil {
@@ -137,7 +139,7 @@ func getGroupsGroups(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	owner := r.Context().Value(GROUP).(types.GroupI)
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	ogroups, mgroups, err := ownerbase.GetGroups(owner.GetID())
 	if err != nil {
@@ -193,7 +195,7 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(400, "No Search Term"))
 	}
 	group := r.Context().Value(GROUP).(types.Owner)
-	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	owned, err := filebase.GetOwned(group.GetID())
 	if err != nil {
 		panic(err)
@@ -222,7 +224,7 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 	if len(filters) == 0 {
 		panic(srverror.Basic(400, "No Search Condition"))
 	}
-	result, _, err := r.Context().Value(types.TAG).(types.Tagbase).GetFiles(filters, fids...)
+	result, _, err := r.Context().Value(types.TAG).(database.Tagbase).GetFiles(filters, fids...)
 	if err != nil {
 		panic(err)
 	}
@@ -242,7 +244,7 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 		if len(r.Form["id"]) == 0 {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
-		ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+		ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		for _, idstr := range r.Form["id"] {
 			id, err := types.DecodeObjectIDString(idstr)
 			if err != nil {
@@ -269,7 +271,7 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 
 func lookupGroup(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	ownerbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	vals := mux.Vars(r)
 	match, err := ownerbase.FindGroupName(vals["name"])
 	if err != nil {

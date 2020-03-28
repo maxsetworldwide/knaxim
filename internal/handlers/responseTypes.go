@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/util"
 )
@@ -21,7 +22,7 @@ type SearchResponse struct {
 
 // BuildSearchResponse contructs SearchResponse from a list of matched fileids
 func BuildSearchResponse(r *http.Request, fids []types.FileID) SearchResponse {
-	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	var files []types.FileI
 	var lengths map[string]int64
 	errch := make(chan error, 2)
@@ -34,7 +35,7 @@ func BuildSearchResponse(r *http.Request, fids []types.FileID) SearchResponse {
 		var err error
 		lengths = make(map[string]int64)
 		for _, fid := range fids {
-			lengths[fid.String()], err = r.Context().Value(types.CONTENT).(types.Contentbase).Len(fid.StoreID)
+			lengths[fid.String()], err = r.Context().Value(types.CONTENT).(database.Contentbase).Len(fid.StoreID)
 			if err != nil {
 				errch <- err
 				return
@@ -115,7 +116,7 @@ func BuildUserInfo(r *http.Request, u types.UserI) UserInfo {
 	ui.Name = u.GetName()
 	if actor.Equal(u) {
 		ui.Roles = u.GetRoles()
-		userbase := r.Context().Value(types.OWNER).(types.Ownerbase)
+		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		var err error
 		if ui.Data.Current, err = userbase.GetSpace(u.GetID()); err != nil {
 			util.VerboseRequest(r, "unable to get current files")

@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
 	"github.com/gorilla/mux"
@@ -23,7 +25,7 @@ func AttachRecord(r *mux.Router) {
 
 func changeRecordName(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(USER).(types.Owner)
-	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	vals := mux.Vars(r)
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
@@ -52,11 +54,11 @@ func sendMatchedRecords(out http.ResponseWriter, r *http.Request, matches []type
 	w := out.(*srvjson.ResponseWriter)
 	output := make(map[string]FileInfo)
 	for _, match := range matches {
-		count, err := r.Context().Value(types.CONTENT).(types.Contentbase).Len(match.GetID().StoreID)
+		count, err := r.Context().Value(types.CONTENT).(database.Contentbase).Len(match.GetID().StoreID)
 		if err != nil {
 			panic(err)
 		}
-		store, err := r.Context().Value(types.STORE).(types.Storebase).Get(match.GetID().StoreID)
+		store, err := r.Context().Value(types.STORE).(database.Storebase).Get(match.GetID().StoreID)
 		if err != nil {
 			panic(err)
 		}
@@ -72,7 +74,7 @@ func getOwnedRecords(w http.ResponseWriter, r *http.Request) {
 	} else {
 		owner = r.Context().Value(USER).(types.Owner)
 	}
-	filebase := r.Context().Value(types.FILE).(types.Filebase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	recs, err := filebase.GetOwned(owner.GetID())
 	if err != nil {
 		panic(err)
@@ -88,7 +90,7 @@ func getPermissionRecords(key string) func(http.ResponseWriter, *http.Request) {
 		} else {
 			owner = r.Context().Value(USER).(types.Owner)
 		}
-		filebase := r.Context().Value(types.FILE).(types.Filebase)
+		filebase := r.Context().Value(types.FILE).(database.Filebase)
 		recs, err := filebase.GetPermKey(owner.GetID(), key)
 		if err != nil {
 			panic(err)

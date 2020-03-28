@@ -12,8 +12,11 @@ import (
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
+	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/process"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
@@ -54,7 +57,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file types.F
 	defer cb.Close(ctx)
 
 	gotenbergErr := make(chan error, 1)
-	go createView(ctx, types.Database(cb), file, fs, gotenbergErr)
+	go createView(ctx, database.Database(cb), file, fs, gotenbergErr)
 	rcontent, err := fs.Reader()
 	if err != nil {
 		return err
@@ -96,7 +99,7 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file types.F
 	return <-gotenbergErr
 }
 
-func createView(ctx context.Context, db types.Database, file types.FileI, fs *types.FileStore, out chan error) {
+func createView(ctx context.Context, db database.Database, file types.FileI, fs *types.FileStore, out chan error) {
 	name := file.GetName()
 	var result []byte
 	extConst, ok := process.ExtMap[fs.ContentType]
@@ -194,7 +197,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
-			fs.Perr = &types.ProcessingError{
+			fs.Perr = &errors.Processing{
 				Status:  242,
 				Message: err.Error(),
 			}
@@ -215,7 +218,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 			Word: r.FormValue("dir"),
 			Type: tag.USER,
 			Data: tag.Data{
-				tag.USER: map[string]string{
+				tag.USER: map[string]interface{}{
 					owner.GetID().String(): dirflag,
 				},
 			},
@@ -324,7 +327,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	go func() {
 		if err := processContent(pctx, cncl, file, fs); err != nil {
 			util.VerboseRequest(r, "Processing Error: %s", err.Error())
-			fs.Perr = &types.ProcessingError{
+			fs.Perr = &errors.Processing{
 				Status:  242,
 				Message: err.Error(),
 			}
@@ -345,7 +348,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			Word: r.FormValue("dir"),
 			Type: tag.USER,
 			Data: tag.Data{
-				tag.USER: map[string]string{
+				tag.USER: map[string]interface{}{
 					owner.GetID().String(): dirflag,
 				},
 			},
@@ -373,18 +376,18 @@ func fileInfo(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	frec, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	frec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
 	if !frec.GetOwner().Match(owner) && !frec.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", owner.GetID().String(), frec.GetName(), frec.GetID().String()))
 	}
-	count, err := r.Context().Value(types.CONTENT).(types.Contentbase).Len(frec.GetID().StoreID)
+	count, err := r.Context().Value(types.CONTENT).(database.Contentbase).Len(frec.GetID().StoreID)
 	if err != nil {
 		panic(err)
 	}
-	store, err := r.Context().Value(types.STORE).(types.Storebase).Get(frec.GetID().StoreID)
+	store, err := r.Context().Value(types.STORE).(database.Storebase).Get(frec.GetID().StoreID)
 	if err != nil {
 		panic(err)
 	}
@@ -419,7 +422,7 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request"))
 	}
-	rec, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
@@ -427,8 +430,8 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(403, "Permission Denied", "fileContent user no view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
 
-	lines, err := r.Context().Value(types.CONTENT).(types.Contentbase).Slice(rec.GetID().StoreID, startindx, endindx)
-	if pe, ok := err.(*types.ProcessingError); ok {
+	lines, err := r.Context().Value(types.CONTENT).(database.Contentbase).Slice(rec.GetID().StoreID, startindx, endindx)
+	if pe, ok := err.(*errors.Processing); ok {
 		w.WriteHeader(pe.Status)
 		w.Set("ProcessingError", pe.Message)
 	} else if err != nil && lines == nil {
@@ -465,16 +468,16 @@ func searchFile(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
 	}
-	file, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	file, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
 	if !file.GetOwner().Match(owner) && !file.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "user does not have view permission", owner.GetID().String(), file.GetName(), file.GetID().String()))
 	}
-	matched, err := r.Context().Value(types.CONTENT).(types.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end)
+	matched, err := r.Context().Value(types.CONTENT).(database.Contentbase).RegexSearchFile(regex, file.GetID().StoreID, start, end)
 	if err != nil {
-		if pe, ok := err.(*types.ProcessingError); ok {
+		if pe, ok := err.(*errors.Processing); ok {
 			w.WriteHeader(pe.Status)
 			w.Set("ProcessingError", pe.Message)
 		} else if matched == nil {
@@ -498,14 +501,14 @@ func deleteRecord(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "malformed file id"))
 	}
-	rec, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
 	if !rec.GetOwner().Match(owner) {
 		panic(srverror.Basic(403, "Permission Denied", "deleteRecord user not owner", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
-	if err = r.Context().Value(types.FILE).(types.Filebase).Remove(fid); err != nil {
+	if err = r.Context().Value(types.FILE).(database.Filebase).Remove(fid); err != nil {
 		panic(err)
 	}
 	w.Set("message", "File Removed")
@@ -528,14 +531,14 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
 	}
-	rec, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
 	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "sendFile user not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
-	store, err := r.Context().Value(types.STORE).(types.Storebase).Get(fid.StoreID)
+	store, err := r.Context().Value(types.STORE).(database.Storebase).Get(fid.StoreID)
 	if err != nil {
 		panic(err)
 	}
@@ -561,14 +564,14 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
 	}
-	rec, err := r.Context().Value(types.FILE).(types.Filebase).Get(fid)
+	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
 		panic(err)
 	}
 	if !rec.GetOwner().Match(owner) && !rec.CheckPerm(owner, "view") {
 		panic(srverror.Basic(403, "Permission Denied", "sendView user does not have view permission", owner.GetID().String(), rec.GetName(), rec.GetID().String()))
 	}
-	fs, err := r.Context().Value(types.STORE).(types.Storebase).Get(fid.StoreID)
+	fs, err := r.Context().Value(types.STORE).(database.Storebase).Get(fid.StoreID)
 	if err != nil {
 		panic(err)
 	}
@@ -580,7 +583,7 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	} else {
-		view, err := r.Context().Value(types.VIEW).(types.Viewbase).Get(fid.StoreID)
+		view, err := r.Context().Value(types.VIEW).(database.Viewbase).Get(fid.StoreID)
 		if err != nil {
 			if fs.Perr != nil {
 				panic(srverror.Basic(fs.Perr.Status, fs.Perr.Message))
