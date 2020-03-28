@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestOwnerbase(t *testing.T) {
@@ -22,28 +22,28 @@ func TestOwnerbase(t *testing.T) {
 	methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	ob = db.Owner(methodtesting).(*Ownerbase)
-	var ownerids = []database.OwnerID{
-		database.OwnerID{
+	var ownerids = []types.OwnerID{
+		types.OwnerID{
 			Type:        'u',
 			UserDefined: [3]byte{'d', 'e', 'v'},
 			Stamp:       []byte("try"),
 		},
-		database.OwnerID{
+		types.OwnerID{
 			Type:        'u',
 			UserDefined: [3]byte{'d', 'e', 'v'},
 			Stamp:       []byte("try"),
 		},
-		database.OwnerID{
+		types.OwnerID{
 			Type:        'g',
 			UserDefined: [3]byte{'t', 'g', 'r'},
 			Stamp:       []byte("test"),
 		},
 	}
-	var data = []database.Owner{
-		&database.User{
+	var data = []types.Owner{
+		&types.User{
 			ID:   ownerids[0],
 			Name: "devon",
-			Pass: database.UserCredential{
+			Pass: types.UserCredential{
 				Salt: []byte("thisisthesalt"),
 				Hash: []byte("thisisthehash"),
 			},
@@ -52,10 +52,10 @@ func TestOwnerbase(t *testing.T) {
 			CookieInactivity: time.Now().Add(time.Hour * 2),
 			CookieTimeout:    time.Now().Add(time.Hour * 24),
 		},
-		&database.User{
+		&types.User{
 			ID:   ownerids[1],
 			Name: "developer",
-			Pass: database.UserCredential{
+			Pass: types.UserCredential{
 				Salt: []byte("thisisthesalt2"),
 				Hash: []byte("thisisthehash2"),
 			},
@@ -64,20 +64,20 @@ func TestOwnerbase(t *testing.T) {
 			CookieInactivity: time.Now().Add(time.Hour * 2),
 			CookieTimeout:    time.Now().Add(time.Hour * 24),
 		},
-		&database.Group{
+		&types.Group{
 			ID:   ownerids[2],
 			Name: "testGroup",
 		},
 	}
-	data[2].(*database.Group).Own = data[0]
-	data[2].(*database.Group).AddMember(data[1])
+	data[2].(*types.Group).Own = data[0]
+	data[2].(*types.Group).AddMember(data[1])
 	t.Run("Reserve", func(t *testing.T) {
 		for i, ele := range data {
 			var err error
 			switch v := ele.(type) {
-			case *database.User:
+			case *types.User:
 				v.ID, err = ob.Reserve(v.ID, v.Name)
-			case *database.Group:
+			case *types.Group:
 				v.ID, err = ob.Reserve(v.ID, v.Name)
 			}
 			if err != nil {
@@ -166,7 +166,7 @@ func TestOwnerbase(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		newowner := data[2].(*database.Group)
+		newowner := data[2].(*types.Group)
 		newowner.SetName("updatedgroup")
 		err := ob.Update(newowner)
 		if err != nil {
@@ -176,7 +176,7 @@ func TestOwnerbase(t *testing.T) {
 		if err != nil {
 			t.Fatal("failed to get changed", err)
 		}
-		if current.(database.GroupI).GetName() != newowner.GetName() {
+		if current.(types.GroupI).GetName() != newowner.GetName() {
 			t.Fatalf("update had no effect: %+#v", current)
 		}
 	})

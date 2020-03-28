@@ -1,12 +1,13 @@
 package mongo
 
 import (
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
 // Contentbase database connection with content lines operations
@@ -15,7 +16,7 @@ type Contentbase struct {
 }
 
 // Insert adds lines to the database
-func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
+func (cb *Contentbase) Insert(lines ...types.ContentLine) error {
 	var docs []interface{}
 	for _, line := range lines {
 		docs = append(docs, line)
@@ -28,7 +29,7 @@ func (cb *Contentbase) Insert(lines ...database.ContentLine) error {
 }
 
 // Len returns number of lines associated with StoreID
-func (cb *Contentbase) Len(id filehash.StoreID) (count int64, err error) {
+func (cb *Contentbase) Len(id types.StoreID) (count int64, err error) {
 	count, err = cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).CountDocuments(cb.ctx, bson.M{
 		"id": id,
 	})
@@ -39,7 +40,7 @@ func (cb *Contentbase) Len(id filehash.StoreID) (count int64, err error) {
 }
 
 // Slice returns slices associated with StoreID within bounds
-func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.ContentLine, error) {
 	fs, err := cb.Store(nil).Get(id)
 	if err != nil {
 		return nil, err
@@ -62,17 +63,17 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no slices in range")
+			return nil, errors.ErrNoResults.Extend("no slices in range")
 		}
 		return nil, srverror.New(err, 500, "Database Error C3", "Failed to find lines")
 	}
-	var out []database.ContentLine
+	var out []types.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no slices when decoded")
+			return nil, errors.ErrNoResults.Extend("no slices when decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error C3.1", "failed to decode lines")
 	}
@@ -80,7 +81,7 @@ func (cb *Contentbase) Slice(id filehash.StoreID, start int, end int) ([]databas
 }
 
 // RegexSearchFile returns lines associated with StoreID, within bounds, and matches regular expression
-func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start int, end int) ([]database.ContentLine, error) {
+func (cb *Contentbase) RegexSearchFile(regex string, id types.StoreID, start int, end int) ([]types.ContentLine, error) {
 	fs, err := cb.Store(nil).Get(id)
 	if err != nil {
 		return nil, err
@@ -102,17 +103,17 @@ func (cb *Contentbase) RegexSearchFile(regex string, id filehash.StoreID, start 
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no matches in range")
+			return nil, errors.ErrNoResults.Extend("no matches in range")
 		}
 		return nil, srverror.New(err, 500, "Database Error C4", "Failed to find lines")
 	}
-	var out []database.ContentLine
+	var out []types.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no matches decoded")
+			return nil, errors.ErrNoResults.Extend("no matches decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error C4.1", "failed to decode lines")
 	}

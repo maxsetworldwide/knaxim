@@ -3,16 +3,17 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
-var sid = filehash.StoreID{
+var sid = types.StoreID{
 	Hash:  42,
 	Stamp: 42,
 }
 
 func fillstores(db *Database) {
-	db.Stores[sid.String()] = &database.FileStore{
+	db.Stores[sid.String()] = &types.FileStore{
 		ID:          sid,
 		Content:     []byte("placeholder"),
 		ContentType: "test",
@@ -26,12 +27,12 @@ func TestStore(t *testing.T) {
 	defer sb.Close(nil)
 	t.Parallel()
 
-	var sid = filehash.StoreID{
+	var sid = types.StoreID{
 		Hash:  10,
 		Stamp: 10,
 	}
 
-	fs := &database.FileStore{
+	fs := &types.FileStore{
 		ID:          sid,
 		Content:     []byte("this is the content"),
 		ContentType: "testfile",
@@ -72,7 +73,7 @@ func TestStore(t *testing.T) {
 	}
 
 	t.Log("UpdateMeta")
-	fs.Perr = &database.ProcessingError{
+	fs.Perr = &errors.Processing{
 		Status:  420,
 		Message: "hello",
 	}

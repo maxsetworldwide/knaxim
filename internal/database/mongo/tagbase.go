@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,14 +16,14 @@ import (
 )
 
 type tagbson struct {
-	File  *filehash.FileID  `bson:"file,omitempty" json:"file,omitempty"`
-	Store *filehash.StoreID `bson:"store,omitempty" json:"store,omitempty"`
-	Word  string            `bson:"word" json:"word"`
-	Type  tag.Type          `bson:"type" json:"type"`
-	Data  *tag.Data         `bson:"data,omitempty" json:"data,omitempty"`
+	File  *types.FileID  `bson:"file,omitempty" json:"file,omitempty"`
+	Store *types.StoreID `bson:"store,omitempty" json:"store,omitempty"`
+	Word  string         `bson:"word" json:"word"`
+	Type  tag.Type       `bson:"type" json:"type"`
+	Data  *tag.Data      `bson:"data,omitempty" json:"data,omitempty"`
 }
 
-func filetag(f filehash.FileID, t tag.Tag) tagbson {
+func filetag(f types.FileID, t tag.Tag) tagbson {
 	r := tagbson{
 		File: &f,
 		Word: t.Word,
@@ -46,7 +46,7 @@ func (tb *tagbson) Tag() tag.Tag {
 	return t
 }
 
-func storetag(s filehash.StoreID, t tag.Tag) tagbson {
+func storetag(s types.StoreID, t tag.Tag) tagbson {
 	r := tagbson{
 		Store: &s,
 		Word:  t.Word,
@@ -64,7 +64,7 @@ type Tagbase struct {
 }
 
 // UpsertFile adds tags associated with file id
-func (tb *Tagbase) UpsertFile(id filehash.FileID, tags ...tag.Tag) error {
+func (tb *Tagbase) UpsertFile(id types.FileID, tags ...tag.Tag) error {
 	var data []tagbson
 	for _, t := range tags {
 		data = append(data, filetag(id, t))
@@ -117,7 +117,7 @@ func (tb *Tagbase) UpsertFile(id filehash.FileID, tags ...tag.Tag) error {
 }
 
 // UpsertStore adds tags associated with store id
-func (tb *Tagbase) UpsertStore(id filehash.StoreID, tags ...tag.Tag) error {
+func (tb *Tagbase) UpsertStore(id types.StoreID, tags ...tag.Tag) error {
 	var data []tagbson
 	for _, t := range tags {
 		data = append(data, storetag(id, t))
@@ -170,8 +170,8 @@ func (tb *Tagbase) UpsertStore(id filehash.StoreID, tags ...tag.Tag) error {
 }
 
 // FileTags returns all tags associated with file
-func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, error) {
-	stores := make([]filehash.StoreID, 0, len(files))
+func (tb *Tagbase) FileTags(files ...types.FileID) (map[string][]tag.Tag, error) {
+	stores := make([]types.StoreID, 0, len(files))
 	for _, f := range files {
 		stores = append(stores, f.StoreID)
 	}
@@ -203,7 +203,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no tags")
+			return nil, errors.ErrNoResults.Extend("no tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
 	}
@@ -213,7 +213,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 			if perr != nil {
 				return nil, perr
 			}
-			return nil, database.ErrNoResults.Extend("no tags decoded")
+			return nil, errors.ErrNoResults.Extend("no tags decoded")
 		}
 		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
 	}
@@ -221,7 +221,7 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 		if perr != nil {
 			return nil, perr
 		}
-		return nil, database.ErrNoResults.Extend("no tags found for files")
+		return nil, errors.ErrNoResults.Extend("no tags found for files")
 	}
 	out := make(map[string][]tag.Tag)
 	for _, match := range matches {
@@ -240,13 +240,13 @@ func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, err
 }
 
 type tagAggReturn struct {
-	Store filehash.StoreID `bson:"_id"`
-	Tags  []tagbson        `bson:"tags"`
+	Store types.StoreID `bson:"_id"`
+	Tags  []tagbson     `bson:"tags"`
 }
 
 // GetFiles returns file ids and store ids that have matching tags
 // if any files are given in context, then only tags of those files are searched
-func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]filehash.FileID, []filehash.StoreID, error) {
+func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...types.FileID) ([]types.FileID, []types.StoreID, error) {
 	//Build Aggregation Pipeline
 	aggmatch := make(bson.A, 0, len(filters))
 	for _, filter := range filters {
@@ -266,7 +266,7 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 	if len(context) == 0 {
 		initmatch["$or"] = aggmatch
 	} else {
-		storeids := make([]filehash.StoreID, 0, len(context))
+		storeids := make([]types.StoreID, 0, len(context))
 		for _, fid := range context {
 			storeids = append(storeids, fid.StoreID)
 		}
@@ -303,20 +303,20 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("no files match tags")
+			return nil, nil, errors.ErrNoResults.Extend("no files match tags")
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4.1", "unable to get aggregate tags")
 	}
 	var results []tagAggReturn
 	if err := cursor.All(tb.ctx, &results); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("no files decoded matching tags")
+			return nil, nil, errors.ErrNoResults.Extend("no files decoded matching tags")
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error T4", "unable to decode data")
 	}
 	//assemble fileids and storeids for return; check that fileids meet all filter conditions
-	var fids []filehash.FileID
-	var sids []filehash.StoreID
+	var fids []types.FileID
+	var sids []types.StoreID
 	for _, result := range results {
 		sids = append(sids, result.Store)
 	NEXTTAG:
@@ -374,7 +374,7 @@ func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]fi
 		}
 	}
 	if len(fids) == 0 && len(sids) == 0 {
-		return nil, nil, database.ErrNoResults.Extend("no full matching files")
+		return nil, nil, errors.ErrNoResults.Extend("no full matching files")
 	}
 	return fids, sids, nil
 }
@@ -396,14 +396,14 @@ func (tb *Tagbase) SearchData(typ tag.Type, data tag.Data) ([]tag.Tag, error) {
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no matching tags")
+			return nil, errors.ErrNoResults.Extend("no matching tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T5", "tag.searchData mongo error")
 	}
 	var returned []tagbson
 	if err := cursor.All(tb.ctx, &returned); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no decoded tags")
+			return nil, errors.ErrNoResults.Extend("no decoded tags")
 		}
 		return nil, srverror.New(err, 500, "Database Error T5.1", "tag.searchData decode error")
 	}

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 var contentString = "View version of a file for the memory database"
 
-var inputVS = &database.ViewStore{
-	ID: filehash.StoreID{
+var inputVS = &types.ViewStore{
+	ID: types.StoreID{
 		Hash:  98765,
 		Stamp: 4321,
 	},

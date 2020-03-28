@@ -5,8 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestContenbase(t *testing.T) {
@@ -25,24 +24,24 @@ func TestContenbase(t *testing.T) {
 		defer cancel()
 		cb = db.Content(methodtesting).(*Contentbase)
 	}
-	var fileids = []filehash.StoreID{
-		filehash.StoreID{
+	var fileids = []types.StoreID{
+		types.StoreID{
 			Hash:  7777,
 			Stamp: 32621,
 		},
-		filehash.StoreID{
+		types.StoreID{
 			Hash:  841602,
 			Stamp: 28720,
 		},
 	}
-	var fileStores = []*database.FileStore{
-		&database.FileStore{
+	var fileStores = []*types.FileStore{
+		&types.FileStore{
 			ID:          fileids[0],
 			Content:     []byte("asdfasdf"),
 			ContentType: "test",
 			FileSize:    420,
 		},
-		&database.FileStore{
+		&types.FileStore{
 			ID:          fileids[1],
 			Content:     []byte("fdafdsa"),
 			ContentType: "test",
@@ -62,28 +61,28 @@ func TestContenbase(t *testing.T) {
 			}
 		}
 	}
-	var data = []database.ContentLine{
-		database.ContentLine{
+	var data = []types.ContentLine{
+		types.ContentLine{
 			ID:       fileids[0],
 			Position: 0,
 			Content:  []string{"This is the first sentence."},
 		},
-		database.ContentLine{
+		types.ContentLine{
 			ID:       fileids[0],
 			Position: 1,
 			Content:  []string{"Another Sentence right here."},
 		},
-		database.ContentLine{
+		types.ContentLine{
 			ID:       fileids[0],
 			Position: 2,
 			Content:  []string{"More Sentences."},
 		},
-		database.ContentLine{
+		types.ContentLine{
 			ID:       fileids[1],
 			Position: 0,
 			Content:  []string{"This is another document."},
 		},
-		database.ContentLine{
+		types.ContentLine{
 			ID:       fileids[1],
 			Position: 1,
 			Content:  []string{"It only has 2 sentences"},

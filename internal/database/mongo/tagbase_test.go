@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
-func putStorePlaceholder(db *Database, sid filehash.StoreID) error {
-	placeholder, err := database.NewFileStore(strings.NewReader(sid.String()))
+func putStorePlaceholder(db *Database, sid types.StoreID) error {
+	placeholder, err := types.NewFileStore(strings.NewReader(sid.String()))
 	if err != nil {
 		return err
 	}
@@ -42,16 +41,16 @@ func TestTagbase(t *testing.T) {
 		}
 		tb = db.Tag(context.Background()).(*Tagbase)
 	}
-	fileids := []filehash.FileID{
-		filehash.FileID{
-			StoreID: filehash.StoreID{
+	fileids := []types.FileID{
+		types.FileID{
+			StoreID: types.StoreID{
 				Hash:  9843,
 				Stamp: 354,
 			},
 			Stamp: []byte("aa"),
 		},
-		filehash.FileID{
-			StoreID: filehash.StoreID{
+		types.FileID{
+			StoreID: types.StoreID{
 				Hash:  15468,
 				Stamp: 98,
 			},
@@ -76,7 +75,7 @@ func TestTagbase(t *testing.T) {
 			Word: "folder",
 			Type: tag.USER,
 			Data: tag.Data{
-				tag.USER: map[string]string{
+				tag.USER: map[string]interface{}{
 					"userid": "test",
 				},
 			},
@@ -85,7 +84,7 @@ func TestTagbase(t *testing.T) {
 			Word: "multiple",
 			Type: tag.USER,
 			Data: tag.Data{
-				tag.USER: map[string]string{
+				tag.USER: map[string]interface{}{
 					"userid": "test",
 				},
 			},
@@ -142,7 +141,7 @@ func TestTagbase(t *testing.T) {
 			Word: "multiple",
 			Type: tag.ALLTYPES,
 			Data: tag.Data{
-				tag.USER: map[string]string{
+				tag.USER: map[string]interface{}{
 					"userid": "test",
 				},
 			},
@@ -159,7 +158,7 @@ func TestTagbase(t *testing.T) {
 	})
 	t.Run("SearchData", func(t *testing.T) {
 		tags, err := tb.SearchData(tag.USER, tag.Data{
-			tag.USER: map[string]string{
+			tag.USER: map[string]interface{}{
 				"userid": "test",
 			},
 		})

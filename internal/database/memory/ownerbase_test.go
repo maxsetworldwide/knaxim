@@ -3,14 +3,13 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
-var test1 = database.NewUser("testuser1", "testuserpass1", "test1@test.test")
-var test2 = database.NewUser("testuser2", "testuserpass2", "test2@test.test")
-var group1 = database.NewGroup("group1", test1)
-var group2 = database.NewGroup("group2", group1)
+var test1 = types.NewUser("testuser1", "testuserpass1", "test1@test.test")
+var test2 = types.NewUser("testuser2", "testuserpass2", "test2@test.test")
+var group1 = types.NewGroup("group1", test1)
+var group2 = types.NewGroup("group2", group1)
 
 func fillowners(db *Database) {
 	//Users

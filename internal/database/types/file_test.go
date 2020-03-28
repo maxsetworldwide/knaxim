@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"testing"
+
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
 func TestFileStore(t *testing.T) {
@@ -29,7 +31,7 @@ func TestFileStore(t *testing.T) {
 		t.Fatalf("uncorrect read string: %s", s)
 	}
 
-	fs.Perr = &ProcessingError{
+	fs.Perr = &errors.Processing{
 		Status:  444,
 		Message: "all lasers",
 	}

@@ -16,7 +16,7 @@ func TestTag(t *testing.T) {
 		Word: "test",
 		Type: tag.USER,
 		Data: tag.Data{
-			tag.USER: map[string]string{
+			tag.USER: map[string]interface{}{
 				"hello": "world",
 			},
 		},
@@ -32,7 +32,7 @@ func TestTag(t *testing.T) {
 		Word: "another",
 		Type: tag.CONTENT,
 		Data: tag.Data{
-			tag.CONTENT: map[string]string{
+			tag.CONTENT: map[string]interface{}{
 				"data": "base",
 			},
 		},
@@ -69,7 +69,7 @@ func TestTag(t *testing.T) {
 
 	t.Log("Search Data")
 	matches, err := tb.SearchData(tag.USER, tag.Data{
-		tag.USER: map[string]string{
+		tag.USER: map[string]interface{}{
 			"hello": "world",
 		},
 	})

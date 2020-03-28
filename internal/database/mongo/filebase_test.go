@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
@@ -26,44 +26,44 @@ func TestFilebase(t *testing.T) {
 		defer cancel()
 		fb = db.File(methodtesting).(*Filebase)
 	}
-	var fileids = []filehash.FileID{
-		filehash.FileID{
-			StoreID: filehash.StoreID{
+	var fileids = []types.FileID{
+		types.FileID{
+			StoreID: types.StoreID{
 				Hash:  901,
 				Stamp: 613,
 			},
 			Stamp: []byte{34},
 		},
-		filehash.FileID{
-			StoreID: filehash.StoreID{
+		types.FileID{
+			StoreID: types.StoreID{
 				Hash:  604,
 				Stamp: 1834,
 			},
 			Stamp: []byte{16},
 		},
 	}
-	var ownerids = []database.OwnerID{
-		database.OwnerID{
+	var ownerids = []types.OwnerID{
+		types.OwnerID{
 			Type:        'u',
 			UserDefined: [3]byte{'d', 'e', 'v'},
 			Stamp:       []byte("try"),
 		},
-		database.OwnerID{
+		types.OwnerID{
 			Type:        'u',
 			UserDefined: [3]byte{'d', 'e', 'v'},
 			Stamp:       []byte("try2"),
 		},
-		database.OwnerID{
+		types.OwnerID{
 			Type:        'g',
 			UserDefined: [3]byte{'t', 'g', 'r'},
 			Stamp:       []byte("test"),
 		},
 	}
-	var owners = []database.Owner{
-		&database.User{
+	var owners = []types.Owner{
+		&types.User{
 			ID:   ownerids[0],
 			Name: "devon",
-			Pass: database.UserCredential{
+			Pass: types.UserCredential{
 				Salt: []byte("thisisthesalt"),
 				Hash: []byte("thisisthehash"),
 			},
@@ -72,10 +72,10 @@ func TestFilebase(t *testing.T) {
 			CookieInactivity: time.Now().Add(time.Hour * 2),
 			CookieTimeout:    time.Now().Add(time.Hour * 24),
 		},
-		&database.User{
+		&types.User{
 			ID:   ownerids[1],
 			Name: "developer",
-			Pass: database.UserCredential{
+			Pass: types.UserCredential{
 				Salt: []byte("thisisthesalt2"),
 				Hash: []byte("thisisthehash2"),
 			},
@@ -84,26 +84,26 @@ func TestFilebase(t *testing.T) {
 			CookieInactivity: time.Now().Add(time.Hour * 2),
 			CookieTimeout:    time.Now().Add(time.Hour * 24),
 		},
-		&database.Group{
+		&types.Group{
 			ID:   ownerids[2],
 			Name: "testGroup",
 		},
 	}
-	owners[2].(*database.Group).Own = owners[0]
-	owners[2].(*database.Group).AddMember(owners[1])
-	var files = []database.FileI{
-		&database.File{
-			Permission: database.Permission{
+	owners[2].(*types.Group).Own = owners[0]
+	owners[2].(*types.Group).AddMember(owners[1])
+	var files = []types.FileI{
+		&types.File{
+			Permission: types.Permission{
 				Own: owners[0],
 			},
 			ID:   fileids[0],
 			Name: "First.txt",
 		},
-		&database.File{
-			Permission: database.Permission{
+		&types.File{
+			Permission: types.Permission{
 				Own: owners[1],
-				Perm: map[string][]database.Owner{
-					"view": []database.Owner{owners[2]},
+				Perm: map[string][]types.Owner{
+					"view": []types.Owner{owners[2]},
 				},
 			},
 			ID:   fileids[1],
@@ -195,7 +195,7 @@ func TestFilebase(t *testing.T) {
 		}
 	})
 	t.Run("MatchStore", func(t *testing.T) {
-		matched, err := fb.MatchStore(ownerids[0], []filehash.StoreID{fileids[0].StoreID}, "view")
+		matched, err := fb.MatchStore(ownerids[0], []types.StoreID{fileids[0].StoreID}, "view")
 		if err != nil {
 			t.Fatal("failed to match store", err)
 		}
@@ -209,7 +209,7 @@ func TestFilebase(t *testing.T) {
 	t.Run("Update", func(t *testing.T) {
 		newfile := files[0]
 		newfile.SetName("update.txt")
-		newfile.SetPerm(database.Public, "view", true)
+		newfile.SetPerm(types.Public, "view", true)
 		err := fb.Update(newfile)
 		if err != nil {
 			t.Fatal("failed to update", err)
@@ -228,7 +228,7 @@ func TestFilebase(t *testing.T) {
 			t.Fatal("failed to remove", err)
 		}
 		_, err = fb.Get(files[0].GetID())
-		if se, ok := err.(srverror.Error); !ok || se.Status() != database.ErrNotFound.Status() {
+		if se, ok := err.(srverror.Error); !ok || se.Status() != errors.ErrNotFound.Status() {
 			t.Fatal("file not removed", err)
 		}
 	})

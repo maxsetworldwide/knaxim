@@ -7,7 +7,8 @@ import (
 	"math"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,13 +17,13 @@ import (
 )
 
 type trackOwners struct {
-	gotten     map[string]database.Owner
-	usernames  map[string]database.UserI
-	groupnames map[string]database.GroupI
-	groupperms map[string][]database.GroupI
+	gotten     map[string]types.Owner
+	usernames  map[string]types.UserI
+	groupnames map[string]types.GroupI
+	groupperms map[string][]types.GroupI
 }
 
-func appendUnique(list []database.GroupI, elements ...database.GroupI) []database.GroupI {
+func appendUnique(list []types.GroupI, elements ...types.GroupI) []types.GroupI {
 	for _, ele := range elements {
 		found := false
 		for _, l := range list {
@@ -40,18 +41,18 @@ func appendUnique(list []database.GroupI, elements ...database.GroupI) []databas
 
 func newTrackOwners() trackOwners {
 	var out trackOwners
-	out.gotten = make(map[string]database.Owner)
-	out.usernames = make(map[string]database.UserI)
-	out.groupnames = make(map[string]database.GroupI)
-	out.groupperms = make(map[string][]database.GroupI)
+	out.gotten = make(map[string]types.Owner)
+	out.usernames = make(map[string]types.UserI)
+	out.groupnames = make(map[string]types.GroupI)
+	out.groupperms = make(map[string][]types.GroupI)
 	return out
 }
 
-func (to trackOwners) put(o database.Owner) {
+func (to trackOwners) put(o types.Owner) {
 	switch v := o.(type) {
-	case database.UserI:
+	case types.UserI:
 		to.usernames[v.GetName()] = v
-	case database.GroupI:
+	case types.GroupI:
 		to.groupnames[v.GetName()] = v
 		if o := v.GetOwner(); o != nil {
 			oid := o.GetID().String()
@@ -67,19 +68,19 @@ func (to trackOwners) put(o database.Owner) {
 	to.gotten[o.GetID().String()] = o
 }
 
-func (to trackOwners) get(id string) database.Owner {
+func (to trackOwners) get(id string) types.Owner {
 	return to.gotten[id]
 }
 
-func (to trackOwners) getUser(name string) database.UserI {
+func (to trackOwners) getUser(name string) types.UserI {
 	return to.usernames[name]
 }
 
-func (to trackOwners) getGroup(name string) database.GroupI {
+func (to trackOwners) getGroup(name string) types.GroupI {
 	return to.groupnames[name]
 }
 
-func (to trackOwners) getGroupByPermission(oname string) []database.GroupI {
+func (to trackOwners) getGroupByPermission(oname string) []types.GroupI {
 	return to.groupperms[oname]
 }
 
@@ -88,22 +89,22 @@ type Ownerbase struct {
 	Database
 }
 
-func mapIDtoCollection(id database.OwnerID, db Database) string {
+func mapIDtoCollection(id types.OwnerID, db Database) string {
 	switch id.Type {
 	case 'u':
 		return db.CollNames["user"]
 	case 'g':
 		return db.CollNames["group"]
 	default:
-		panic(database.ErrIDUnrecognized)
+		panic(errors.ErrIDUnrecognized)
 	}
 }
 
 // Reserve an owner id, will mutate if owner id not available, returns reserved owner id
-func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (oid database.OwnerID, err error) {
+func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (oid types.OwnerID, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			oid = database.OwnerID{}
+			oid = types.OwnerID{}
 			switch v := r.(type) {
 			case srverror.Error:
 				err = v
@@ -114,7 +115,7 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (oid database.Own
 			}
 		}
 	}()
-	var out *database.OwnerID
+	var out *types.OwnerID
 	cname := mapIDtoCollection(id, ob.Database)
 	result := ob.client.Database(ob.DBName).Collection(cname).FindOne(
 		ob.ctx,
@@ -124,10 +125,10 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (oid database.Own
 	)
 	if err := result.Err(); err != nil {
 		if err != mongo.ErrNoDocuments {
-			return database.OwnerID{}, srverror.New(err, 500, "Database Error U1.2", "unable to confirm name not taken")
+			return types.OwnerID{}, srverror.New(err, 500, "Database Error U1.2", "unable to confirm name not taken")
 		}
 	} else {
-		return database.OwnerID{}, database.ErrNameTaken
+		return types.OwnerID{}, errors.ErrNameTaken
 	}
 	for out == nil {
 		timeout := time.Now().Add(time.Hour * 24)
@@ -170,7 +171,7 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (oid database.Own
 }
 
 // Insert adds owner to the database, owner id must first be reserved, see Reserve
-func (ob *Ownerbase) Insert(u database.Owner) (err error) {
+func (ob *Ownerbase) Insert(u types.Owner) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch v := r.(type) {
@@ -199,27 +200,27 @@ func (ob *Ownerbase) Insert(u database.Owner) (err error) {
 		return srverror.New(e, 500, "Database Error U2", "unable to insert")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrIDNotReserved
+		return errors.ErrIDNotReserved
 	}
 	return nil
 }
 
 // Get returns owner based on id
-func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
+func (ob *Ownerbase) Get(id types.OwnerID) (types.Owner, error) {
 	if result := ob.get(id.String()); result != nil {
 		return result, nil
 	}
 	switch id.Type {
 	case 'p':
-		return database.Public, nil
+		return types.Public, nil
 	case 'u':
 		result := ob.client.Database(ob.DBName).Collection(ob.CollNames["user"]).FindOne(ob.ctx, bson.M{
 			"id": id,
 		})
-		u := new(database.User)
+		u := new(types.User)
 		if err := result.Decode(u); err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, database.ErrNotFound.Extend("unable to find user", id.String())
+				return nil, errors.ErrNotFound.Extend("unable to find user", id.String())
 			}
 			return nil, srverror.New(err, 500, "Database Error U3", "unable to get user")
 		}
@@ -229,10 +230,10 @@ func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 		result := ob.client.Database(ob.DBName).Collection(ob.CollNames["group"]).FindOne(ob.ctx, bson.M{
 			"id": id,
 		})
-		g := new(database.Group)
+		g := new(types.Group)
 		if err := result.Decode(g); err != nil {
 			if err == mongo.ErrNoDocuments {
-				return nil, database.ErrNotFound.Extend("unable to find group", id.String())
+				return nil, errors.ErrNotFound.Extend("unable to find group", id.String())
 			}
 			return nil, srverror.New(err, 500, "DatabaseError U3.1", "unable to get group")
 		}
@@ -244,22 +245,22 @@ func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
 		}
 		return g, nil
 	default:
-		return nil, database.ErrIDUnrecognized
+		return nil, errors.ErrIDUnrecognized
 	}
 }
 
 // FindUserName returns user based on username
-func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
+func (ob *Ownerbase) FindUserName(name string) (types.UserI, error) {
 	if result := ob.getUser(name); result != nil {
 		return result, nil
 	}
 	result := ob.client.Database(ob.DBName).Collection(ob.CollNames["user"]).FindOne(ob.ctx, bson.M{
 		"name": name,
 	})
-	user := new(database.User)
+	user := new(types.User)
 	if err := result.Decode(user); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound.Extend("User name", name)
+			return nil, errors.ErrNotFound.Extend("User name", name)
 		}
 		return nil, srverror.New(err, 500, "Database Error O1", "error finding user name")
 	}
@@ -268,17 +269,17 @@ func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
 }
 
 // FindGroupName finds group based on name
-func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
+func (ob *Ownerbase) FindGroupName(name string) (types.GroupI, error) {
 	if result := ob.getGroup(name); result != nil {
 		return result, nil
 	}
 	result := ob.client.Database(ob.DBName).Collection(ob.CollNames["group"]).FindOne(ob.ctx, bson.M{
 		"name": name,
 	})
-	group := new(database.Group)
+	group := new(types.Group)
 	if err := result.Decode(group); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound.Extend("Group name", name)
+			return nil, errors.ErrNotFound.Extend("Group name", name)
 		}
 		return nil, srverror.New(err, 500, "Database Error O2", "error finding group name")
 	}
@@ -292,9 +293,9 @@ func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
 }
 
 // GetGroups returns owned groups and groups an owner is a member of. based on the id of the owner
-func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, member []database.GroupI, err error) {
+func (ob *Ownerbase) GetGroups(id types.OwnerID) (owned []types.GroupI, member []types.GroupI, err error) {
 	grouplist := ob.getGroupByPermission(id.String())
-	gids := make([]database.OwnerID, 0, len(grouplist))
+	gids := make([]types.OwnerID, 0, len(grouplist))
 	for _, g := range grouplist {
 		gids = append(gids, g.GetID())
 	}
@@ -313,14 +314,14 @@ func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, me
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("No associated groups", id.String())
+			return nil, nil, errors.ErrNoResults.Extend("No associated groups", id.String())
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O3", "unable to find groups")
 	}
-	var groups []*database.Group
+	var groups []*types.Group
 	if err = cursor.All(ob.ctx, &groups); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("No associated groups decoded", id.String())
+			return nil, nil, errors.ErrNoResults.Extend("No associated groups decoded", id.String())
 		}
 		return nil, nil, srverror.New(err, 500, "Database Error O4", "unable to decode groups")
 	}
@@ -345,7 +346,7 @@ func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, me
 }
 
 // Update owner
-func (ob *Ownerbase) Update(u database.Owner) (err error) {
+func (ob *Ownerbase) Update(u types.Owner) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch v := r.(type) {
@@ -372,14 +373,14 @@ func (ob *Ownerbase) Update(u database.Owner) (err error) {
 		return srverror.New(err, 500, "Database Error O5", "error updating owner")
 	}
 	if result.MatchedCount == 0 {
-		return database.ErrNotFound.Extend("no owner to update", u.GetID().String())
+		return errors.ErrNotFound.Extend("no owner to update", u.GetID().String())
 	}
 	ob.gotten[u.GetID().String()] = nil
 	return nil
 }
 
 // GetSpace returns amount of used space an owner has
-func (ob *Ownerbase) GetSpace(id database.OwnerID) (int64, error) {
+func (ob *Ownerbase) GetSpace(id types.OwnerID) (int64, error) {
 	cursor, err := ob.client.Database(ob.DBName).Collection(ob.CollNames["file"]).Aggregate(
 		ob.ctx,
 		bson.A{
@@ -420,15 +421,15 @@ func (ob *Ownerbase) GetSpace(id database.OwnerID) (int64, error) {
 }
 
 // GetTotalSpace returns the amount of total space available to an owner
-func (ob *Ownerbase) GetTotalSpace(id database.OwnerID) (int64, error) {
+func (ob *Ownerbase) GetTotalSpace(id types.OwnerID) (int64, error) {
 	own, err := ob.Get(id)
 	if err != nil {
 		return 0, err
 	}
 	switch v := own.(type) {
-	case database.GroupI:
+	case types.GroupI:
 		return 0, nil
-	case database.UserI:
+	case types.UserI:
 		customspace := v.GetTotalSpace()
 		if customspace == 0 {
 			if v.GetRole("guest") {
@@ -441,12 +442,12 @@ func (ob *Ownerbase) GetTotalSpace(id database.OwnerID) (int64, error) {
 		}
 		return customspace, nil
 	default:
-		return 0, database.ErrNotFound.Extend("unrecognized user")
+		return 0, errors.ErrNotFound.Extend("unrecognized user")
 	}
 }
 
 // GetResetKey generates a password reset key
-func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
+func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
 	if err != nil {
@@ -470,34 +471,34 @@ func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
 }
 
 // CheckResetKey looks up a reset key and which owner is associated with that key
-func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err error) {
+func (ob *Ownerbase) CheckResetKey(keystr string) (id types.OwnerID, err error) {
 	key, err := base64.RawURLEncoding.DecodeString(keystr)
 	if err != nil {
-		return database.OwnerID{}, srverror.New(err, 400, "Bad Reset", "malformed reset key string")
+		return types.OwnerID{}, srverror.New(err, 400, "Bad Reset", "malformed reset key string")
 	}
 	result := ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).FindOne(ob.ctx, bson.M{
 		"key": key,
 	})
 	if result.Err() != nil {
-		return database.OwnerID{}, srverror.New(result.Err(), 404, "Not Found")
+		return types.OwnerID{}, srverror.New(result.Err(), 404, "Not Found")
 	}
 	var resetDoc struct {
-		User   database.OwnerID `bson:"user"`
-		Key    []byte           `bson:"key"`
-		Expire time.Time        `bson:"expire"`
+		User   types.OwnerID `bson:"user"`
+		Key    []byte        `bson:"key"`
+		Expire time.Time     `bson:"expire"`
 	}
 	err = result.Decode(&resetDoc)
 	if err != nil {
-		return database.OwnerID{}, database.ErrNotFound.Extend("no key", err.Error())
+		return types.OwnerID{}, errors.ErrNotFound.Extend("no key", err.Error())
 	}
 	if resetDoc.Expire.Before(time.Now()) {
-		return database.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")
+		return types.OwnerID{}, srverror.Basic(404, "Not Found", "reset key expired")
 	}
 	return resetDoc.User, nil
 }
 
 // DeleteResetKey deletes resetkey pairing to owner id
-func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
+func (ob *Ownerbase) DeleteResetKey(id types.OwnerID) error {
 	_, err := ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).DeleteOne(ob.ctx, bson.M{
 		"user": id,
 	})

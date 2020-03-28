@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,8 +21,8 @@ type Storebase struct {
 }
 
 // Reserve a store id, will mutate if store id not available, returns reserved store id
-func (db *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
-	var out *filehash.StoreID
+func (db *Storebase) Reserve(id types.StoreID) (types.StoreID, error) {
+	var out *types.StoreID
 	for out == nil {
 		timeout := time.Now().Add(time.Hour * 24)
 		//check if id reservation has timed out
@@ -66,7 +66,7 @@ func (db *Storebase) Reserve(id filehash.StoreID) (filehash.StoreID, error) {
 }
 
 // Insert file store, must reserve store id first, see Reserve
-func (db *Storebase) Insert(fs *database.FileStore) error {
+func (db *Storebase) Insert(fs *types.FileStore) error {
 	{
 		result, e := db.client.Database(db.DBName).Collection(db.CollNames["store"]).UpdateOne(
 			db.ctx,
@@ -80,7 +80,7 @@ func (db *Storebase) Insert(fs *database.FileStore) error {
 			return srverror.New(e, 500, "Database Error S2", "unable to insert store")
 		}
 		if result.ModifiedCount == 0 {
-			return database.ErrIDNotReserved
+			return errors.ErrIDNotReserved
 		}
 	}
 	{
@@ -98,15 +98,15 @@ func (db *Storebase) Insert(fs *database.FileStore) error {
 }
 
 // Get file store
-func (db *Storebase) Get(id filehash.StoreID) (out *database.FileStore, err error) {
+func (db *Storebase) Get(id types.StoreID) (out *types.FileStore, err error) {
 	result := db.client.Database(db.DBName).Collection(db.CollNames["store"]).FindOne(
 		db.ctx,
 		bson.M{"id": id},
 	)
-	var store = new(database.FileStore)
+	var store = new(types.FileStore)
 	if err := result.Decode(store); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound.Extend("FileStore", id.String())
+			return nil, errors.ErrNotFound.Extend("FileStore", id.String())
 		}
 		return nil, srverror.New(err, 500, "Database Error S4", "failed to find file store")
 	}
@@ -138,7 +138,7 @@ func (db *Storebase) Get(id filehash.StoreID) (out *database.FileStore, err erro
 }
 
 // MatchHash returns all file stores with matching hashes
-func (db *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) {
+func (db *Storebase) MatchHash(h uint32) (out []*types.FileStore, err error) {
 	ctx, cancel := context.WithCancel(db.ctx)
 	defer cancel()
 	var wg sync.WaitGroup
@@ -186,7 +186,7 @@ func (db *Storebase) MatchHash(h uint32) (out []*database.FileStore, err error) 
 }
 
 // UpdateMeta of file store
-func (db *Storebase) UpdateMeta(fs *database.FileStore) error {
+func (db *Storebase) UpdateMeta(fs *types.FileStore) error {
 	result, err := db.client.Database(db.DBName).Collection(db.CollNames["store"]).ReplaceOne(db.ctx, bson.M{
 		"id": fs.ID,
 	}, fs)
@@ -194,7 +194,7 @@ func (db *Storebase) UpdateMeta(fs *database.FileStore) error {
 		return srverror.New(err, 500, "Database Error S12", "error updating file store metadata")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound.Extend("no FileStore to update", fs.ID.String())
+		return errors.ErrNotFound.Extend("no FileStore to update", fs.ID.String())
 	}
 	return nil
 }
