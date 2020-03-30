@@ -47,7 +47,7 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			return err
 		}
 		var wg sync.WaitGroup
-		wg.Add(9)
+		wg.Add(10)
 		indexctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		cherr := make(chan error, 8)
@@ -179,18 +179,37 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 		go func() {
 			//tag
 			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["tag"]).Indexes()
+			I := testclient.Database(d.DBName).Collection(d.CollNames["filetags"]).Indexes()
 			var err error
 			if _, err = I.CreateMany(
 				indexctx,
 				[]mongo.IndexModel{
 					mongo.IndexModel{
-						Keys:    bson.D{bson.E{Key: "file", Value: 1}, bson.E{Key: "word", Value: 1}},
-						Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"file": bson.M{"$exists": true}}),
+						Keys:    bson.D{bson.E{Key: "file", Value: 1}, bson.E{Key: "owner", Value: 1}, bson.E{Key: "word", Value: 1}},
+						Options: options.Index().SetUnique(true),
 					},
 					mongo.IndexModel{
+						Keys: bson.M{"word": 1},
+					},
+				}); err != nil {
+				select {
+				case cherr <- err:
+				case <-indexctx.Done():
+				}
+				return
+			}
+		}()
+		go func() {
+			//tag
+			defer wg.Done()
+			I := testclient.Database(d.DBName).Collection(d.CollNames["storetags"]).Indexes()
+			var err error
+			if _, err = I.CreateMany(
+				indexctx,
+				[]mongo.IndexModel{
+					mongo.IndexModel{
 						Keys:    bson.D{bson.E{Key: "store", Value: 1}, bson.E{Key: "word", Value: 1}},
-						Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"store": bson.M{"$exists": true}}),
+						Options: options.Index().SetUnique(true),
 					},
 					mongo.IndexModel{
 						Keys: bson.M{"word": 1},
@@ -241,11 +260,15 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			if _, err = I.CreateMany(indexctx, []mongo.IndexModel{
 				mongo.IndexModel{
 					Keys:    bson.M{"user": 1},
-					Options: options.Index().SetUnique(true).SetExpireAfterSeconds(60 * 60 * 24),
+					Options: options.Index().SetUnique(true),
 				},
 				mongo.IndexModel{
 					Keys:    bson.M{"key": 1},
 					Options: options.Index().SetUnique(true),
+				},
+				mongo.IndexModel{
+					Keys:    bson.M{"expire": 1},
+					Options: options.Index().SetExpireAfterSeconds(0),
 				},
 			}); err != nil {
 				select {
@@ -288,8 +311,11 @@ func initcoll(c map[string]string) map[string]string {
 	if _, ok := c["chunk"]; !ok {
 		c["chunk"] = "chunk"
 	}
-	if _, ok := c["tag"]; !ok {
-		c["tag"] = "tag"
+	if _, ok := c["filetags"]; !ok {
+		c["filetags"] = "filetags"
+	}
+	if _, ok := c["storetags"]; !ok {
+		c["storetags"] = "storetags"
 	}
 	if _, ok := c["acronym"]; !ok {
 		c["acronym"] = "acronym"

@@ -21,6 +21,11 @@ const (
 )
 
 const (
+	// Search indicates that there are additional filter parameters within the Data
+	SEARCH Type = (1 << 16) << iota
+)
+
+const (
 	// USER indicates a custom tag created by a user, ie a folder
 	USER Type = (1 << 24) << iota
 	// DATE is to record a mapping of a date to a file made by a user.
@@ -105,6 +110,9 @@ type Tag struct {
 
 // Update adds or replaces data values in the passed tag
 func (t Tag) Update(oth Tag) Tag {
+	if t.Word == "" {
+		t.Word = oth.Word
+	}
 	newt := Tag{
 		Word: t.Word,
 		Type: t.Type | oth.Type,
@@ -180,10 +188,15 @@ func (d *Data) UnmarshalBSON(b []byte) error {
 
 func (d Data) FilterType(t Type) Data {
 	out := make(Data)
+	var dataPresent bool
 	for k, v := range d {
 		if k&t > 0 && k&^t == 0 {
 			out[k] = v
+			dataPresent = true
 		}
+	}
+	if !dataPresent {
+		return nil
 	}
 	return out
 }
@@ -191,7 +204,7 @@ func (d Data) FilterType(t Type) Data {
 // StoreTag is a Tag tied to a FileStore
 type StoreTag struct {
 	Tag   `bson:",inline"`
-	Store types.StoreID `bson:"sid"`
+	Store types.StoreID `bson:"store"`
 }
 
 // FileTag is a Tag tied to a File
