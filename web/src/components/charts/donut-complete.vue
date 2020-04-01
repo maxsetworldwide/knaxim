@@ -2,14 +2,14 @@
   <b-container class="m-0 p-0">
     <b-row no-gutters align-v="center">
       <b-col cols="6">
-        <chart-legend :chart="chart" @click="handleClick" />
+        <chart-legend :chart="chart" @click="$emit('click', $event)" />
       </b-col>
       <b-col cols="6">
         <donut
           class="chart"
           :dataVals="dataVals"
           @rendered="chart = $event"
-          @click="handleClick"
+          @click="$emit('click', $event)"
         />
       </b-col>
     </b-row>
