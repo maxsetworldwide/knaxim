@@ -36,11 +36,6 @@ export default {
     return {
       chart: {}
     }
-  },
-  methods: {
-    handleClick (payload) {
-      console.log({ payload })
-    }
   }
 }
 </script>
