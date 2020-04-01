@@ -78,8 +78,8 @@ type Tagbase interface {
 	Remove(...tag.FileTag) error
 	Get(types.FileID, types.OwnerID) ([]tag.FileTag, error)
 	GetAll(tag.Type, types.OwnerID) ([]tag.FileTag, error)
-	SearchOwned(types.OwnerID, ...tag.Tag) ([]types.FileID, error)
-	SearchAccess(types.OwnerID, string, ...tag.Tag) ([]types.FileID, error)
+	SearchOwned(types.OwnerID, ...tag.FileTag) ([]types.FileID, error)
+	SearchAccess(types.OwnerID, string, ...tag.FileTag) ([]types.FileID, error)
 	SearchFiles([]types.FileID, ...tag.FileTag) ([]types.FileID, error)
 }
 

@@ -185,7 +185,11 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 				indexctx,
 				[]mongo.IndexModel{
 					mongo.IndexModel{
-						Keys:    bson.D{bson.E{Key: "file", Value: 1}, bson.E{Key: "owner", Value: 1}, bson.E{Key: "word", Value: 1}},
+						Keys: bson.D{
+							bson.E{Key: "owner", Value: 1},
+							bson.E{Key: "word", Value: 1},
+							bson.E{Key: "file", Value: 1},
+						},
 						Options: options.Index().SetUnique(true),
 					},
 					mongo.IndexModel{
