@@ -40,10 +40,4 @@ export default {
 }
 </script>
 
-<style scoped lang="scss">
-.legend {
-}
-
-.chart {
-}
-</style>
+<style scoped lang="scss"></style>
