@@ -95,7 +95,7 @@ export default {
     this.$emit('rendered', this.$data._chart)
   },
   methods: {
-    handleClick (point, event) {
+    handleClick (_, event) {
       if (event.length) {
         const idx = event[0]._index
         this.$emit('click', this.labels[idx])
