@@ -45,9 +45,9 @@ export default {
       return this.dataVals.map((val) => val.data || 0)
     },
     defaultColors () {
+      const pallette = this.defaultColorPallette
       return this.dataVals.map((_, idx) => {
-        const pallette = this.defaultColorPallette
-        return this.defaultColorPallette[idx % pallette.length]
+        return pallette[idx % pallette.length]
       })
     }
   },
