@@ -1,3 +1,26 @@
+<!--
+ -  donut.vue: a donut chart based on arbitrary data
+ -
+ -  props:
+ -    borderColor:
+ -      string representing the color to border and separate each slice.
+ -      Defaults to 'rgba(0, 0, 0, 0)'
+ -    dataVals:
+ -      array of objects representing the data to pass to the chart
+ -    dataVals[i].label:
+ -      string representing label or name of this data point
+ -    dataVals[i].data:
+ -      number representing the magnitude of this data point. These do not have
+ -      to be percentages, as chartjs automatically sums all data and converts
+ -      them into percentages.
+ -
+ -  events:
+ -    rendered:
+ -      emitted upon rendering the chart, passing the chart data from the render
+ -    click:
+ -      emitted upon clicking a slice of the chart, passing the label of the
+ -      slice that was clicked
+ -->
 <script>
 import { Doughnut } from 'vue-chartjs'
 

@@ -1,3 +1,15 @@
+<!--
+ - donut-complete: a wrapper for donut.vue and chart-legend.vue
+ -
+ - props:
+ -  dataVals:
+ -    data to pass directly to the donut. See donut.vue.
+ -
+ - events:
+ -  click:
+ -    emitted from both the donut and legend components. See donut.vue and
+ -    chart-legend.vue.
+ -->
 <template>
   <b-container class="m-0 p-0">
     <b-row no-gutters align-v="center">

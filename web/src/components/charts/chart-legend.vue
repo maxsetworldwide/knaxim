@@ -1,3 +1,14 @@
+<!--
+ - chart-legend: utilize a chart object from chart.js to create a custom legend
+ - with click events
+ -
+ - props:
+ -  chart:
+ -    chart object from chart.js. Vue-chartjs exposes this as vm.$data._chart
+ - events:
+ -  click:
+ -    emitted upon clicking a legend item, passing the label that was clicked.
+ -->
 <template>
   <ul>
     <li
