@@ -238,7 +238,13 @@ func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
 	return <-errch
 }
 
+// Get returns all filetags for a particular file id and owner
 func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, error) {
+	return tb.GetType(fid, oid, tag.ALLTYPES)
+}
+
+// GetType returns FileTags of a particular file, for a particular owner, with a match to a particular type
+func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([]tag.FileTag, error) {
 	type result struct {
 		tags []tag.FileTag
 		err  error
@@ -260,10 +266,20 @@ func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, erro
 		}
 	}()
 	go func() { // Get Store Tags
+		if typ&tag.ALLSTORE == 0 {
+			select {
+			case storetags <- nil:
+			case <-getctx.Done():
+			}
+			return
+		}
 		cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["storetags"]).Find(
 			getctx,
 			bson.M{
 				"store": fid.StoreID,
+				"type": bson.M{
+					"$bitsAnySet": typ,
+				},
 			},
 		)
 		if err != nil {
@@ -302,11 +318,21 @@ func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, erro
 		}
 	}()
 	go func() { // Get File Tags
+		if typ&tag.ALLFILE == 0 {
+			select {
+			case filetags <- nil:
+			case <-getctx.Done():
+			}
+			return
+		}
 		cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"]).Find(
 			getctx,
 			bson.M{
 				"file":  fid,
 				"owner": oid,
+				"type": bson.M{
+					"$bitsAnySet": typ,
+				},
 			},
 		)
 		if err != nil {
@@ -465,7 +491,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 		err error
 	}
 	type storeagg struct {
-		Store types.StoreID `bson:"store"`
+		Store types.StoreID `bson:"_id"`
 		Tags  []tag.Tag     `bson:"tags"`
 	}
 	type ftag struct {
@@ -473,7 +499,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 		Tag   tag.Tag       `bson:",inline"`
 	}
 	type fileagg struct {
-		File types.FileID `bson:"file"`
+		File types.FileID `bson:"_id"`
 		Tags []ftag       `bson:"tags"`
 	}
 	out := make(chan result)
@@ -520,13 +546,16 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 			for _, id := range fids {
 				sids = append(sids, id.StoreID)
 			}
+			wordConditions := []bson.M{
+				bson.M{"word": bson.M{"$in": words}},
+			}
+			if len(regexs) > 0 {
+				wordConditions = append(wordConditions, bson.M{"$or": regexs})
+			}
 			pipeline := []bson.M{
 				bson.M{
 					"$match": bson.M{
-						"$or": []bson.M{
-							bson.M{"word": bson.M{"$in": words}},
-							bson.M{"$or": regexs},
-						},
+						"$or":   wordConditions,
 						"store": bson.M{"$in": sids},
 					},
 				},
@@ -640,17 +669,18 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 					words = append(words, t.Word)
 				}
 			}
-			fids := make([]types.FileID, 0, len(fids))
-			for _, id := range fids {
-				fids = append(fids, id)
+			wordConditions := []bson.M{
+				bson.M{"word": bson.M{"$in": words}},
+			}
+			if len(regexs) > 0 {
+				wordConditions = append(wordConditions, bson.M{
+					"$or": regexs,
+				})
 			}
 			pipeline := []bson.M{
 				bson.M{
 					"$match": bson.M{
-						"$or": []bson.M{
-							bson.M{"word": bson.M{"$in": words}},
-							bson.M{"$or": regexs},
-						},
+						"$or":  wordConditions,
 						"file": bson.M{"$in": fids},
 					},
 				},

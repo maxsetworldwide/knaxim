@@ -77,6 +77,7 @@ type Tagbase interface {
 	Upsert(...tag.FileTag) error
 	Remove(...tag.FileTag) error
 	Get(types.FileID, types.OwnerID) ([]tag.FileTag, error)
+	GetType(types.FileID, types.OwnerID, tag.Type) ([]tag.FileTag, error)
 	GetAll(tag.Type, types.OwnerID) ([]tag.FileTag, error)
 	SearchOwned(types.OwnerID, ...tag.FileTag) ([]types.FileID, error)
 	SearchAccess(types.OwnerID, string, ...tag.FileTag) ([]types.FileID, error)
