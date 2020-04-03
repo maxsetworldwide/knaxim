@@ -177,5 +177,5 @@ asyncreader:
   dependencies:
     - serverBuild
   script:
-    cd pkg/asyncreader
-    go test -v
+    - cd pkg/asyncreader
+    - go test -v
