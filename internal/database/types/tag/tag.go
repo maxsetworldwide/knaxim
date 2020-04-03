@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	// Search indicates that there are additional filter parameters within the Data
+	// SEARCH indicates that there are additional filter parameters within the Data to apply when searching tags
 	SEARCH Type = (1 << 16) << iota
 )
 
@@ -186,6 +186,7 @@ func (d *Data) UnmarshalBSON(b []byte) error {
 	return nil
 }
 
+// FilterType returns a new instance of tag data that is a subset of keys defined by the type
 func (d Data) FilterType(t Type) Data {
 	out := make(Data)
 	var dataPresent bool

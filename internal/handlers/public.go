@@ -29,12 +29,20 @@ func searchPublic(out http.ResponseWriter, r *http.Request) {
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(400, "No Search Term"))
 	}
-	filters := make([]tag.Tag, 0, len(r.Form["find"]))
+	filters := make([]tag.FileTag, 0, len(r.Form["find"]))
 	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		if len(f) > 0 {
-			filters = append(filters, tag.Tag{
-				Word: f,
-				Type: tag.CONTENT,
+			filters = append(filters, tag.FileTag{
+				Tag: tag.Tag{
+					Word: f,
+					Type: tag.CONTENT | tag.SEARCH,
+					Data: tag.Data{
+						tag.SEARCH: map[string]interface{}{
+							"regex":        true,
+							"regexoptions": "i",
+						},
+					},
+				},
 			})
 		}
 	}
@@ -49,7 +57,7 @@ func searchPublic(out http.ResponseWriter, r *http.Request) {
 	for _, pf := range publicfiles {
 		fids = append(fids, pf.GetID())
 	}
-	fids, _, err = r.Context().Value(types.TAG).(database.Tagbase).GetFiles(filters, fids...)
+	fids, err = r.Context().Value(types.TAG).(database.Tagbase).SearchFiles(fids, filters...)
 	if err != nil {
 		panic(err)
 	}

@@ -19,7 +19,7 @@ var (
 	FileLoadInProgress = &Processing{Status: 202, Message: "Processing File"}
 )
 
-// ProcessingError is a record of an error that occured during processing of a file, and how to respond
+// Processing is a record of an error that occured during processing of a file, and how to respond
 type Processing struct {
 	Status  int    `json:"status" bson:"s"`
 	Message string `json:"msg" bson:"m"`

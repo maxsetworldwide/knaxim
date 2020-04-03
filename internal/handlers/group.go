@@ -212,19 +212,27 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 		fids = append(fids, a.GetID())
 	}
 
-	filters := make([]tag.Tag, 0, len(r.Form["find"]))
+	filters := make([]tag.FileTag, 0, len(r.Form["find"]))
 	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		if len(f) > 0 {
-			filters = append(filters, tag.Tag{
-				Word: f,
-				Type: tag.CONTENT,
+			filters = append(filters, tag.FileTag{
+				Tag: tag.Tag{
+					Word: f,
+					Type: tag.CONTENT | tag.SEARCH,
+					Data: tag.Data{
+						tag.SEARCH: map[string]interface{}{
+							"regex":        true,
+							"regexoptions": "i",
+						},
+					},
+				},
 			})
 		}
 	}
 	if len(filters) == 0 {
 		panic(srverror.Basic(400, "No Search Condition"))
 	}
-	result, _, err := r.Context().Value(types.TAG).(database.Tagbase).GetFiles(filters, fids...)
+	result, err := r.Context().Value(types.TAG).(database.Tagbase).SearchFiles(fids, filters...)
 	if err != nil {
 		panic(err)
 	}

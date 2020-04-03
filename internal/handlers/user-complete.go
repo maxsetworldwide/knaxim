@@ -123,9 +123,13 @@ func (cp *CompletePackage) addGroup(g types.GroupI, currentUser types.UserI, own
 		} else {
 			return err
 		}
-		if tags, err := tagbase.SearchData(tag.USER, tag.Data{tag.USER: map[string]interface{}{g.GetID().String(): dirflag}}); err == nil {
+		if tags, err := tagbase.GetAll(tag.USER, g.GetID()); err == nil {
+			wordset := make(map[string]bool)
 			for _, t := range tags {
-				d = append(d, t.Word)
+				if !wordset[t.Word] {
+					wordset[t.Word] = true
+					d = append(d, t.Word)
+				}
 			}
 		} else {
 			return err
@@ -203,9 +207,13 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 		util.VerboseRequest(r, "error getting groups")
 		panic(err)
 	}
-	if tags, err := r.Context().Value(types.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]interface{}{user.GetID().String(): dirflag}}); err == nil {
+	if tags, err := r.Context().Value(types.TAG).(database.Tagbase).GetAll(tag.USER, user.GetID()); err == nil {
+		wordset := make(map[string]bool)
 		for _, t := range tags {
-			info.User.Dirs = append(info.User.Dirs, t.Word)
+			if !wordset[t.Word] {
+				wordset[t.Word] = true
+				info.User.Dirs = append(info.User.Dirs, t.Word)
+			}
 		}
 	} else {
 		util.VerboseRequest(r, "error searching tag data")

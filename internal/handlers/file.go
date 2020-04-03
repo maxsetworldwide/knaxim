@@ -92,7 +92,17 @@ func processContent(ctx context.Context, cancel context.CancelFunc, file types.F
 	if err != nil {
 		return err
 	}
-	err = cb.Tag(nil).UpsertStore(fs.ID, tags...)
+	err = cb.Tag(nil).Upsert(func() []tag.FileTag {
+		ftags := make([]tag.FileTag, 0, len(tags))
+		for _, t := range tags {
+			ftags = append(ftags, tag.FileTag{
+				File:  file.GetID(),
+				Owner: file.GetOwner().GetID(),
+				Tag:   t,
+			})
+		}
+		return ftags
+	}()...)
 	if err != nil {
 		return err
 	}
@@ -214,13 +224,12 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		sb.Close(ctx)
 	}()
 	if len(r.FormValue("dir")) > 0 {
-		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
-			Word: r.FormValue("dir"),
-			Type: tag.USER,
-			Data: tag.Data{
-				tag.USER: map[string]interface{}{
-					owner.GetID().String(): dirflag,
-				},
+		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
+			File:  file.GetID(),
+			Owner: owner.GetID(),
+			Tag: tag.Tag{
+				Word: r.FormValue("dir"),
+				Type: tag.USER,
 			},
 		})
 		if err != nil {
@@ -344,20 +353,18 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		sb.Close(ctx)
 	}()
 	if len(r.FormValue("dir")) > 0 {
-		err = config.DB.Tag(fctx).UpsertFile(file.GetID(), tag.Tag{
-			Word: r.FormValue("dir"),
-			Type: tag.USER,
-			Data: tag.Data{
-				tag.USER: map[string]interface{}{
-					owner.GetID().String(): dirflag,
-				},
+		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
+			File:  file.GetID(),
+			Owner: owner.GetID(),
+			Tag: tag.Tag{
+				Word: r.FormValue("dir"),
+				Type: tag.USER,
 			},
 		})
 		if err != nil {
 			panic(err)
 		}
 	}
-
 	w.Set("id", file.GetID())
 	w.Set("name", file.GetName())
 }

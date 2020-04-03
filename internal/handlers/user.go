@@ -216,11 +216,19 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(404, "Not Found", "no search term"))
 	}
-	filters := make([]tag.Tag, 0, len(r.Form["find"]))
+	filters := make([]tag.FileTag, 0, len(r.Form["find"]))
 	for _, f := range util.SplitSearch(r.Form["find"]...) {
-		filters = append(filters, tag.Tag{
-			Word: f,
-			Type: tag.CONTENT,
+		filters = append(filters, tag.FileTag{
+			Tag: tag.Tag{
+				Word: f,
+				Type: tag.CONTENT | tag.SEARCH,
+				Data: tag.Data{
+					tag.SEARCH: map[string]interface{}{
+						"regex":        true,
+						"regexoptions": "i",
+					},
+				},
+			},
 		})
 	}
 	owned, err := filebase.GetOwned(user.GetID())
@@ -238,7 +246,7 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 	for _, v := range viewable {
 		fids = append(fids, v.GetID())
 	}
-	fids, _, err = r.Context().Value(types.TAG).(database.Tagbase).GetFiles(filters, fids...)
+	fids, err = r.Context().Value(types.TAG).(database.Tagbase).SearchFiles(fids, filters...)
 	if err != nil {
 		panic(err)
 	}

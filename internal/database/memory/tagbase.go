@@ -3,11 +3,52 @@ package memory
 import (
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
 // Tagbase wraps database and provides tag operations
 type Tagbase struct {
 	Database
+}
+
+// Upsert adds tags to the database
+func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
+	return srverror.Basic(404, "upsert unimplemented")
+}
+
+// Remove removes tags from the database
+func (tb *Tagbase) Remove(...tag.FileTag) error {
+	return srverror.Basic(404, "Remove unimplemented")
+}
+
+// Get returns all tags associated with a particular file and owner
+func (tb *Tagbase) Get(types.FileID, types.OwnerID) ([]tag.FileTag, error) {
+	return nil, srverror.Basic(404, "Get unimplemented")
+}
+
+// GetType returns all tags of a particular type, associated with a particular file and owner
+func (tb *Tagbase) GetType(types.FileID, types.OwnerID, tag.Type) ([]tag.FileTag, error) {
+	return nil, srverror.Basic(404, "GetType unimplemented")
+}
+
+// GetAll returns all tags of a particular type for a particular owner
+func (tb *Tagbase) GetAll(tag.Type, types.OwnerID) ([]tag.FileTag, error) {
+	return nil, srverror.Basic(404, "GetAll unimplemented")
+}
+
+// SearchOwned returns all fileids that is owned by the owner and matches the tag fileter conditions
+func (tb *Tagbase) SearchOwned(types.OwnerID, ...tag.FileTag) ([]types.FileID, error) {
+	return nil, srverror.Basic(404, "SearchOwned unimplemented")
+}
+
+// SearchAccess returns all fileids that are accessable by owner with particular permission that match the tag filter conditions
+func (tb *Tagbase) SearchAccess(types.OwnerID, string, ...tag.FileTag) ([]types.FileID, error) {
+	return nil, srverror.Basic(404, "SearchAccess unimplemented")
+}
+
+// SearchFiles returns all fileids that match the tag fileters
+func (tb *Tagbase) SearchFiles([]types.FileID, ...tag.FileTag) ([]types.FileID, error) {
+	return nil, srverror.Basic(404, "SearchFiles unimplemented")
 }
 
 // UpsertFile adds tags attached to fileid

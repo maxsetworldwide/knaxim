@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
@@ -48,15 +47,16 @@ func getDirs(out http.ResponseWriter, r *http.Request) {
 	}
 
 	var dirs []string
-	if tags, err := r.Context().Value(types.TAG).(database.Tagbase).SearchData(
+	if tags, err := r.Context().Value(types.TAG).(database.Tagbase).GetAll(
 		tag.USER,
-		tag.Data{
-			tag.USER: map[string]interface{}{
-				owner.GetID().String(): dirflag},
-		},
+		owner.GetID(),
 	); err == nil {
+		folderset := make(map[string]bool)
 		for _, t := range tags {
-			dirs = append(dirs, t.Word)
+			if !folderset[t.Word] {
+				folderset[t.Word] = true
+				dirs = append(dirs, t.Word)
+			}
 		}
 	} else {
 		panic(err)
@@ -98,18 +98,16 @@ func createDir(out http.ResponseWriter, r *http.Request) {
 		w.Set("affectedFiles", 0)
 		return
 	}
-	dirtag := tag.Tag{
-		Word: nname,
-		Type: tag.USER,
-		Data: tag.Data{
-			tag.USER: map[string]interface{}{
-				owner.GetID().String(): dirflag,
-			},
-		},
-	}
 	tagbase := r.Context().Value(types.TAG).(database.Tagbase)
 	for _, file := range files {
-		err := tagbase.UpsertFile(file.GetID(), dirtag)
+		err := tagbase.Upsert(tag.FileTag{
+			File:  file.GetID(),
+			Owner: owner.GetID(),
+			Tag: tag.Tag{
+				Word: nname,
+				Type: tag.USER,
+			},
+		})
 		if err != nil {
 			panic(srverror.New(err, 500, "Server Error", "Unable to add user tag"))
 		}
@@ -130,16 +128,7 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 		owner = r.Context().Value(USER).(types.Owner)
 	}
 	tagbase := r.Context().Value(types.TAG).(database.Tagbase)
-	tagfilter := tag.Tag{
-		Word: vals["id"],
-		Type: tag.USER,
-		Data: tag.Data{
-			tag.USER: map[string]interface{}{
-				owner.GetID().String(): dirflag,
-			},
-		},
-	}
-	filematches, _, err := tagbase.GetFiles([]tag.Tag{tagfilter})
+	tags, err := tagbase.GetAll(tag.USER, owner.GetID())
 	if err != nil {
 		if se := err.(srverror.Error); se.Status() == errors.ErrNoResults.Status() {
 			w.WriteHeader(se.Status())
@@ -147,8 +136,14 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 			panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
 		}
 	}
+	var filematches []types.FileID
+	for _, t := range tags {
+		if t.Word == vals["id"] {
+			filematches = append(filematches, t.File)
+		}
+	}
 
-	w.Set("name", strings.ToLower(tagfilter.Word))
+	w.Set("name", vals["id"])
 	w.Set("files", filematches)
 }
 
@@ -180,22 +175,21 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 			}
 			fids = append(fids, fid)
 		}
-		dirtag := tag.Tag{
-			Word: dirtagname,
-			Type: tag.USER,
-			Data: tag.Data{
-				tag.USER: map[string]interface{}{
-					owner.GetID().String(): func() string {
-						if add {
-							return dirflag
-						}
-						return ""
-					}(),
-				},
-			},
-		}
 		for _, fid := range fids {
-			err := tagbase.UpsertFile(fid, dirtag)
+			dirtag := tag.FileTag{
+				File:  fid,
+				Owner: owner.GetID(),
+				Tag: tag.Tag{
+					Word: dirtagname,
+					Type: tag.USER,
+				},
+			}
+			var err error
+			if add {
+				err = tagbase.Upsert(dirtag)
+			} else {
+				err = tagbase.Remove(dirtag)
+			}
 			if err != nil {
 				panic(err)
 			}
@@ -216,39 +210,43 @@ func searchDir(out http.ResponseWriter, r *http.Request) {
 		owner = r.Context().Value(USER).(types.Owner)
 	}
 	vals := mux.Vars(r)
-	filters := make([]tag.Tag, 0, 1+len(r.Form["find"]))
-	filters = append(filters, tag.Tag{
-		Word: vals["id"],
-		Type: tag.USER,
-		Data: tag.Data{
-			tag.USER: map[string]interface{}{
-				owner.GetID().String(): dirflag,
-			},
+	filters := make([]tag.FileTag, 0, 1+len(r.Form["find"]))
+	filters = append(filters, tag.FileTag{
+		Owner: owner.GetID(),
+		Tag: tag.Tag{
+			Word: vals["id"],
+			Type: tag.USER,
 		},
 	})
 	for _, find := range r.Form["find"] {
-		filters = append(filters, tag.Tag{
-			Word: find,
-			Type: tag.CONTENT,
+		// TODO: process find strings into regex
+		filters = append(filters, tag.FileTag{
+			Tag: tag.Tag{
+				Word: find,
+				Type: tag.CONTENT | tag.SEARCH,
+				Data: tag.Data{
+					tag.SEARCH: map[string]interface{}{
+						"regex":        true,
+						"regexoptions": "i",
+					},
+				},
+			},
 		})
 	}
-	fids, _, err := tagbase.GetFiles(filters)
+	ownedids, err := tagbase.SearchOwned(owner.GetID(), filters...)
 	if err != nil {
 		panic(err)
 	}
-	filebase := r.Context().Value(types.FILE).(database.Filebase)
-	matches := make([]types.FileID, 0, len(fids))
-	for _, fid := range fids {
-		file, err := filebase.Get(fid)
-		if err != nil && err != errors.ErrNotFound {
-			panic(err)
-		}
-		if err == errors.ErrNotFound {
-			continue
-		}
-		if file.GetOwner().Match(owner) || file.CheckPerm(owner, "view") {
-			matches = append(matches, fid)
-		}
+	viewids, err := tagbase.SearchAccess(owner.GetID(), "view", filters...)
+	if err != nil {
+		panic(err)
+	}
+	matches := make([]types.FileID, 0, len(ownedids)+len(viewids))
+	for _, o := range ownedids {
+		matches = append(matches, o)
+	}
+	for _, v := range viewids {
+		matches = append(matches, v)
 	}
 	w.Set("matches", matches)
 }
@@ -263,31 +261,19 @@ func deleteDir(out http.ResponseWriter, r *http.Request) {
 		owner = r.Context().Value(USER).(types.Owner)
 	}
 	vals := mux.Vars(r)
-	fids, _, err := r.Context().Value(types.TAG).(database.Tagbase).GetFiles([]tag.Tag{tag.Tag{
-		Word: vals["id"],
-		Type: tag.USER,
-		Data: tag.Data{
-			tag.USER: map[string]interface{}{
-				owner.GetID().String(): dirflag,
-			},
-		},
-	}})
+	ftags, err := r.Context().Value(types.TAG).(database.Tagbase).GetAll(tag.USER, owner.GetID())
 	if err != nil {
 		panic(err)
 	}
-	for _, fid := range fids {
-		err := r.Context().Value(types.TAG).(database.Tagbase).UpsertFile(fid, tag.Tag{
-			Word: vals["id"],
-			Type: tag.USER,
-			Data: tag.Data{
-				tag.USER: map[string]interface{}{
-					owner.GetID().String(): "",
-				},
-			},
-		})
-		if err != nil {
-			panic(err)
+	var targettags []tag.FileTag
+	for _, ft := range ftags {
+		if ft.Word == vals["id"] {
+			targettags = append(targettags, ft)
 		}
+	}
+	err = r.Context().Value(types.TAG).(database.Tagbase).Remove(targettags...)
+	if err != nil {
+		panic(err)
 	}
 	w.Set("message", "Complete")
 }
