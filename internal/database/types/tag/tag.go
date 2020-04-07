@@ -208,11 +208,40 @@ type StoreTag struct {
 	Store types.StoreID `bson:"store"`
 }
 
+// Update updates the StoreTag based on provided other StoreTag
+func (st StoreTag) Update(oth StoreTag) StoreTag {
+	id := st.Store
+	if id.Equal(types.StoreID{}) {
+		id = oth.Store
+	}
+	return StoreTag{
+		Store: id,
+		Tag:   st.Tag.Update(oth.Tag),
+	}
+}
+
 // FileTag is a Tag tied to a File
 type FileTag struct {
 	Tag   `bson:",inline"`
 	File  types.FileID  `bson:"file"`
 	Owner types.OwnerID `bson:"owner"`
+}
+
+// Update creates a combination of the two tags
+func (ft FileTag) Update(oth FileTag) FileTag {
+	id := ft.File
+	if id.Equal(types.FileID{}) {
+		id = oth.File
+	}
+	owner := ft.Owner
+	if owner.Equal(types.OwnerID{}) {
+		owner = oth.Owner
+	}
+	return FileTag{
+		File:  id,
+		Owner: owner,
+		Tag:   ft.Tag.Update(oth.Tag),
+	}
 }
 
 // StoreTag builds StoreTag from FileTag

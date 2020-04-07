@@ -25,12 +25,12 @@ type Database struct {
 		GroupName map[string]types.GroupI
 		Reset     map[string]types.OwnerID
 	}
-	Files     map[string]types.FileI         // key filehash.FileID.String()
-	Stores    map[string]*types.FileStore    // key filehash.StoreID.String()
-	Lines     map[string][]types.ContentLine // key filehash.StoreID.String()
-	TagFiles  map[string]map[string]tag.Tag  // key filehash.FileID.String() => word string => tag
-	TagStores map[string]map[string]tag.Tag  // key filehash.StoreID.String() => word string => tag
-	Views     map[string]*types.ViewStore    // key filehash.StoreID.String()
+	Files     map[string]types.FileI                       // key filehash.FileID.String()
+	Stores    map[string]*types.FileStore                  // key filehash.StoreID.String()
+	Lines     map[string][]types.ContentLine               // key filehash.StoreID.String()
+	TagFiles  map[string]map[string]map[string]tag.FileTag // key filehash.FileID.String() => ownerid => word string => tag
+	TagStores map[string]map[string]tag.StoreTag           // key filehash.StoreID.String() => word string => tag
+	Views     map[string]*types.ViewStore                  // key filehash.StoreID.String()
 	Acronyms  map[string][]string
 }
 
@@ -52,8 +52,8 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	db.Files = make(map[string]types.FileI)
 	db.Stores = make(map[string]*types.FileStore)
 	db.Lines = make(map[string][]types.ContentLine)
-	db.TagFiles = make(map[string]map[string]tag.Tag)
-	db.TagStores = make(map[string]map[string]tag.Tag)
+	db.TagFiles = make(map[string]map[string]map[string]tag.FileTag)
+	db.TagStores = make(map[string]map[string]tag.StoreTag)
 	db.Views = make(map[string]*types.ViewStore)
 	db.Acronyms = make(map[string][]string)
 	return nil
