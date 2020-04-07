@@ -377,7 +377,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 			case stags := <-storetags:
 				for _, st := range stags {
 					collecting[st.Word] = tag.FileTag{
-						Tag:   collecting[st.Word].Update(st.Tag),
+						Tag:   collecting[st.Word].Tag.Update(st.Tag),
 						File:  fid,
 						Owner: oid,
 					}
@@ -385,7 +385,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 			case ftags := <-filetags:
 				for _, ft := range ftags {
 					collecting[ft.Word] = tag.FileTag{
-						Tag:   collecting[ft.Word].Update(ft.Tag),
+						Tag:   collecting[ft.Word].Tag.Update(ft.Tag),
 						File:  fid,
 						Owner: oid,
 					}

@@ -28,6 +28,8 @@ type Tagbase struct {
 
 // Upsert adds tags to the database
 func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
+	lock.Lock()
+	defer lock.Unlock()
 	stags, ftags := divideTags(tags)
 	for _, st := range stags {
 		if tb.TagStores[st.Store.String()] == nil {
@@ -58,6 +60,8 @@ func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
 
 // Remove removes tags from the database
 func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
+	lock.Lock()
+	defer lock.Unlock()
 	stags, ftags := divideTags(tags)
 	for _, st := range stags {
 		if tb.TagStores[st.Store.String()] != nil {
@@ -102,6 +106,8 @@ func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
 
 // Get returns all tags associated with a particular file and owner
 func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	ftags := tb.TagFiles[fid.String()][oid.String()]
 	stags := tb.TagStores[fid.StoreID.String()]
 	words := map[string]bool{}
@@ -127,6 +133,8 @@ func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, erro
 
 // GetType returns all tags of a particular type, associated with a particular file and owner
 func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) (tags []tag.FileTag, err error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	if typ&tag.ALLFILE != 0 {
 		if tb.TagFiles[fid.String()] != nil && tb.TagFiles[fid.String()][oid.String()] != nil {
 			for _, t := range tb.TagFiles[fid.String()][oid.String()] {
@@ -154,6 +162,8 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) (t
 
 // GetAll returns all tags of a particular type for a particular owner
 func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) (tags []tag.FileTag, err error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	for _, maps := range tb.TagFiles {
 		if maps[oid.String()] != nil {
 			for _, ft := range maps[oid.String()] {
@@ -168,6 +178,8 @@ func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) (tags []tag.FileTag, 
 
 // SearchOwned returns all fileids that is owned by the owner and matches the tag fileter conditions
 func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.FileID, error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	fs, err := tb.File(nil).GetOwned(oid)
 	if err != nil {
 		return nil, err
@@ -181,6 +193,8 @@ func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.
 
 // SearchAccess returns all fileids that are accessable by owner with particular permission that match the tag filter conditions
 func (tb *Tagbase) SearchAccess(oid types.OwnerID, key string, tags ...tag.FileTag) ([]types.FileID, error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	fs, err := tb.File(nil).GetPermKey(oid, key)
 	if err != nil {
 		return nil, err
@@ -194,6 +208,8 @@ func (tb *Tagbase) SearchAccess(oid types.OwnerID, key string, tags ...tag.FileT
 
 // SearchFiles returns all fileids that match the tag fileters
 func (tb *Tagbase) SearchFiles(in []types.FileID, tags ...tag.FileTag) (out []types.FileID, err error) {
+	lock.RLock()
+	defer lock.RUnlock()
 	var expectFileTag, expectStoreTag bool
 	matched := make(map[string]bool)
 	for _, t := range tags {
@@ -205,12 +221,12 @@ func (tb *Tagbase) SearchFiles(in []types.FileID, tags ...tag.FileTag) (out []ty
 		}
 	}
 	for _, fid := range in {
-		valid := 0
+		valid := make([]bool, len(tags))
 		if expectFileTag {
 
 			for _, maps := range tb.TagFiles[fid.String()] {
 			TAG:
-				for _, t := range tags {
+				for i, t := range tags {
 					if t.Type&tag.ALLFILE != 0 {
 						for _, ft := range maps {
 							if ft.Type&t.Type != 0 {
@@ -218,12 +234,12 @@ func (tb *Tagbase) SearchFiles(in []types.FileID, tags ...tag.FileTag) (out []ty
 									t.Data[tag.SEARCH] != nil &&
 									t.Data[tag.SEARCH]["regex"] == true {
 									if matched, _ := regexp.MatchString(t.Word, ft.Word); matched {
-										valid++
+										valid[i] = true
 										continue TAG
 									}
 								} else {
 									if t.Word == ft.Word {
-										valid++
+										valid[i] = true
 										continue TAG
 									}
 								}
@@ -235,19 +251,19 @@ func (tb *Tagbase) SearchFiles(in []types.FileID, tags ...tag.FileTag) (out []ty
 		}
 		if expectStoreTag {
 		STAG:
-			for _, t := range tags {
+			for i, t := range tags {
 				for _, st := range tb.TagStores[fid.StoreID.String()] {
 					if st.Type&t.Type != 0 {
 						if t.Type&tag.SEARCH != 0 &&
 							t.Data[tag.SEARCH] != nil &&
 							t.Data[tag.SEARCH]["regex"] == true {
 							if matched, _ := regexp.MatchString(t.Word, st.Word); matched {
-								valid++
+								valid[i] = true
 								continue STAG
 							}
 						} else {
 							if t.Word == st.Word {
-								valid++
+								valid[i] = true
 								continue STAG
 							}
 						}
@@ -255,7 +271,14 @@ func (tb *Tagbase) SearchFiles(in []types.FileID, tags ...tag.FileTag) (out []ty
 				}
 			}
 		}
-		matched[fid.String()] = valid == len(tags)
+		matched[fid.String()] = func() bool {
+			for _, v := range valid {
+				if !v {
+					return false
+				}
+			}
+			return true
+		}()
 	}
 	for id, match := range matched {
 		if match {
