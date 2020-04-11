@@ -90,6 +90,10 @@ func (fb *Filebase) Remove(r types.FileID) error {
 func (fb *Filebase) GetOwned(uid types.OwnerID) ([]types.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
+	return fb.getOwned(uid)
+}
+
+func (fb *Filebase) getOwned(uid types.OwnerID) ([]types.FileI, error) {
 	var out []types.FileI
 	for _, file := range fb.Files {
 		if file.GetOwner().GetID().Equal(uid) {
@@ -103,6 +107,10 @@ func (fb *Filebase) GetOwned(uid types.OwnerID) ([]types.FileI, error) {
 func (fb *Filebase) GetPermKey(uid types.OwnerID, pkey string) ([]types.FileI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
+	return fb.getPermKey(uid, pkey)
+}
+
+func (fb *Filebase) getPermKey(uid types.OwnerID, pkey string) ([]types.FileI, error) {
 	var out []types.FileI
 LOOP:
 	for _, file := range fb.Files {

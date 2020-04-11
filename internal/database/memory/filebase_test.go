@@ -101,4 +101,5 @@ func TestFiles(t *testing.T) {
 	if err == nil || expectnil != nil {
 		t.Fatalf("found removed file: %v, %s", expectnil, err)
 	}
+	t.Log("Remove End")
 }

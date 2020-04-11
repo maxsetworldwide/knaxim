@@ -166,7 +166,7 @@ func (ob *Ownerbase) GetSpace(o types.OwnerID) (int64, error) {
 	}
 	var total int64
 	for _, file := range ob.Files {
-		if file.GetOwner().GetID().Equal(o) {
+		if file != nil && file.GetOwner().GetID().Equal(o) {
 			total += ob.Stores[file.GetID().StoreID.String()].FileSize
 		}
 	}

@@ -89,6 +89,10 @@ func (db *Database) Owner(c context.Context) database.Ownerbase {
 func (db *Database) File(c context.Context) database.Filebase {
 	lock.Lock()
 	defer lock.Unlock()
+	return db.file(c)
+}
+
+func (db *Database) file(c context.Context) database.Filebase {
 	countLock.Lock()
 	defer countLock.Unlock()
 	out := &Filebase{
