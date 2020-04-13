@@ -3,8 +3,8 @@ package mongo
 import (
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,8 +18,8 @@ type Filebase struct {
 }
 
 // Reserve a fileid, will mutate if fileid not available, returns reserved file id
-func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
-	var out *filehash.FileID
+func (fb *Filebase) Reserve(id types.FileID) (types.FileID, error) {
+	var out *types.FileID
 	for out == nil {
 		timeout := time.Now().Add(time.Hour * 24)
 		result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).UpdateOne(fb.ctx, bson.M{
@@ -57,7 +57,7 @@ func (fb *Filebase) Reserve(id filehash.FileID) (filehash.FileID, error) {
 }
 
 // Insert file into database. file id must all ready been reserved, see Reserve
-func (fb *Filebase) Insert(r database.FileI) error {
+func (fb *Filebase) Insert(r types.FileI) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).UpdateOne(
 		fb.ctx,
 		bson.M{
@@ -73,20 +73,20 @@ func (fb *Filebase) Insert(r database.FileI) error {
 		return srverror.New(err, 500, "Database Error F2", "Unable to insert")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrIDNotReserved.Extend("missing fileid")
+		return errors.ErrIDNotReserved.Extend("missing fileid")
 	}
 	return nil
 }
 
 // Get file from id
-func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
+func (fb *Filebase) Get(fid types.FileID) (types.FileI, error) {
 	result := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).FindOne(fb.ctx, bson.M{
 		"id": fid,
 	})
-	fd := new(database.FileDecoder)
+	fd := new(types.FileDecoder)
 	if err := result.Decode(fd); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound.Extend(fid.String())
+			return nil, errors.ErrNotFound.Extend(fid.String())
 		}
 		return nil, srverror.New(err, 500, "Database Error F3", "Unable to get file")
 	}
@@ -99,7 +99,7 @@ func (fb *Filebase) Get(fid filehash.FileID) (database.FileI, error) {
 }
 
 // GetAll files from ids
-func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
+func (fb *Filebase) GetAll(fids ...types.FileID) ([]types.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"id": bson.M{"$in": fids},
 	})
@@ -109,7 +109,7 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 			for _, fid := range fids {
 				ids = append(ids, fid.String())
 			}
-			return nil, database.ErrNoResults.Extend("GetAll files: ").Extend(ids...)
+			return nil, errors.ErrNoResults.Extend("GetAll files: ").Extend(ids...)
 		}
 		return nil, srverror.New(err, 500, "Database Error F3.1", "Unable to get files")
 	}
@@ -117,7 +117,7 @@ func (fb *Filebase) GetAll(fids ...filehash.FileID) ([]database.FileI, error) {
 }
 
 // Update File
-func (fb *Filebase) Update(r database.FileI) error {
+func (fb *Filebase) Update(r types.FileI) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).ReplaceOne(fb.ctx, bson.M{
 		"id": r.GetID(),
 	}, r)
@@ -125,13 +125,13 @@ func (fb *Filebase) Update(r database.FileI) error {
 		return srverror.New(err, 500, "Database Error F4", "error updating file")
 	}
 	if result.ModifiedCount == 0 {
-		return database.ErrNotFound.Extend("unable to update:", r.GetID().String())
+		return errors.ErrNotFound.Extend("unable to update:", r.GetID().String())
 	}
 	return nil
 }
 
 // Remove file with id
-func (fb *Filebase) Remove(r filehash.FileID) error {
+func (fb *Filebase) Remove(r types.FileID) error {
 	result, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).DeleteOne(fb.ctx, bson.M{
 		"id": r,
 	})
@@ -139,20 +139,20 @@ func (fb *Filebase) Remove(r filehash.FileID) error {
 		return srverror.New(err, 500, "Database Error F5", "unable to remove file", r.String())
 	}
 	if result.DeletedCount == 0 {
-		return database.ErrNotFound.Extend("File id: ", r.String())
+		return errors.ErrNotFound.Extend("File id: ", r.String())
 	}
 	return nil
 }
 
-func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]database.FileI, error) {
-	var reference []*database.FileDecoder
+func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]types.FileI, error) {
+	var reference []*types.FileDecoder
 	if err := cursor.All(fb.ctx, &reference); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("unable to decode files")
+			return nil, errors.ErrNoResults.Extend("unable to decode files")
 		}
 		return nil, srverror.New(err, 500, "Database Error F6", "unable to decode file list")
 	}
-	files := make([]database.FileI, 0, len(reference))
+	files := make([]types.FileI, 0, len(reference))
 	for _, ref := range reference {
 		files = append(files, ref.File())
 	}
@@ -166,13 +166,13 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]database.FileI, error) 
 }
 
 // GetOwned returns all files owned by owner id
-func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
+func (fb *Filebase) GetOwned(uid types.OwnerID) ([]types.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"own": uid,
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no owned files")
+			return nil, errors.ErrNoResults.Extend("no owned files")
 		}
 		return nil, srverror.New(err, 500, "Database Error F7", "unable to send request")
 	}
@@ -180,13 +180,13 @@ func (fb *Filebase) GetOwned(uid database.OwnerID) ([]database.FileI, error) {
 }
 
 // GetPermKey returns all files that have owner id with provided permission
-func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.FileI, error) {
+func (fb *Filebase) GetPermKey(uid types.OwnerID, pkey string) ([]types.FileI, error) {
 	cursor, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).Find(fb.ctx, bson.M{
 		"perm." + pkey: uid,
 	})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no files with:", pkey)
+			return nil, errors.ErrNoResults.Extend("no files with:", pkey)
 		}
 		return nil, srverror.New(err, 500, "Database Error F8", "unable to send request")
 	}
@@ -195,7 +195,7 @@ func (fb *Filebase) GetPermKey(uid database.OwnerID, pkey string) ([]database.Fi
 
 // MatchStore returns all files where an owner either owns the file or has a particular permission,
 // and the file matches one of the provided StoreIDs
-func (fb *Filebase) MatchStore(oid database.OwnerID, sid []filehash.StoreID, pkeys ...string) ([]database.FileI, error) {
+func (fb *Filebase) MatchStore(oid types.OwnerID, sid []types.StoreID, pkeys ...string) ([]types.FileI, error) {
 	query := bson.M{
 		"id.storeid": bson.M{"$in": sid},
 	}
@@ -211,7 +211,7 @@ func (fb *Filebase) MatchStore(oid database.OwnerID, sid []filehash.StoreID, pke
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no filestores match file")
+			return nil, errors.ErrNoResults.Extend("no filestores match file")
 		}
 		return nil, srverror.New(err, 500, "Database Error F9", "unable to send request")
 	}

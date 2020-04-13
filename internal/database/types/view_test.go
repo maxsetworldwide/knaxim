@@ -1,19 +1,17 @@
-package database
+package types
 
 import (
 	"bytes"
 	"io"
 	"strings"
 	"testing"
-
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 func TestViewStore(t *testing.T) {
 	contentString := "This is the view content! It's like the file store content, but it should be a PDF version of the file."
 	inBytes := []byte(contentString)
 
-	mockStoreID := filehash.StoreID{
+	mockStoreID := StoreID{
 		Hash:  12345,
 		Stamp: 6789,
 	}

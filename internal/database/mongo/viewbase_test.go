@@ -6,8 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestViewbase(t *testing.T) {
@@ -26,8 +25,8 @@ func TestViewbase(t *testing.T) {
 	}
 	{
 		contentString := "View version of a file FFFFF*****"
-		inputVS := &database.ViewStore{
-			ID: filehash.StoreID{
+		inputVS := &types.ViewStore{
+			ID: types.StoreID{
 				Hash:  12345,
 				Stamp: 678,
 			},

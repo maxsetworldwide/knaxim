@@ -108,7 +108,7 @@ func TestSrvError(t *testing.T) {
 	 * They can, however, be called with a nil srverr pointer.
 	 */
 	t.Run("NilSrverror", func(t *testing.T) {
-		var errObj *srverr = nil
+		var errObj *srverr
 		t.Run("Message", func(t *testing.T) {
 			msg := errObj.Error()
 			if msg != "" {

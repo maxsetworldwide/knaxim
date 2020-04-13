@@ -1,4 +1,4 @@
-package database
+package types
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
 func TestFileStore(t *testing.T) {
@@ -31,7 +31,7 @@ func TestFileStore(t *testing.T) {
 		t.Fatalf("uncorrect read string: %s", s)
 	}
 
-	fs.Perr = &ProcessingError{
+	fs.Perr = &errors.Processing{
 		Status:  444,
 		Message: "all lasers",
 	}
@@ -42,8 +42,8 @@ func TestFileStore(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	fid := filehash.FileID{
-		StoreID: filehash.StoreID{
+	fid := FileID{
+		StoreID: StoreID{
 			Hash:  10,
 			Stamp: 10,
 		},
@@ -113,8 +113,8 @@ func TestFile(t *testing.T) {
 }
 
 func TestWeb(t *testing.T) {
-	fid := filehash.FileID{
-		StoreID: filehash.StoreID{
+	fid := FileID{
+		StoreID: StoreID{
 			Hash:  10,
 			Stamp: 10,
 		},

@@ -1,17 +1,15 @@
-package database
+package types
 
 import (
 	"errors"
 	"fmt"
 	"io"
 	"strings"
-
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 )
 
 // ContentLine is a line of content within a file
 type ContentLine struct {
-	ID filehash.StoreID `bson:"id"`
+	ID StoreID `bson:"id"`
 	//PageNum  int              `bson:"pagenum"`
 	Position int      `bson:"position"`
 	Content  []string `bson:"content"`

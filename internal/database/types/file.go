@@ -1,4 +1,4 @@
-package database
+package types
 
 import (
 	"bytes"
@@ -7,44 +7,25 @@ import (
 	"io"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database/filehash"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
+	dberrs "git.maxset.io/web/knaxim/internal/database/types/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// ProcessingError is a record of an error that occured during processing of a file, and how to respond
-type ProcessingError struct {
-	Status  int    `json:"status" bson:"s"`
-	Message string `json:"msg" bson:"m"`
-}
-
-// Equal is true if the status and message are equal
-func (pe *ProcessingError) Equal(oth *ProcessingError) bool {
-	if pe.Status != oth.Status {
-		return false
-	}
-	return pe.Message == oth.Message
-}
-
-// Error implements error, returns message
-func (pe *ProcessingError) Error() string {
-	return pe.Message
-}
-
 // FileStore represents a file's content
 type FileStore struct {
-	ID          filehash.StoreID `json:"id" bson:"id"`
-	Content     []byte           `json:"content" bson:"-"`
-	ContentType string           `json:"ctype" bson:"ctype"`
-	FileSize    int64            `json:"fsize" bson:"fsize"`
-	Perr        *ProcessingError `json:"err,omitempty" bson:"perr,omitempty"`
+	ID          StoreID            `json:"id" bson:"id"`
+	Content     []byte             `json:"content" bson:"-"`
+	ContentType string             `json:"ctype" bson:"ctype"`
+	FileSize    int64              `json:"fsize" bson:"fsize"`
+	Perr        *dberrs.Processing `json:"err,omitempty" bson:"perr,omitempty"`
 }
 
 // NewFileStore builds a FileStore from a reader of the file content
 func NewFileStore(r io.Reader) (*FileStore, error) {
 	n := new(FileStore)
-	n.Perr = FileLoadInProgress
+	n.Perr = dberrs.FileLoadInProgress
 
 	pout, pin := io.Pipe()
 	ContentBuf := new(bytes.Buffer)
@@ -60,7 +41,7 @@ func NewFileStore(r io.Reader) (*FileStore, error) {
 	}()
 
 	var err error
-	n.ID, err = filehash.NewStoreID(pout)
+	n.ID, err = NewStoreID(pout)
 	if err != nil {
 		return nil, srverror.New(err, 500, "Database Error F1")
 	}
@@ -86,9 +67,9 @@ func (fs *FileStore) Reader() (io.Reader, error) {
 func (fs *FileStore) Copy() *FileStore {
 	c := make([]byte, len(fs.Content))
 	copy(c, fs.Content)
-	var perrcopy *ProcessingError
+	var perrcopy *dberrs.Processing
 	if fs.Perr != nil {
-		perrcopy = &ProcessingError{
+		perrcopy = &dberrs.Processing{
 			Status:  fs.Perr.Status,
 			Message: fs.Perr.Message,
 		}
@@ -105,8 +86,8 @@ func (fs *FileStore) Copy() *FileStore {
 // FileI is the interface type to represent a file
 type FileI interface {
 	PermissionI
-	GetID() filehash.FileID
-	SetID(filehash.FileID)
+	GetID() FileID
+	SetID(FileID)
 	GetName() string
 	SetName(n string)
 	GetDate() FileTime
@@ -121,9 +102,9 @@ type FileTime struct {
 // File is the meta data and permission values of a file
 type File struct {
 	Permission
-	ID   filehash.FileID `json:"id" bson:"id"`
-	Name string          `json:"name" bson:"name"`
-	Date FileTime        `json:"date" bson:"date"`
+	ID   FileID   `json:"id" bson:"id"`
+	Name string   `json:"name" bson:"name"`
+	Date FileTime `json:"date" bson:"date"`
 }
 
 // WebFile is an extention of a File with URL value
@@ -133,12 +114,12 @@ type WebFile struct {
 }
 
 // GetID implements FileI
-func (f *File) GetID() filehash.FileID {
+func (f *File) GetID() FileID {
 	return f.ID
 }
 
 // SetID implements FileI
-func (f *File) SetID(id filehash.FileID) {
+func (f *File) SetID(id FileID) {
 	f.ID = id
 }
 
@@ -192,10 +173,10 @@ func (f *File) MarshalBSON() ([]byte, error) {
 }
 
 type fForm struct {
-	ID   filehash.FileID `bson:"id" json:"id"`
-	Name string          `json:"name" bson:"name"`
-	URL  *string         `json:"url,omitempty" bson:"url,omitempty"`
-	Date FileTime        `json:"date" bson:"date"`
+	ID   FileID   `bson:"id" json:"id"`
+	Name string   `json:"name" bson:"name"`
+	URL  *string  `json:"url,omitempty" bson:"url,omitempty"`
+	Date FileTime `json:"date" bson:"date"`
 }
 
 // UnmarshalJSON converts json to File

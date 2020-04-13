@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
 func TestStorebase(t *testing.T) {
@@ -25,7 +25,7 @@ func TestStorebase(t *testing.T) {
 		sb = db.Store(context.Background()).(*Storebase)
 	}
 	{
-		input := filehash.StoreID{
+		input := types.StoreID{
 			Hash:  24098,
 			Stamp: 123,
 		}
@@ -49,8 +49,8 @@ func TestStorebase(t *testing.T) {
 		})
 	}
 	{
-		input := &database.FileStore{
-			ID: filehash.StoreID{
+		input := &types.FileStore{
+			ID: types.StoreID{
 				Hash:  24098,
 				Stamp: 123,
 			},
@@ -89,7 +89,7 @@ func TestStorebase(t *testing.T) {
 			}
 		})
 		t.Run("Update", func(t *testing.T) {
-			input.Perr = &database.ProcessingError{
+			input.Perr = &errors.Processing{
 				Status:  420,
 				Message: "Hey, You see this",
 			}

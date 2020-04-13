@@ -3,7 +3,8 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
 func TestTag(t *testing.T) {
@@ -11,72 +12,187 @@ func TestTag(t *testing.T) {
 	tb := DB.Tag(nil)
 	defer tb.Close(nil)
 	t.Parallel()
-
-	filetag := tag.Tag{
-		Word: "test",
-		Type: tag.USER,
-		Data: tag.Data{
-			tag.USER: map[string]string{
-				"hello": "world",
+	fileids := []types.FileID{
+		types.FileID{
+			StoreID: types.StoreID{
+				Hash:  123456,
+				Stamp: 789,
+			},
+			Stamp: []byte("abctag"),
+		},
+		types.FileID{
+			StoreID: types.StoreID{
+				Hash:  4568196,
+				Stamp: 4897,
+			},
+			Stamp: []byte("tagtest"),
+		},
+	}
+	ownerids := []types.OwnerID{
+		types.OwnerID{
+			Type:        'u',
+			UserDefined: [3]byte{'e', 's', 't'},
+			Stamp:       []byte{'1', 't', 'a', 'g'},
+		},
+		types.OwnerID{
+			Type:        't',
+			UserDefined: [3]byte{'e', 's', 't'},
+			Stamp:       []byte{'2'},
+		},
+	}
+	tags := []tag.FileTag{
+		tag.FileTag{
+			File:  fileids[0],
+			Owner: ownerids[0],
+			Tag: tag.Tag{
+				Word: "test",
+				Type: tag.USER | tag.CONTENT,
+			},
+		},
+		tag.FileTag{
+			File:  fileids[1],
+			Owner: ownerids[0],
+			Tag: tag.Tag{
+				Word: "test2",
+				Type: tag.TOPIC | tag.CONTENT,
+			},
+		},
+		tag.FileTag{
+			File:  fileids[0],
+			Owner: ownerids[1],
+			Tag: tag.Tag{
+				Word: "test3",
+				Type: tag.ACTION | tag.CONTENT,
+			},
+		},
+		tag.FileTag{
+			File:  fileids[1],
+			Owner: ownerids[1],
+			Tag: tag.Tag{
+				Word: "test4",
+				Type: tag.ALLFILE,
 			},
 		},
 	}
-
-	t.Log("Upsert File")
-	err := tb.UpsertFile(fid, filetag)
+	t.Logf("fileids: %v", fileids)
+	t.Logf("ownerids: %v", ownerids)
+	t.Log("Upsert")
+	err := tb.Upsert(tags...)
 	if err != nil {
-		t.Fatalf("failed to UpsertFile: %s", err)
+		t.Fatalf("Unable to Upsert tags: %s", err.Error())
 	}
 
-	storetag := tag.Tag{
-		Word: "another",
-		Type: tag.CONTENT,
-		Data: tag.Data{
-			tag.CONTENT: map[string]string{
-				"data": "base",
+	t.Log("Get")
+	{
+		gtags, err := tb.Get(fileids[0], ownerids[0])
+		if err != nil {
+			t.Fatalf("Unable to Get tags: %s", err.Error())
+		}
+		if len(gtags) != 2 {
+			t.Fatalf("Incorrect Return: %v", gtags)
+		}
+	}
+
+	t.Log("GetType")
+	{
+		gtags, err := tb.GetType(fileids[0], ownerids[0], tag.USER)
+		if err != nil {
+			t.Fatalf("Unable to GetType: %s", err.Error())
+		}
+		if len(gtags) != 1 {
+			t.Fatalf("Incorrect Return: %v", gtags)
+		}
+	}
+
+	t.Log("GetAll")
+	{
+		gtags, err := tb.GetAll(tag.USER, ownerids[0])
+		if err != nil {
+			t.Fatalf("Unable to GetAll: %s", err.Error())
+		}
+		if len(gtags) != 1 {
+			t.Fatalf("Incorrect Return: %v", gtags)
+		}
+	}
+
+	t.Log("SearchFiles")
+	{
+		stags, err := tb.SearchFiles(fileids, tag.FileTag{
+			Tag: tag.Tag{
+				Word: "test",
+				Type: tag.ALLTYPES,
+				Data: tag.Data{
+					tag.SEARCH: map[string]interface{}{
+						"regex": true,
+					},
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("Unable to Search Files: %s", err.Error())
+		}
+		if len(stags) != 2 {
+			t.Fatalf("Incorrect Return: %v", stags)
+		}
+	}
+	owner := &types.User{
+		ID:   ownerids[0],
+		Name: "tagtestowner",
+	}
+	files := []*types.File{
+		&types.File{
+			ID: fileids[0],
+			Permission: types.Permission{
+				Own: owner,
+			},
+		},
+		&types.File{
+			ID: fileids[1],
+			Permission: types.Permission{
+				Own: owner,
 			},
 		},
 	}
-
-	t.Log("Upsert Store")
-	err = tb.UpsertStore(sid, storetag)
-	if err != nil {
-		t.Fatalf("failed to upsert store tag: %s", err)
+	{
+		ob := tb.Owner(nil)
+		if _, err := ob.Reserve(owner.GetID(), owner.GetName()); err != nil {
+			t.Fatalf("unable to reserve owner: %s", err.Error())
+		}
+		if err := ob.Insert(owner); err != nil {
+			t.Fatalf("unable to insert owner: %s", err.Error())
+		}
+		ob.Close(nil)
+		fb := tb.File(nil)
+		for _, fid := range fileids {
+			if _, err := fb.Reserve(fid); err != nil {
+				t.Fatalf("unable to reserve fid: %s", fid.String())
+			}
+		}
+		for i, f := range files {
+			if err := fb.Insert(f); err != nil {
+				t.Fatalf("unable to insert file %d", i)
+			}
+		}
+		fb.Close(nil)
 	}
-
-	t.Log("FileTags")
-	matched, err := tb.FileTags(fid)
-	if err != nil {
-		t.Fatalf("failed to get File Tags: %s", err)
-	}
-	if len(matched) != 2 || matched["test"] == nil || matched["another"] == nil {
-		t.Fatalf("incorrect matches: %v", matched)
-	}
-
-	t.Log("GetFiles")
-	fids, sids, err := tb.GetFiles([]tag.Tag{
-		tag.Tag{
-			Word: "test",
-			Type: tag.USER,
-		},
-	})
-	if err != nil {
-		t.Fatalf("failed to GetFiles: %s", err)
-	}
-	if len(fids) != 1 || !fids[0].Equal(fid) || len(sids) != 1 || !sids[0].Equal(sid) {
-		t.Fatalf("incorrect return from GetFiles: %v, %v", fids, sids)
-	}
-
-	t.Log("Search Data")
-	matches, err := tb.SearchData(tag.USER, tag.Data{
-		tag.USER: map[string]string{
-			"hello": "world",
-		},
-	})
-	if err != nil {
-		t.Fatalf("unable to SearchData: %s", err)
-	}
-	if len(matches) != 1 || matches[0].Word != "test" {
-		t.Fatalf("incorrect return of SearchData: %v", matches)
+	t.Log("SearchOwned")
+	{
+		stags, err := tb.SearchOwned(ownerids[0], tag.FileTag{
+			Tag: tag.Tag{
+				Word: "test",
+				Type: tag.ALLTYPES,
+				Data: tag.Data{
+					tag.SEARCH: map[string]interface{}{
+						"regex": true,
+					},
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to search Owned: %s", err.Error())
+		}
+		if len(stags) != 2 {
+			t.Fatalf("incorrect return: %v", stags)
+		}
 	}
 }

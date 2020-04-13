@@ -1,8 +1,8 @@
 package memory
 
 import (
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
 
 // Viewbase wraps database and provides view operations
@@ -11,7 +11,7 @@ type Viewbase struct {
 }
 
 // Insert adds new viewstore to the database
-func (vb *Viewbase) Insert(vs *database.ViewStore) error {
+func (vb *Viewbase) Insert(vs *types.ViewStore) error {
 	lock.Lock()
 	defer lock.Unlock()
 	vb.Views[vs.ID.String()] = vs
@@ -19,12 +19,12 @@ func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 }
 
 // Get viewstore of associated id
-func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error) {
+func (vb *Viewbase) Get(id types.StoreID) (out *types.ViewStore, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	out, ok := vb.Views[id.String()]
 	if !ok {
-		return nil, database.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
 	return
 }
