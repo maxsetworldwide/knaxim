@@ -1,0 +1,21 @@
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55774"},"acronym":"ABFC","complete":"advanced base functional component"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e557da"},"acronym":"ACM","complete":"advanced conventional munitions"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e557dc"},"acronym":"ACM","complete":"advanced cruise missile"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55820"},"acronym":"ACW","complete":"advanced conventional weapons"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55826"},"acronym":"AD","complete":"advanced deployability"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55846"},"acronym":"ADCAP","complete":"advanced capability"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e5585e"},"acronym":"ADL","complete":"Unit advanced distributed learning"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55892"},"acronym":"ADVON","complete":"advanced echelon"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e558b0"},"acronym":"AEHF","complete":"advanced extremely high frequency"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55a00"},"acronym":"AIRES","complete":"advanced imagery requirements exploitation system"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55a6c"},"acronym":"ALSS","complete":"advanced logistic support site"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55ad0"},"acronym":"AMRAAM","complete":"advanced medium-range air-to-air missile"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55af0"},"acronym":"ANDVT","complete":"advanced narrowband digital voice terminal"}
+{"_id":{"$oid":"5e8fa78cf09ade28e8e55bd8"},"acronym":"ASB","complete":"naval advanced support base"}
+{"_id":{"$oid":"5e8fa78df09ade28e8e55c5a"},"acronym":"ASO","complete":"advanced special operations"}
+{"_id":{"$oid":"5e8fa78df09ade28e8e55c8c"},"acronym":"ATACC","complete":"advanced tactical air command center"}
+{"_id":{"$oid":"5e8fa78df09ade28e8e55ccc"},"acronym":"ATM","complete":"advanced trauma management"}
+{"_id":{"$oid":"5e8fa78df09ade28e8e55ce4"},"acronym":"ATP","complete":"advanced targeting pod"}
+{"_id":{"$oid":"5e8fa78df09ade28e8e576f1"},"acronym":"JATACS","complete":"joint advanced tactical cryptological support"}
+{"_id":{"$oid":"5e8fa78ef09ade28e8e581b8"},"acronym":"NALSS","complete":"naval advanced logistic support site"}
+{"_id":{"$oid":"5e8fa78ef09ade28e8e592a1"},"acronym":"TAC","complete":"tactical advanced computer "}
