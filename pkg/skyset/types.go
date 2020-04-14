@@ -21,8 +21,8 @@ const (
 	CXN  group = iota
 )
 
-//GetGroup converts string representation to const
-func GetGroup(str string) group {
+//getGroup converts string representation to const
+func getGroup(str string) group {
 	switch str {
 	case "Unknown":
 		return UNK
@@ -69,7 +69,7 @@ func (g *group) UnmarshalJSON(input []byte) (err error) {
 			err = fmt.Errorf("Unmarshal Group: %v", e)
 		}
 	}()
-	*g = GetGroup(string(input[1 : len(input)-1]))
+	*g = getGroup(string(input[1 : len(input)-1]))
 	return nil
 }
 

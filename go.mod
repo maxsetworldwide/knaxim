@@ -19,9 +19,11 @@ require (
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/mdempsky/maligned v0.0.0-20180708014732-6e39bd26a8c8 // indirect
 	github.com/mibk/dupl v1.0.0 // indirect
+	github.com/montanaflynn/stats v0.6.3 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/opennota/check v0.0.0-20180911053232-0c771f5545ff // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/shogo82148/go-shuffle v0.0.0-20180218125048-27e6095f230d // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/thecodingmachine/gotenberg-go-client/v7 v7.1.0
 	github.com/tidwall/pretty v1.0.0 // indirect
