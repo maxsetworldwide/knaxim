@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
@@ -13,7 +12,6 @@ import (
 const userTagType = tag.Type(uint32(1 << 24))
 
 func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]tag.FileTag, error) {
-	fmt.Printf("DEBUG: useTagType: %d\n", userTagType)
 	srcDB := client.Database(src)
 
 	tagColl := srcDB.Collection("tag")
@@ -32,20 +30,17 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 		Type tag.Type                     `bson:"type"`
 	}
 	if err := cursor.All(ctx, &oldTags); err != nil {
-		fmt.Println("Cursor error")
 		if err == mongo.ErrNoDocuments {
 			return []tag.FileTag{}, nil
 		}
 		return nil, err
 	}
 	var newTags []tag.FileTag
-	fmt.Printf("oldTags length:%d\n", len(oldTags))
 	for _, currTag := range oldTags {
 		if idMap, ok := currTag.Data["user"]; ok {
 			for id, val := range idMap {
 				userID, err := types.DecodeObjectIDString(id)
 				if err != nil {
-					fmt.Println("Error decoding user id")
 					return nil, err
 				}
 				if val == "d" {
