@@ -8,7 +8,7 @@ import (
 type group uint8
 
 type grouping struct {
-	grp    group
+	group  group
 	tokens []Token
 }
 
