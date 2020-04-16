@@ -2,10 +2,14 @@ package main
 
 /*
  * This is an integration test that requires an external mongodb session to be
- * running. The URI will be grabbed from the command line when running the test.
- * A name for an existing and valid old DB should be provided as well. JSON
- * files should be provided with this package so they can be easily created via
- * Compass.
+ * running. The URI will be grabbed from the command line when running the test,
+ * or defaults to mongodb://localhost:27017.
+ * A .gz file containing the intended test DB is included in testdata/ . This
+ * can be uploaded to your mongo instance via `mongorestore --gzip --archive=testdata/testDB.gz`.
+ * This will create a database called "conversionTestOldDB" within your mongo instance.
+ * Then, simply running `go test` will run the test with that database name.
+ * The -testoldname can be specified, but will default to "conversionTestOldDB"
+ * Run go test with -v to see the name of the new test DB.
  */
 
 import (
@@ -20,20 +24,12 @@ import (
 )
 
 var testUri = flag.String("testuri", "mongodb://localhost:27017", "mongodb URI")
-var testOldName = flag.String("testoldname", "", "A valid DB name to be read in the test.")
-var testNewName = ""
+var testOldName = flag.String("testoldname", "conversionTestOldDB", "A valid DB name to be read in the test.")
 
 var noclean = flag.Bool("noclean", false, "If true, tests will not clean up databases after finishing, so they can be inspected manually.")
 
-//wanted to do a test that checks that old database is not changed, but doesn't
-//seem entirely possible
 func TestConversion(t *testing.T) {
 	flag.Parse()
-	testNewName := uuid.New().String()
-	if testNewName == "" {
-		t.Fatalf("Test setup error: uuid generation for new test db name failed")
-	}
-	t.Logf("New name: %s", testNewName)
 	testctx := context.TODO()
 	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testUri))
 	if err != nil {
@@ -44,6 +40,15 @@ func TestConversion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Test setup error: %s", err.Error())
 	}
+	dbList, err := testClient.ListDatabaseNames(testctx, bson.M{"name": *testOldName})
+	if len(dbList) == 0 {
+		t.Fatalf("Database %s does not exist. This test requires a running instance of a test old database.", *testOldName)
+	}
+	testNewName := uuid.New().String()
+	if testNewName == "" {
+		t.Fatalf("Test setup error: uuid generation for new test db name failed")
+	}
+	t.Logf("New name: %s", testNewName)
 	t.Run("Invalid URI", func(t *testing.T) {
 		invalidUri := "thisURIShouldError"
 		err := convertDB(invalidUri, "a", "b", true)

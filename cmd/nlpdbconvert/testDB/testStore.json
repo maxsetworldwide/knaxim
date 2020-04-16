@@ -1,4 +1,0 @@
-{"_id":{"$oid":"5e8fa7def09ade28e8e59e30"},"id":{"hash":{"$numberLong":"3559580550"},"stamp":{"$numberInt":"22452"}},"ctype":"application/vnd.oasis.opendocument.text","fsize":{"$numberInt":"19306"}}
-{"_id":{"$oid":"5e8fa808f09ade28e8e5a16f"},"id":{"hash":{"$numberLong":"3619752955"},"stamp":{"$numberInt":"36523"}},"ctype":"text/vnd.abc","fsize":{"$numberInt":"34"}}
-{"_id":{"$oid":"5e8fa808f09ade28e8e5a177"},"id":{"hash":{"$numberInt":"553190513"},"stamp":{"$numberInt":"43003"}},"ctype":"text/plain","fsize":{"$numberInt":"16"}}
-{"_id":{"$oid":"5e8fa8b5f09ade28e8e5a3a2"},"id":{"hash":{"$numberInt":"1439693693"},"stamp":{"$numberInt":"38222"}},"ctype":"application/pdf","fsize":{"$numberInt":"57662"}}
