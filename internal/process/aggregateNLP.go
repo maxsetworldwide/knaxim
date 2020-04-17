@@ -1,6 +1,10 @@
 package process
 
-import "git.maxset.io/web/knaxim/pkg/skyset"
+import (
+	"sort"
+
+	"git.maxset.io/web/knaxim/pkg/skyset"
+)
 
 type nlpaggregate struct {
 	sentence uint
@@ -69,11 +73,13 @@ func (nlp nlpaggregate) add(phr []skyset.Phrase) {
 	}
 }
 
-type nlpdatalist []struct {
+type nlpdatalistelement struct {
 	word  string
 	first uint
 	count uint
 }
+
+type nlpdatalist []nlpdatalistelement
 
 func (n nlpdatalist) Len() int {
 	return len(n)
@@ -91,4 +97,37 @@ func (n nlpdatalist) Less(i, j int) bool {
 
 func (n nlpdatalist) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
+}
+
+func (nlp nlpaggregate) report() map[skyset.Synth]nlpdatalist {
+	out := make(map[skyset.Synth]nlpdatalist)
+	for syn, data := range nlp.data {
+		var temp nlpdatalist
+		for word, info := range data {
+			temp = append(temp, nlpdatalistelement{
+				word:  word,
+				first: info.first,
+				count: info.count,
+			})
+		}
+		sort.Sort(temp)
+		out[syn] = temp
+	}
+	return out
+}
+
+func (n nlpdatalist) Tags(typ tag.Type) (tags []tag.Tag){
+	for i, data := range n {
+		tags = append(tags, tag.Tag{
+			Word: data.word,
+			Type: typ,
+			Data: tag.Data{
+				typ: map[string]interface{}{
+					"firstOccurance": data.first,
+					"count": data.count,
+					"significance": i,
+				}
+			}
+		})
+	}
 }
