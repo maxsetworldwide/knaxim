@@ -48,10 +48,10 @@ func getMongoClient(ctx context.Context, uri string) (*mongoDB.Client, error) {
 
 func convertDB(uri, oldName, newName string, overwrite bool) error {
 	if oldName == newName {
-		return errors.New("Old name and new name should not be the same.")
+		return errors.New("old name and new name should not be the same")
 	}
 	if len(oldName) == 0 || len(newName) == 0 {
-		return errors.New("oldName and newName should not be empty.")
+		return errors.New("oldName and newName should not be empty")
 	}
 	ctx := context.TODO()
 	mongoClient, err := getMongoClient(ctx, uri)

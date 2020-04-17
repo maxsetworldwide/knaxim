@@ -26,7 +26,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var testUri = flag.String("testuri", "mongodb://localhost:27017", "mongodb URI")
+var testURI = flag.String("testuri", "mongodb://localhost:27017", "mongodb URI")
 var testOldName = flag.String("testoldname", "conversionTestOldDB", "A valid DB name to be read in the test.")
 var noclean = flag.Bool("noclean", false, "If true, tests will not clean up databases after finishing, so they can be inspected manually.")
 
@@ -39,7 +39,7 @@ var expectedTagsPerWord = map[string]int{
 func TestConversion(t *testing.T) {
 	flag.Parse()
 	testctx := context.TODO()
-	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testUri))
+	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testURI))
 	if err != nil {
 		t.Fatalf("Test setup error: %s", err.Error())
 	}
@@ -58,33 +58,33 @@ func TestConversion(t *testing.T) {
 	}
 	t.Logf("New name: %s", testNewName)
 	t.Run("Invalid URI", func(t *testing.T) {
-		invalidUri := "thisURIShouldError"
-		err := convertDB(invalidUri, "a", "b", true)
+		invalidURI := "thisURIShouldError"
+		err := convertDB(invalidURI, "a", "b", true)
 		if err == nil {
-			t.Fatalf("Expected error from invalid URI. Provided '%s'", invalidUri)
+			t.Fatalf("Expected error from invalid URI. Provided '%s'", invalidURI)
 		}
 	})
 	t.Run("Invalid Old Name", func(t *testing.T) {
 		invalidName := uuid.New().String()
-		err := convertDB(*testUri, invalidName, testNewName, true)
+		err := convertDB(*testURI, invalidName, testNewName, true)
 		if err == nil {
 			t.Fatalf("Expected error from invalid old DB name. Provided '%s'", invalidName)
 		}
 	})
 	t.Run("Same Name", func(t *testing.T) {
-		err := convertDB(*testUri, testNewName, testNewName, true)
+		err := convertDB(*testURI, testNewName, testNewName, true)
 		if err == nil {
 			t.Fatalf("Expected error when providing the same name for old and new.")
 		}
 	})
 	t.Run("Empty Old Name", func(t *testing.T) {
-		err := convertDB(*testUri, "", testNewName, true)
+		err := convertDB(*testURI, "", testNewName, true)
 		if err == nil {
 			t.Fatalf("Expected error when providing an empty old name.")
 		}
 	})
 	t.Run("Empty New Name", func(t *testing.T) {
-		err := convertDB(*testUri, *testOldName, "", true)
+		err := convertDB(*testURI, *testOldName, "", true)
 		if err == nil {
 			t.Fatalf("Expected error when providing an empty new name.")
 		}
@@ -98,20 +98,20 @@ func TestConversion(t *testing.T) {
 		}
 		defer testClient.Database(existingName).Drop(testctx)
 		t.Run("Overwrite Off", func(t *testing.T) {
-			err = convertDB(*testUri, *testOldName, existingName, false)
+			err = convertDB(*testURI, *testOldName, existingName, false)
 			if err == nil {
 				t.Fatalf("Expected error from providing existing newDB with no overwrite")
 			}
 		})
 		t.Run("Overwrite On", func(t *testing.T) {
-			err = convertDB(*testUri, *testOldName, existingName, true)
+			err = convertDB(*testURI, *testOldName, existingName, true)
 			if err != nil {
 				t.Fatalf("Expected no error from providing existing newDB with overwrite")
 			}
 		})
 	})
 	t.Run("Intended Usage", func(t *testing.T) {
-		err := convertDB(*testUri, *testOldName, testNewName, false)
+		err := convertDB(*testURI, *testOldName, testNewName, false)
 		if err != nil {
 			t.Fatalf("Expected no error from proper usage.\nProvided:\nURI:%s\nold:%s\nnew:%s\nError:%s", *uri, *testOldName, testNewName, err.Error())
 		}
@@ -140,7 +140,7 @@ func TestConversion(t *testing.T) {
 				t.Fatalf("Did not receive expected collections in new database.\nExpected:%+v\nReceived:%+v", expColls, dbColls)
 			}
 			for _, coll := range dbColls {
-				expColls[coll] += 1
+				expColls[coll]++
 			}
 			for _, val := range expColls {
 				if val != 1 {
