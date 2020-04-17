@@ -66,8 +66,8 @@ type cut struct {
 }
 
 func cutSequence(seq []byte) []cut {
-	solutions := make([][]cut, 0, len(seq)+1)
-	scores := make([]float64, 0, len(seq)+1)
+	solutions := make([][]cut, len(seq)+1)
+	scores := make([]float64, len(seq)+1)
 	for i := range scores {
 		scores[i] = float64(2 * len(seq))
 	}

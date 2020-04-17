@@ -179,3 +179,13 @@ asyncreader:
   script:
     - cd pkg/asyncreader
     - go test -v
+
+skyset:
+  stage: test
+  tags:
+    - golang
+  dependencies:
+    - serverBuild
+  script:
+    - cd pkg/skyset
+    - go test -v
