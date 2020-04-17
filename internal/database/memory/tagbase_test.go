@@ -18,21 +18,21 @@ func TestTag(t *testing.T) {
 				Hash:  123456,
 				Stamp: 789,
 			},
-			Stamp: []byte("abc"),
+			Stamp: []byte("abctag"),
 		},
 		types.FileID{
 			StoreID: types.StoreID{
 				Hash:  4568196,
 				Stamp: 4897,
 			},
-			Stamp: []byte("test"),
+			Stamp: []byte("tagtest"),
 		},
 	}
 	ownerids := []types.OwnerID{
 		types.OwnerID{
-			Type:        't',
+			Type:        'u',
 			UserDefined: [3]byte{'e', 's', 't'},
-			Stamp:       []byte{'1'},
+			Stamp:       []byte{'1', 't', 'a', 'g'},
 		},
 		types.OwnerID{
 			Type:        't',
@@ -133,6 +133,66 @@ func TestTag(t *testing.T) {
 		}
 		if len(stags) != 2 {
 			t.Fatalf("Incorrect Return: %v", stags)
+		}
+	}
+	owner := &types.User{
+		ID:   ownerids[0],
+		Name: "tagtestowner",
+	}
+	files := []*types.File{
+		&types.File{
+			ID: fileids[0],
+			Permission: types.Permission{
+				Own: owner,
+			},
+		},
+		&types.File{
+			ID: fileids[1],
+			Permission: types.Permission{
+				Own: owner,
+			},
+		},
+	}
+	{
+		ob := tb.Owner(nil)
+		if _, err := ob.Reserve(owner.GetID(), owner.GetName()); err != nil {
+			t.Fatalf("unable to reserve owner: %s", err.Error())
+		}
+		if err := ob.Insert(owner); err != nil {
+			t.Fatalf("unable to insert owner: %s", err.Error())
+		}
+		ob.Close(nil)
+		fb := tb.File(nil)
+		for _, fid := range fileids {
+			if _, err := fb.Reserve(fid); err != nil {
+				t.Fatalf("unable to reserve fid: %s", fid.String())
+			}
+		}
+		for i, f := range files {
+			if err := fb.Insert(f); err != nil {
+				t.Fatalf("unable to insert file %d", i)
+			}
+		}
+		fb.Close(nil)
+	}
+	t.Log("SearchOwned")
+	{
+		stags, err := tb.SearchOwned(ownerids[0], tag.FileTag{
+			Tag: tag.Tag{
+				Word: "test",
+				Type: tag.ALLTYPES,
+				Data: tag.Data{
+					tag.SEARCH: map[string]interface{}{
+						"regex": true,
+					},
+				},
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to search Owned: %s", err.Error())
+		}
+		if len(stags) != 2 {
+			t.Fatalf("incorrect return: %v", stags)
 		}
 	}
 }
