@@ -98,5 +98,10 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return err
 	}
 
+	_, err = createNLPTags(ctx, mongoClient, oldName)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
