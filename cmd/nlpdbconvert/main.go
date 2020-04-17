@@ -1,10 +1,3 @@
-/*
-* nlpdbconvert: takes a pre-nlpgraphs update database for Knaxim/CE and updates
-* the tagbase to include new nlp tags in the tagbase structure.
-* This cmd takes and mongoDB URI and two DB names - the old db name and a new
-* one.
-* THE NEW DB NAME WILL BE OVERWRITTEN!
- */
 package main
 
 import (
@@ -18,12 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-/*
- * params:
- *   mongo URI
- *   old db name
- *   new db name
- */
 var uri = flag.String("uri", "mongodb://localhost:27017", "mongodb URI")
 var oldDBName = flag.String("oldname", "", "DB name to read from")
 var newDBName = flag.String("newname", "", "New DB name to write to")
@@ -31,7 +18,6 @@ var overwrite = flag.Bool("overwrite", false, "Overwrite newname if it already e
 
 func main() {
 	flag.Parse()
-
 }
 
 func getMongoClient(ctx context.Context, uri string) (*mongoDB.Client, error) {

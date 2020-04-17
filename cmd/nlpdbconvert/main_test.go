@@ -1,19 +1,5 @@
 package main
 
-/*
- * This is an integration test that requires an external mongodb session to be
- * running. A manual test should be utilized in tandem with this test, as it
- * simply checks for easy-to-see errors. Refer to testdata/testDBNotes.
- * The URI will be grabbed from the command line when running the test, or
- * defaults to mongodb://localhost:27017.
- * A .gz file containing the intended test DB is included in testdata/ . This
- * can be uploaded to your mongo instance via `mongorestore --gzip --archive=testdata/testDB.gz`.
- * This will create a database called "conversionTestOldDB" within your mongo instance.
- * Then, simply running `go test` will run the test with that database name.
- * The -testoldname can be specified, but will default to "conversionTestOldDB"
- * Run go test with -v to see the name of the new test DB.
- */
-
 import (
 	"context"
 	"flag"
