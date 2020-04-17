@@ -2,8 +2,10 @@ package main
 
 /*
  * This is an integration test that requires an external mongodb session to be
- * running. The URI will be grabbed from the command line when running the test,
- * or defaults to mongodb://localhost:27017.
+ * running. A manual test should be utilized in tandem with this test, as it
+ * simply checks for easy-to-see errors. Refer to testdata/testDBNotes.
+ * The URI will be grabbed from the command line when running the test, or
+ * defaults to mongodb://localhost:27017.
  * A .gz file containing the intended test DB is included in testdata/ . This
  * can be uploaded to your mongo instance via `mongorestore --gzip --archive=testdata/testDB.gz`.
  * This will create a database called "conversionTestOldDB" within your mongo instance.
@@ -17,6 +19,7 @@ import (
 	"flag"
 	"testing"
 
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,8 +28,13 @@ import (
 
 var testUri = flag.String("testuri", "mongodb://localhost:27017", "mongodb URI")
 var testOldName = flag.String("testoldname", "conversionTestOldDB", "A valid DB name to be read in the test.")
-
 var noclean = flag.Bool("noclean", false, "If true, tests will not clean up databases after finishing, so they can be inspected manually.")
+
+// based on provided testDB.gz
+var expectedTagsPerWord = map[string]int{
+	"_favorites_": 3,
+	"_trash_":     1,
+}
 
 func TestConversion(t *testing.T) {
 	flag.Parse()
@@ -137,6 +145,43 @@ func TestConversion(t *testing.T) {
 			for _, val := range expColls {
 				if val != 1 {
 					t.Fatalf("Did not receive expected collections in new database.\nExpected:%+v\nReceived:%+v", expColls, dbColls)
+				}
+			}
+		})
+		t.Run("Num User Tags", func(t *testing.T) {
+			var userTagType tag.Type = 1 << 24
+			cursor, err := testClient.Database(testNewName).Collection("filetags").Find(testctx, bson.M{
+				"type": userTagType,
+			})
+			if err != nil {
+				t.Fatalf("Error retrieving user tags: %s", err.Error())
+			}
+			var tags []tag.FileTag
+			err = cursor.All(testctx, &tags)
+			if err != nil {
+				t.Fatalf("Error parsing response: %s", err.Error())
+			}
+			expectedNumUserTags := 0
+			for _, val := range expectedTagsPerWord {
+				expectedNumUserTags += val
+			}
+			if len(tags) != expectedNumUserTags {
+				t.Fatalf("Expected %d tags from resulting database. Received %d.", expectedNumUserTags, len(tags))
+			}
+			tagWords := make(map[string]int)
+			for _, tag := range tags {
+				tagWords[tag.Word]++
+			}
+			if len(tagWords) != len(expectedTagsPerWord) {
+				t.Fatalf("Expected %d different words in user tags. Received %d. Map: %+v", len(expectedTagsPerWord), len(tagWords), tagWords)
+			}
+			for key, val := range tagWords {
+				expectedNum, ok := expectedTagsPerWord[key]
+				if !ok {
+					t.Fatalf("Received unexpected user tag: %s, Map: %+v", key, tagWords)
+				}
+				if expectedNum != val {
+					t.Fatalf("Expected %d %s tags. Received %d. Map: %+v", expectedNum, key, val, tagWords)
 				}
 			}
 		})
