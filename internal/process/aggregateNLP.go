@@ -3,6 +3,7 @@ package process
 import (
 	"sort"
 
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/pkg/skyset"
 )
 
@@ -116,18 +117,19 @@ func (nlp nlpaggregate) report() map[skyset.Synth]nlpdatalist {
 	return out
 }
 
-func (n nlpdatalist) Tags(typ tag.Type) (tags []tag.Tag){
+func (n nlpdatalist) tags(typ tag.Type) (tags []tag.Tag) {
 	for i, data := range n {
 		tags = append(tags, tag.Tag{
 			Word: data.word,
 			Type: typ,
 			Data: tag.Data{
 				typ: map[string]interface{}{
-					"firstOccurance": data.first,
-					"count": data.count,
+					"first":        data.first,
+					"count":        data.count,
 					"significance": i,
-				}
-			}
+				},
+			},
 		})
 	}
+	return
 }
