@@ -2,6 +2,7 @@ package process
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -44,4 +45,9 @@ func TestRead(t *testing.T) {
 	}
 	sb.Close(testctx)
 	Read(testctx, fs, db, tikapath, gotenburgpath)
+	databasejson, err := json.MarshalIndent(db, "", "\t")
+	if err != nil {
+		t.Fatalf("unable to produce database output: %s", err.Error())
+	}
+	t.Logf("state of db: %s\n", string(databasejson))
 }

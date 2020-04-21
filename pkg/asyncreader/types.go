@@ -10,12 +10,16 @@ type buffer struct {
 	maxsize        int
 	lock           *sync.RWMutex
 	availableSpace *sync.Cond
+	newData        *sync.Cond
 	readers        []*bufferReader
 	shifter        *sync.Once
 	closed         bool
 }
 
 func (buf *buffer) Write(data []byte) (n int, err error) {
+	if buf.closed {
+		return 0, io.ErrClosedPipe
+	}
 	b := data
 	buf.lock.Lock()
 	defer buf.lock.Unlock()
@@ -24,6 +28,7 @@ func (buf *buffer) Write(data []byte) (n int, err error) {
 			shift := buf.maxsize - len(buf.data)
 			buf.data = append(buf.data, b[0:shift]...)
 			b = b[shift:]
+			buf.newData.Broadcast()
 		}
 		if buf.availableSpace == nil {
 			buf.availableSpace = sync.NewCond(buf.lock)
@@ -31,6 +36,7 @@ func (buf *buffer) Write(data []byte) (n int, err error) {
 		buf.availableSpace.Wait()
 	}
 	buf.data = append(buf.data, b...)
+	buf.newData.Broadcast()
 	return len(data), nil
 }
 
@@ -39,6 +45,8 @@ func (buf *buffer) Close() error {
 		buf.lock.Lock()
 		defer buf.lock.Unlock()
 		buf.closed = true
+		buf.newData.Broadcast()
+		buf.newData = nil
 	}
 	return nil
 }
@@ -80,6 +88,9 @@ type bufferReader struct {
 
 func (br *bufferReader) Read(b []byte) (n int, err error) {
 	br.lock.RLock()
+	for len(br.data)-br.head <= 0 && br.newData != nil {
+		br.newData.Wait()
+	}
 	n = copy(b, br.data[br.head:])
 	br.head += n
 	if br.closed && br.head >= len(br.data) {

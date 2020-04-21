@@ -14,6 +14,7 @@ func NewWithMaxsize(n int, m int) (io.WriteCloser, []io.Reader) {
 	w := new(buffer)
 	w.maxsize = m
 	w.lock = new(sync.RWMutex)
+	w.newData = sync.NewCond(w.lock.RLocker())
 	rs := make([]io.Reader, n)
 	w.readers = make([]*bufferReader, n)
 	for i := 0; i < n; i++ {
