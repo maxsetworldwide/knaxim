@@ -48,7 +48,7 @@ var includepos = map[skyset.Synth]map[skyset.PennPOS]bool{
 	},
 }
 
-func (nlp nlpaggregate) add(phr []skyset.Phrase) {
+func (nlp *nlpaggregate) add(phr []skyset.Phrase) {
 	nlp.sentence++
 	if nlp.data == nil {
 		nlp.data = make(map[skyset.Synth]map[string]nlpaggregatedata)
@@ -100,7 +100,7 @@ func (n nlpdatalist) Swap(i, j int) {
 	n[i], n[j] = n[j], n[i]
 }
 
-func (nlp nlpaggregate) report() map[skyset.Synth]nlpdatalist {
+func (nlp *nlpaggregate) report() map[skyset.Synth]nlpdatalist {
 	out := make(map[skyset.Synth]nlpdatalist)
 	for syn, data := range nlp.data {
 		var temp nlpdatalist

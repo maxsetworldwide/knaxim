@@ -49,5 +49,6 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to produce database output: %s", err.Error())
 	}
+	<-testctx.Done()
 	t.Logf("state of db: %s\n", string(databasejson))
 }
