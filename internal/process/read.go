@@ -19,7 +19,7 @@ import (
 )
 
 //Read generates meta data from the content of a filestore
-func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika string, gotenburg string) {
+func Read(ctx context.Context, name string, fs *types.FileStore, db database.Database, tika string, gotenburg string) {
 	errlock := new(sync.Mutex)
 	var errs []error
 	pusherr := func(e error) {
@@ -59,8 +59,6 @@ func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika s
 
 	// Tika
 	writetext, readtexts := asyncreader.New(2)
-	writestarted := new(sync.WaitGroup)
-	writestarted.Add(1)
 	go func(w io.WriteCloser) {
 		defer wg.Done()
 		defer w.Close()
@@ -76,7 +74,6 @@ func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika s
 			return
 		}
 		defer tread.Close()
-		writestarted.Done()
 		_, err = io.Copy(w, tread)
 		if err != nil {
 			pusherr(err)
@@ -115,7 +112,6 @@ func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika s
 			}
 		}()
 		var ContentLines []types.ContentLine
-		writestarted.Wait()
 		for i := 0; scanner.Scan(); i++ {
 			sentence := scanner.Text()
 			nlpch <- sentence
@@ -138,13 +134,18 @@ func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika s
 	}(readtexts[0])
 	go func(r io.Reader) {
 		defer wg.Done()
-		writestarted.Wait()
-		//   Split Words > ContentTags
-		tags, err := tag.ExtractContentTags(r)
+		tags, err := tag.ExtractContentTags(strings.NewReader(name))
 		if err != nil {
 			pusherr(err)
 			return
 		}
+		//   Split Words > ContentTags
+		ftags, err := tag.ExtractContentTags(r)
+		if err != nil {
+			pusherr(err)
+			return
+		}
+		tags = append(tags, ftags...)
 		select {
 		case tagch <- tags:
 		case <-ctx.Done():
@@ -182,7 +183,7 @@ func Read(ctx context.Context, fs *types.FileStore, db database.Database, tika s
 			var err error
 			switch extConst {
 			case process.OFFICE:
-				result, err = converter.ConvertOffice("CloudEdisonView", buf.Bytes())
+				result, err = converter.ConvertOffice(name, buf.Bytes())
 			}
 			gotenFinished <- err
 		}()
