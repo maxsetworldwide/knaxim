@@ -19,7 +19,7 @@ import (
 )
 
 //Read generates meta data from the content of a filestore
-func Read(ctx context.Context, name string, fs *types.FileStore, db database.Database, tika string, gotenburg string) {
+func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.FileStore, db database.Database, tika string, gotenburg string) {
 	errlock := new(sync.Mutex)
 	var errs []error
 	pusherr := func(e error) {
@@ -214,6 +214,9 @@ func Read(ctx context.Context, name string, fs *types.FileStore, db database.Dat
 	wg.Wait()
 	close(tagch)
 	tagfinished.Wait()
+	if cncl != nil {
+		cncl()
+	}
 	if len(errs) == 0 {
 		fs.Perr = nil
 	} else {
