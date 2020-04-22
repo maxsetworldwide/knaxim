@@ -119,6 +119,9 @@ func (nlp *nlpaggregate) report() map[skyset.Synth]nlpdatalist {
 
 func (n nlpdatalist) tags(typ tag.Type) (tags []tag.Tag) {
 	for i, data := range n {
+		if i >= 50 {
+			break
+		}
 		tags = append(tags, tag.Tag{
 			Word: data.word,
 			Type: typ,

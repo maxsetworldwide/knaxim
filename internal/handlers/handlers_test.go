@@ -21,6 +21,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/process"
 	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/decode"
 	"github.com/gorilla/mux"
 )
 
@@ -229,7 +230,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		err = processContent(setupctx, nil, adminFiles[i].file, adminFiles[i].store)
+		decode.Read(setupctx, adminFiles[i].file.GetName(), adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -257,7 +258,7 @@ func populateDB() (err error) {
 			fmt.Printf("injest file failed")
 			return
 		}
-		err = processContent(setupctx, nil, publicFiles[i].file, publicFiles[i].store)
+		decode.Read(setupctx, publicFiles[i].file.GetName(), publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -267,7 +268,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		err = processContent(setupctx, nil, testFiles[i].file, testFiles[i].store)
+		decode.Read(setupctx, testFiles[i].file.GetName(), testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}

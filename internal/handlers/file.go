@@ -203,7 +203,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
+	pctx, _ := context.WithTimeout(context.Background(), timescale*5)
 
 	go decode.Read(pctx, file.Name, fs, config.DB, config.T.Path, config.V.GotenPath)
 	// go func() {
@@ -334,26 +334,27 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go func() {
-		if err := processContent(pctx, cncl, file, fs); err != nil {
-			util.VerboseRequest(r, "Processing Error: %s", err.Error())
-			fs.Perr = &errors.Processing{
-				Status:  242,
-				Message: err.Error(),
-			}
-		} else {
-			fs.Perr = nil
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-		defer cancel()
-		sb := config.DB.Store(ctx)
-		err := sb.UpdateMeta(fs)
-		if err != nil {
-			util.Verbose("Unable to Update Processing Error: %s", err.Error())
-		}
-		sb.Close(ctx)
-	}()
+	pctx, _ := context.WithTimeout(context.Background(), timescale*5)
+	go decode.Read(pctx, file.GetName(), fs, config.DB, config.T.Path, config.V.GotenPath)
+	// go func() {
+	// 	if err := processContent(pctx, cncl, file, fs); err != nil {
+	// 		util.VerboseRequest(r, "Processing Error: %s", err.Error())
+	// 		fs.Perr = &errors.Processing{
+	// 			Status:  242,
+	// 			Message: err.Error(),
+	// 		}
+	// 	} else {
+	// 		fs.Perr = nil
+	// 	}
+	// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	// 	defer cancel()
+	// 	sb := config.DB.Store(ctx)
+	// 	err := sb.UpdateMeta(fs)
+	// 	if err != nil {
+	// 		util.Verbose("Unable to Update Processing Error: %s", err.Error())
+	// 	}
+	// 	sb.Close(ctx)
+	// }()
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
