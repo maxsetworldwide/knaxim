@@ -23,8 +23,7 @@ func isChar(b byte) bool {
 
 // ScanWords causes a scanner to extract each alpha-numeric sequence
 func ScanWords(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	var start int
-	start = -1
+	start := -1
 	for i, b := range data {
 		if start < 0 && isChar(b) {
 			start = i
@@ -36,6 +35,9 @@ func ScanWords(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	}
 	if start < 0 {
 		return len(data), nil, nil
+	}
+	if atEOF {
+		return len(data), bytes.ToLower(data[start:]), nil
 	}
 	return start, nil, nil
 }
