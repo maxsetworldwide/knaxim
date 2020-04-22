@@ -12,11 +12,9 @@ var collsToCopy = []string{
 	"chunk",
 	"file",
 	"group",
-	"lines",
 	"reset",
 	"store",
 	"user",
-	"view",
 }
 
 func copyColls(ctx context.Context, client *mongo.Client, src, dest string) error {

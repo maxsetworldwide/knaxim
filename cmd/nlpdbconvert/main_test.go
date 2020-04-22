@@ -15,6 +15,8 @@ import (
 var testURI = flag.String("testuri", "mongodb://localhost:27017", "mongodb URI")
 var testOldName = flag.String("testoldname", "conversionTestOldDB", "A valid DB name to be read in the test.")
 var noclean = flag.Bool("noclean", false, "If true, tests will not clean up databases after finishing, so they can be inspected manually.")
+var testGotenPath = flag.String("testgoten", "http://localhost:3000", "gotenberg URI")
+var testTikaPath = flag.String("testtika", "http://localhost:9998", "tika URI")
 
 // based on provided testDB.gz
 var expectedTagsPerWord = map[string]int{
@@ -24,6 +26,8 @@ var expectedTagsPerWord = map[string]int{
 
 func TestConversion(t *testing.T) {
 	flag.Parse()
+	gotenPath = testGotenPath
+	tikaPath = testTikaPath
 	testctx := context.TODO()
 	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testURI))
 	if err != nil {
@@ -122,11 +126,11 @@ func TestConversion(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Error getting collection names: %s", err.Error())
 			}
-			if len(dbColls) != len(expColls) {
-				t.Fatalf("Did not receive expected collections in new database.\nExpected:%+v\nReceived:%+v", expColls, dbColls)
-			}
 			for _, coll := range dbColls {
 				expColls[coll]++
+			}
+			if len(dbColls) != len(expColls) {
+				t.Fatalf("Did not receive expected collections in new database.\nExpected:%+v\nReceived:%+v", expColls, dbColls)
 			}
 			for _, val := range expColls {
 				if val != 1 {

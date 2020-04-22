@@ -15,6 +15,8 @@ var uri = flag.String("uri", "mongodb://localhost:27017", "mongodb URI")
 var oldDBName = flag.String("oldname", "", "DB name to read from")
 var newDBName = flag.String("newname", "", "New DB name to write to")
 var overwrite = flag.Bool("overwrite", false, "Overwrite newname if it already exists")
+var gotenPath = flag.String("g", "http://localhost:3000", "gotenberg URI")
+var tikaPath = flag.String("t", "http://localhost:9998", "tika URI")
 
 func main() {
 	flag.Parse()
