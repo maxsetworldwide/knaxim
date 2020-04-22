@@ -17,6 +17,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
+	"git.maxset.io/web/knaxim/internal/decode"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"git.maxset.io/web/knaxim/pkg/srvjson"
@@ -49,122 +50,122 @@ func AttachFile(r *mux.Router) {
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
 
-func processContent(ctx context.Context, cancel context.CancelFunc, file types.FileI, fs *types.FileStore) error {
-	if cancel != nil {
-		defer cancel()
-	}
-	cb := config.DB.Content(ctx)
-	defer cb.Close(ctx)
+// func processContent(ctx context.Context, cancel context.CancelFunc, file types.FileI, fs *types.FileStore) error {
+// 	if cancel != nil {
+// 		defer cancel()
+// 	}
+// 	cb := config.DB.Content(ctx)
+// 	defer cb.Close(ctx)
+//
+// 	gotenbergErr := make(chan error, 1)
+// 	go createView(ctx, database.Database(cb), file, fs, gotenbergErr)
+// 	rcontent, err := fs.Reader()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	tikapath := config.T.Path
+// 	contentex := process.NewContentExtractor(nil, tikapath)
+// 	var contentlines []types.ContentLine
+// 	if csvextension.MatchString(file.GetName()) {
+// 		contentlines, err = contentex.ExtractCSV(ctx, rcontent)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		contentlines, err = contentex.ExtractText(ctx, rcontent)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	for i := range contentlines {
+// 		contentlines[i].ID = fs.ID
+// 	}
+// 	// util.Verbose("generated content: %v", contentlines)
+// 	err = cb.Insert(contentlines...)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	creader, err := types.NewContentReader(contentlines)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	tags, err := tag.ExtractContentTags(creader)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	err = cb.Tag(nil).Upsert(func() []tag.FileTag {
+// 		ftags := make([]tag.FileTag, 0, len(tags))
+// 		for _, t := range tags {
+// 			ftags = append(ftags, tag.FileTag{
+// 				File:  file.GetID(),
+// 				Owner: file.GetOwner().GetID(),
+// 				Tag:   t,
+// 			})
+// 		}
+// 		return ftags
+// 	}()...)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return <-gotenbergErr
+// }
 
-	gotenbergErr := make(chan error, 1)
-	go createView(ctx, database.Database(cb), file, fs, gotenbergErr)
-	rcontent, err := fs.Reader()
-	if err != nil {
-		return err
-	}
-	tikapath := config.T.Path
-	contentex := process.NewContentExtractor(nil, tikapath)
-	var contentlines []types.ContentLine
-	if csvextension.MatchString(file.GetName()) {
-		contentlines, err = contentex.ExtractCSV(ctx, rcontent)
-		if err != nil {
-			return err
-		}
-	} else {
-		contentlines, err = contentex.ExtractText(ctx, rcontent)
-		if err != nil {
-			return err
-		}
-	}
-	for i := range contentlines {
-		contentlines[i].ID = fs.ID
-	}
-	// util.Verbose("generated content: %v", contentlines)
-	err = cb.Insert(contentlines...)
-	if err != nil {
-		return err
-	}
-	creader, err := types.NewContentReader(contentlines)
-	if err != nil {
-		return err
-	}
-	tags, err := tag.ExtractContentTags(creader)
-	if err != nil {
-		return err
-	}
-	err = cb.Tag(nil).Upsert(func() []tag.FileTag {
-		ftags := make([]tag.FileTag, 0, len(tags))
-		for _, t := range tags {
-			ftags = append(ftags, tag.FileTag{
-				File:  file.GetID(),
-				Owner: file.GetOwner().GetID(),
-				Tag:   t,
-			})
-		}
-		return ftags
-	}()...)
-	if err != nil {
-		return err
-	}
-	return <-gotenbergErr
-}
-
-func createView(ctx context.Context, db database.Database, file types.FileI, fs *types.FileStore, out chan error) {
-	name := file.GetName()
-	var result []byte
-	extConst, ok := process.ExtMap[fs.ContentType]
-	if !ok || extConst == process.PDF {
-		// no conversions available. do not put a view in the db. retrieval of this
-		// view should return 404 or 302 or 303 to indicate that sentences should be used
-		// OR is PDF
-		// do not store a copy in the viewbase
-		// have the /view api just return the store by checking the name
-		out <- nil
-		return
-	}
-	buf := &bytes.Buffer{}
-	r, err := fs.Reader()
-	if err != nil {
-		out <- err
-		return
-	}
-	if _, err = io.Copy(buf, r); err != nil {
-		out <- err
-		return
-	}
-	url := config.V.GotenPath
-	converter := process.NewFileConverter(url)
-	gotenFinished := make(chan error)
-	go func() {
-		var err error
-		switch extConst {
-		case process.OFFICE:
-			result, err = converter.ConvertOffice(name, buf.Bytes())
-		}
-		gotenFinished <- err
-	}()
-	select {
-	case err := <-gotenFinished:
-		if err != nil {
-			out <- err
-			return
-		}
-	case <-ctx.Done():
-		out <- ctx.Err()
-		return
-	}
-	vb := db.View(nil)
-	vs, err := types.NewViewStore(fs.ID, bytes.NewReader(result))
-	if err != nil {
-		out <- err
-		return
-	}
-	if err = vb.Insert(vs); err != nil {
-		out <- err
-		return
-	}
-	out <- nil
-}
+// func createView(ctx context.Context, db database.Database, file types.FileI, fs *types.FileStore, out chan error) {
+// 	name := file.GetName()
+// 	var result []byte
+// 	extConst, ok := process.ExtMap[fs.ContentType]
+// 	if !ok || extConst == process.PDF {
+// 		// no conversions available. do not put a view in the db. retrieval of this
+// 		// view should return 404 or 302 or 303 to indicate that sentences should be used
+// 		// OR is PDF
+// 		// do not store a copy in the viewbase
+// 		// have the /view api just return the store by checking the name
+// 		out <- nil
+// 		return
+// 	}
+// 	buf := &bytes.Buffer{}
+// 	r, err := fs.Reader()
+// 	if err != nil {
+// 		out <- err
+// 		return
+// 	}
+// 	if _, err = io.Copy(buf, r); err != nil {
+// 		out <- err
+// 		return
+// 	}
+// 	url := config.V.GotenPath
+// 	converter := process.NewFileConverter(url)
+// 	gotenFinished := make(chan error)
+// 	go func() {
+// 		var err error
+// 		switch extConst {
+// 		case process.OFFICE:
+// 			result, err = converter.ConvertOffice(name, buf.Bytes())
+// 		}
+// 		gotenFinished <- err
+// 	}()
+// 	select {
+// 	case err := <-gotenFinished:
+// 		if err != nil {
+// 			out <- err
+// 			return
+// 		}
+// 	case <-ctx.Done():
+// 		out <- ctx.Err()
+// 		return
+// 	}
+// 	vb := db.View(nil)
+// 	vs, err := types.NewViewStore(fs.ID, bytes.NewReader(result))
+// 	if err != nil {
+// 		out <- err
+// 		return
+// 	}
+// 	if err = vb.Insert(vs); err != nil {
+// 		out <- err
+// 		return
+// 	}
+// 	out <- nil
+// }
 
 func createFile(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
@@ -204,25 +205,26 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	}
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
 
-	go func() {
-		if err := processContent(pctx, cncl, file, fs); err != nil {
-			util.VerboseRequest(r, "Processing Error: %s", err.Error())
-			fs.Perr = &errors.Processing{
-				Status:  242,
-				Message: err.Error(),
-			}
-		} else {
-			fs.Perr = nil
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-		defer cancel()
-		sb := config.DB.Store(ctx)
-		err := sb.UpdateMeta(fs)
-		if err != nil {
-			util.Verbose("Unable to Update Processing Error: %s", err.Error())
-		}
-		sb.Close(ctx)
-	}()
+	go decode.Read(pctx, file.Name, fs, config.DB, config.T.Path, config.V.GotenPath)
+	// go func() {
+	// 	if err := processContent(pctx, cncl, file, fs); err != nil {
+	// 		util.VerboseRequest(r, "Processing Error: %s", err.Error())
+	// 		fs.Perr = &errors.Processing{
+	// 			Status:  242,
+	// 			Message: err.Error(),
+	// 		}
+	// 	} else {
+	// 		fs.Perr = nil
+	// 	}
+	// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	// 	defer cancel()
+	// 	sb := config.DB.Store(ctx)
+	// 	err := sb.UpdateMeta(fs)
+	// 	if err != nil {
+	// 		util.Verbose("Unable to Update Processing Error: %s", err.Error())
+	// 	}
+	// 	sb.Close(ctx)
+	// }()
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
