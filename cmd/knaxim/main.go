@@ -90,13 +90,9 @@ func main() {
 	mainR.Use(handlers.Recovery)
 	//mainR.Use(handlers.CompressHandler)
 	mainR.Use(handlers.Timeout)
-	//mainR.Use(databaseMiddleware)
 
 	{
 		apirouter := mainR.PathPrefix("/api").Subrouter()
-		// apirouter.Use(srvjson.JSONResponse)
-		// apirouter.Use(handlers.ConnectDatabase)
-		// apirouter.Use(handlers.ParseBody)
 		handlers.AttachUser(apirouter.PathPrefix("/user").Subrouter())
 		handlers.AttachPerm(apirouter.PathPrefix("/perm").Subrouter())
 		handlers.AttachRecord(apirouter.PathPrefix("/record").Subrouter())
@@ -106,7 +102,6 @@ func main() {
 		handlers.AttachPublic(apirouter.PathPrefix("/public").Subrouter())
 		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
 		handlers.AttachNLP(apirouter.PathPrefix("/nlp").Subrouter())
-		//setupSearch(apirouter.PathPrefix("/s").Subrouter())
 	}
 	if len(config.V.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()
