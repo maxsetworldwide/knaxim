@@ -105,6 +105,7 @@ func main() {
 		handlers.AttachFile(apirouter.PathPrefix("/file").Subrouter())
 		handlers.AttachPublic(apirouter.PathPrefix("/public").Subrouter())
 		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
+		handlers.AttachNLP(apirouter.PathPrefix("/nlp").Subrouter())
 		//setupSearch(apirouter.PathPrefix("/s").Subrouter())
 	}
 	if len(config.V.StaticPath) > 0 {
