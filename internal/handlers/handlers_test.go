@@ -21,7 +21,9 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/process"
 	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/decode"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 	"github.com/gorilla/mux"
 )
 
@@ -67,6 +69,7 @@ type testFile struct {
 	store   *types.FileStore
 	ctype   string
 	content string
+	tags    []tag.Tag
 }
 
 var testFiles = []testFile{
@@ -76,6 +79,41 @@ var testFiles = []testFile{
 		},
 		ctype:   "text/plain",
 		content: "this is the first test file.",
+		tags: []tag.Tag{
+			tag.Tag{
+				Word: "a",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 0,
+						"count":        42,
+						"first":        0,
+					},
+				},
+			},
+			tag.Tag{
+				Word: "b",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 1,
+						"count":        41,
+						"first":        0,
+					},
+				},
+			},
+			tag.Tag{
+				Word: "c",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 2,
+						"count":        40,
+						"first":        0,
+					},
+				},
+			},
+		},
 	},
 	testFile{
 		file: &types.File{
@@ -151,6 +189,7 @@ func sliceContains(slice []string, s string) bool {
 }
 
 func TestMain(m *testing.M) {
+	srverror.DEBUG = true
 	testRouter = mux.NewRouter().PathPrefix("/api").Subrouter()
 	testRouter.Use(Recovery)
 	if err := populateDB(); err != nil {
@@ -192,6 +231,8 @@ func populateDB() (err error) {
 	config.V.GotenPath = gotenpath
 	userbase := config.DB.Owner(setupctx)
 	defer userbase.Close(setupctx)
+	tagbase := userbase.Tag(nil)
+	defer tagbase.Close(nil)
 	for i, userdata := range testUsers["users"] {
 		user := types.NewUser(userdata["name"], userdata["password"], userdata["email"])
 		if _, err = userbase.Reserve(user.ID, user.Name); err != nil {
@@ -281,6 +322,14 @@ func populateDB() (err error) {
 				return
 			}
 			perm.SetPerm(targetUser, "view", true)
+		}
+		for _, t := range file.tags {
+			ftag := tag.FileTag{
+				File:  file.file.GetID(),
+				Owner: file.file.GetOwner().GetID(),
+				Tag:   t,
+			}
+			tagbase.Upsert(ftag)
 		}
 	}
 	return nil
