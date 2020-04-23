@@ -93,8 +93,8 @@ func sendNLP(out http.ResponseWriter, r *http.Request) {
 		}
 	}
 	result := make([]struct {
-		Word  string
-		Count int
+		Word  string `json:"word"`
+		Count int    `json:"count"`
 	}, end-start)
 	for _, t := range tags {
 		position := t.Data[tagtype]["significance"].(int)
