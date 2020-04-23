@@ -98,10 +98,25 @@ func sendNLP(out http.ResponseWriter, r *http.Request) {
 		Count int    `json:"count"`
 	}, end-start)
 	for _, t := range tags {
-		position := t.Data[tagtype]["significance"].(int)
+		var position int
+		switch v := t.Data[tagtype]["significance"].(type) {
+		case int:
+			position = v
+		case int32:
+			position = int(v)
+		case int64:
+			position = int(v)
+		}
 		if position >= start && position < end {
 			result[position-start].Word = t.Word
-			result[position-start].Count = t.Data[tagtype]["count"].(int)
+			switch v := t.Data[tagtype]["count"].(type) {
+			case int:
+				result[position-start].Count = v
+			case int32:
+				result[position-start].Count = int(v)
+			case int64:
+				result[position-start].Count = int(v)
+			}
 		}
 	}
 	w.Set("fid", fid)
