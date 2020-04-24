@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"testing"
+	"time"
 
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"github.com/google/uuid"
@@ -28,7 +29,8 @@ func TestConversion(t *testing.T) {
 	flag.Parse()
 	gotenPath = testGotenPath
 	tikaPath = testTikaPath
-	testctx := context.TODO()
+	testctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
 	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testURI))
 	if err != nil {
 		t.Fatalf("Test setup error: %s", err.Error())

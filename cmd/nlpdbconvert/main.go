@@ -42,7 +42,7 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 	if len(oldName) == 0 || len(newName) == 0 {
 		return errors.New("oldName and newName should not be empty")
 	}
-	ctx := context.TODO()
+	ctx := context.Background()
 	mongoClient, err := getMongoClient(ctx, uri)
 	if err != nil {
 		return err
