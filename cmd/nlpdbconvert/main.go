@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
+	"os"
 
 	"git.maxset.io/web/knaxim/internal/database/mongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,10 +19,29 @@ var newDBName = flag.String("newname", "", "New DB name to write to")
 var overwrite = flag.Bool("overwrite", false, "Overwrite newname if it already exists")
 var gotenPath = flag.String("g", "http://localhost:3000", "gotenberg URI")
 var tikaPath = flag.String("t", "http://localhost:9998", "tika URI")
+var quiet = flag.Bool("q", false, "Suppress console output")
 
 func main() {
 	flag.Parse()
-	convertDB(*uri, *oldDBName, *newDBName, *overwrite)
+	err := convertDB(*uri, *oldDBName, *newDBName, *overwrite)
+	if !*quiet {
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			var verb string
+			if *overwrite {
+				verb = "Overwrote"
+			} else {
+				verb = "Created"
+			}
+			fmt.Printf("Done! %s database '%s'\n", verb, *newDBName)
+		}
+	}
+	if err != nil {
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
 }
 
 func getMongoClient(ctx context.Context, uri string) (*mongoDB.Client, error) {
@@ -43,6 +64,9 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return errors.New("oldName and newName should not be empty")
 	}
 	ctx := context.Background()
+	if !*quiet {
+		fmt.Println("Connecting to MongoDB...")
+	}
 	mongoClient, err := getMongoClient(ctx, uri)
 	if err != nil {
 		return err
@@ -73,11 +97,17 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return err
 	}
 
+	if !*quiet {
+		fmt.Println("Copying unchanged collections...")
+	}
 	err = copyColls(ctx, mongoClient, oldName, newName)
 	if err != nil {
 		return err
 	}
 
+	if !*quiet {
+		fmt.Println("Converting user tags...")
+	}
 	userTags, err := convertUserTags(ctx, mongoClient, oldName)
 	if err != nil {
 		return err
@@ -87,6 +117,9 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return err
 	}
 
+	if !*quiet {
+		fmt.Println("Creating and inserting views, content, and NLP tags...")
+	}
 	err = insertNLPTags(ctx, mongoClient, newDB)
 	if err != nil {
 		return err

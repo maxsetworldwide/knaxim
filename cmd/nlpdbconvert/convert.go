@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	CEMongo "git.maxset.io/web/knaxim/internal/database/mongo"
 	"git.maxset.io/web/knaxim/internal/database/types"
@@ -80,7 +81,14 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 
 	sb := destDB.Store(ctx)
 	defer sb.Close(ctx)
+	if !*quiet {
+		fmt.Printf("Processing %d files:\n", len(files))
+		defer fmt.Println()
+	}
 	for _, file := range files {
+		if !*quiet {
+			fmt.Print(".")
+		}
 		storeID := file.GetID().StoreID
 		fs, err := sb.Get(storeID)
 		if err != nil {

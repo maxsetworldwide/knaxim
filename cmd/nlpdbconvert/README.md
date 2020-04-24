@@ -20,6 +20,8 @@ This requires an instance of Tika and Gotenberg running as well, as all file pro
 
 `-t URI`: Tika URI. Defaults to `http://localhost:9998`
 
+`-quiet`: Suppress console output.
+
 ## Testing
 The provided test file is an integration test that requires external mongodb, gotenberg, and tika sessions to be running. Provided in `./testdata/` is a `testDB.gz` that can be imported into your mongodb session via `mongorestore --gzip --archive=testdata/testDB.gz`. This will create a database called `conversionTestOldDB`. The tests are written with this specific test DB in mind.
 

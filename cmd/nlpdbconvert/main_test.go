@@ -29,6 +29,8 @@ func TestConversion(t *testing.T) {
 	flag.Parse()
 	gotenPath = testGotenPath
 	tikaPath = testTikaPath
+	quietFlag := true
+	quiet = &quietFlag
 	testctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	testClient, err := mongo.Connect(testctx, options.Client().ApplyURI(*testURI))
