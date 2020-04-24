@@ -34,6 +34,18 @@ const state = {
 const getters = {
   nlpLoading (state) {
     return state.loading > 0
+  },
+  nlpTopics (state) {
+    return state.topics
+  },
+  nlpActions (state) {
+    return state.actions
+  },
+  nlpResources (state) {
+    return state.resources
+  },
+  nlpProcesses (state) {
+    return state.processes
   }
 }
 
