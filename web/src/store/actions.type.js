@@ -47,3 +47,5 @@ export const LOAD_FILE_MATCH_LINES = 'loadFileMatchLines'
 export const LOAD_MATCHED_LINES = 'loadMatchedLines'
 
 export const SEARCH = 'search'
+
+export const NLP_DATA = 'nlpData'
