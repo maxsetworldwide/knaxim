@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 
+	CEMongo "git.maxset.io/web/knaxim/internal/database/mongo"
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
+	"git.maxset.io/web/knaxim/internal/decode"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -61,27 +62,32 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 	return newTags, nil
 }
 
-func createNLPTags(ctx context.Context, client *mongo.Client, src string) ([]tag.StoreTag, error) {
-	// go through mongo client, do a find on everything in the store collection
-	// may need instances of a knaxim db for both databases.
-	// Need to see what is needed to process a file store. At the very least, will
-	// need store ids. After that, may need to query the db object with those
-	// store ids. Afterwards, will want to use the new db's knaxim db object to
-	// upsert these tags.
-	srcStoreColl := client.Database(src).Collection("store")
-	cursor, err := srcStoreColl.Find(ctx, bson.D{})
+// Assumes store collection has already been copied over.
+// This function goes through each file record (not file store due to requiring a name),
+// and calls decode.Read() on each one, as if the file was just uploaded. This will
+// add the views, lines, and nlp tags for each file to the database.
+func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Database) error {
+	srcFileColl := client.Database(destDB.DBName).Collection("file")
+	cursor, err := srcFileColl.Find(ctx, bson.D{})
 	if err != nil {
-		return []tag.StoreTag{}, err
+		return err
 	}
-	var fileStores []types.FileStore
-	err = cursor.All(ctx, &fileStores)
+	var files []types.File
+	err = cursor.All(ctx, &files)
 	if err != nil {
-		return []tag.StoreTag{}, err
+		return err
 	}
-	fmt.Println("File Store IDs:")
-	for _, fs := range fileStores {
-		fmt.Println(fs.ID)
-	}
-	return []tag.StoreTag{}, nil
 
+	sb := destDB.Store(ctx)
+	defer sb.Close(ctx)
+	for _, file := range files {
+		storeID := file.GetID().StoreID
+		fs, err := sb.Get(storeID)
+		if err != nil {
+			return err
+		}
+		decode.Read(ctx, nil, file.Name, fs, sb, *tikaPath, *gotenPath)
+	}
+
+	return nil
 }

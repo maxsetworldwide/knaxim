@@ -20,6 +20,7 @@ var tikaPath = flag.String("t", "http://localhost:9998", "tika URI")
 
 func main() {
 	flag.Parse()
+	convertDB(*uri, *oldDBName, *newDBName, *overwrite)
 }
 
 func getMongoClient(ctx context.Context, uri string) (*mongoDB.Client, error) {
@@ -86,7 +87,7 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return err
 	}
 
-	_, err = createNLPTags(ctx, mongoClient, oldName)
+	err = insertNLPTags(ctx, mongoClient, newDB)
 	if err != nil {
 		return err
 	}
