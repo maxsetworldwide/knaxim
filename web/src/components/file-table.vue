@@ -17,7 +17,7 @@
       :class="field.class"
     >
   </template>
-  <template v-slot:head(expand)="col">
+  <template v-slot:head(expand)>
     <!-- <svg @click.stop="expandAll">
       <use href="../assets/app.svg#expand-tri" class="triangle"/>
     </svg> -->
@@ -53,8 +53,9 @@
     </div>
   </template>
   <template v-slot:row-details="row">
-    <b-spinner v-if="filePreview[row.item.id].loading" class="align-middle"></b-spinner>
-    <span v-else>{{ filePreview[row.item.id].lines ? filePreview[row.item.id].lines.join(' ') : '' }}</span>
+    <b-spinner v-if="filePreview[row.item.id].loading || nlpLoading" class="align-middle"></b-spinner>
+    <!-- <span v-else>{{ filePreview[row.item.id].lines ? filePreview[row.item.id].lines.join(' ') : '' }}</span> -->
+    <file-preview v-else :fid="row.item.id"/>
   </template>
   <template v-slot:cell(action)="data">
     <file-icon :extention="(data.item.ext || '')" :webpage="!!data.item.url"/>
@@ -63,14 +64,16 @@
 </template>
 <script>
 import fileIcon from '@/components/file-icon'
+import filePreview from '@/components/file-preview'
 import { mapGetters, mapActions } from 'vuex'
-import { LOAD_OWNER, LOAD_PREVIEW } from '@/store/actions.type'
+import { LOAD_OWNER, LOAD_PREVIEW, NLP_DATA } from '@/store/actions.type'
 import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
 export default {
   name: 'file-table',
   components: {
-    fileIcon
+    fileIcon,
+    filePreview
   },
   props: {
     files: {
@@ -175,12 +178,16 @@ export default {
         return acc || row._showDetails
       }, false)
     },
-    ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview'])
+    ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview', 'nlpLoading'])
   },
   methods: {
     openPreview (row) {
       row.toggleDetails()
       this[LOAD_PREVIEW](row.item)
+      const fid = row.item.id || ''
+      this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 })
+      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 })
+      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 7 })
     },
     expandALL () {
       const expand = !this.anyRowExpanded
@@ -222,7 +229,7 @@ export default {
       this.$emit('open', id)
     },
     // ...mapGetters(['populateFiles']),
-    ...mapActions([LOAD_OWNER, LOAD_PREVIEW])
+    ...mapActions([LOAD_OWNER, LOAD_PREVIEW, NLP_DATA])
   }
 }
 </script>
