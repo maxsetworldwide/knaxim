@@ -228,7 +228,7 @@ func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.F
 			sb.WriteByte('.')
 		}
 		fs.Perr = &errors.Processing{
-			Status:  500,
+			Status:  242,
 			Message: sb.String(),
 		}
 	}
