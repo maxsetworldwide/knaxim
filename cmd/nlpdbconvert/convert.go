@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const userTagType = tag.Type(uint32(1 << 24))
+const userTagType = tag.USER
 
 func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]tag.FileTag, error) {
 	srcDB := client.Database(src)
