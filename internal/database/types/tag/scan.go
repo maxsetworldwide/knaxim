@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"strings"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -67,4 +68,27 @@ func ExtractContentTags(content io.Reader) ([]Tag, error) {
 		out = append(out, v)
 	}
 	return out, nil
+}
+
+func BuildNameTags(s string) (out []Tag, err error) {
+	out = append(out, Tag{
+		Word: s,
+		Type: NAME,
+	})
+
+	sc := bufio.NewScanner(strings.NewReader(s))
+	sc.Split(ScanWords)
+	wordcache := make(map[string]bool)
+	for sc.Scan() {
+		w := sc.Text()
+		if !wordcache[w] {
+			out = append(out, Tag{
+				Word: w,
+				Type: NAME,
+			})
+			wordcache[w] = true
+		}
+	}
+	err = sc.Err()
+	return
 }
