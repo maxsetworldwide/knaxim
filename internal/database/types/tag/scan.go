@@ -70,6 +70,7 @@ func ExtractContentTags(content io.Reader) ([]Tag, error) {
 	return out, nil
 }
 
+// BuildNameTags converts a string into tags of that string and substrings that are alpha numeric sequences
 func BuildNameTags(s string) (out []Tag, err error) {
 	out = append(out, Tag{
 		Word: s,
