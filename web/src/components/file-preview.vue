@@ -70,7 +70,6 @@ export default {
   },
   methods: {
     buildGraphData (data) {
-      console.log({ data })
       let result = []
       for (let val in data) {
         let { word, count } = data[val]
