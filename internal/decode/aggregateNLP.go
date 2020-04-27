@@ -2,6 +2,7 @@ package decode
 
 import (
 	"sort"
+	"strings"
 
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/pkg/skyset"
@@ -48,6 +49,16 @@ var includepos = map[skyset.Synth]map[skyset.PennPOS]bool{
 	},
 }
 
+var ignoreToBe = map[string]bool{
+	"is":    true,
+	"was":   true,
+	"am":    true,
+	"were":  true,
+	"are":   true,
+	"been":  true,
+	"being": true,
+}
+
 func (nlp *nlpaggregate) add(phr []skyset.Phrase) {
 	nlp.sentence++
 	if nlp.data == nil {
@@ -55,7 +66,9 @@ func (nlp *nlpaggregate) add(phr []skyset.Phrase) {
 	}
 	for _, p := range phr {
 		for _, t := range p.Tokens {
-			if includepos[p.Synth] != nil && includepos[p.Synth][t.Pos] {
+			if includepos[p.Synth] != nil &&
+				includepos[p.Synth][t.Pos] &&
+				((p.Synth != skyset.ACTION && p.Synth != skyset.PROCESS) || !ignoreToBe[strings.ToLower(t.Text)]) {
 				if nlp.data[p.Synth] == nil {
 					nlp.data[p.Synth] = map[string]nlpaggregatedata{
 						t.Text: nlpaggregatedata{
