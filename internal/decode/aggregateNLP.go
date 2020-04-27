@@ -57,6 +57,7 @@ var ignoreToBe = map[string]bool{
 	"are":   true,
 	"been":  true,
 	"being": true,
+	"be":    true,
 }
 
 func (nlp *nlpaggregate) add(phr []skyset.Phrase) {
