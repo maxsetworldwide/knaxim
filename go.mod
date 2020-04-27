@@ -11,6 +11,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
 	github.com/google/go-tika v0.1.22-0.20190923214147-92d050676162
+	github.com/google/uuid v1.1.1
 	github.com/gordonklaus/ineffassign v0.0.0-20190601041439-ed7b1b5ee0f8 // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
