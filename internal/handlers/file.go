@@ -82,12 +82,32 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		Name: fheader.Filename,
 		Date: types.FileTime{Upload: time.Now()},
 	}
+	nametags, err := tag.BuildNameTags(file.GetName())
+
+	if err != nil {
+		panic(srverror.New(err, 400, "Unable to parse filename"))
+	}
 	fs, err := process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
 	if err != nil {
 		panic(err)
 	}
+	nameErrCh := make(chan error, 1)
+	go func() {
+		var filetags []tag.FileTag
+		for _, nt := range nametags {
+			filetags = append(filetags, tag.FileTag{
+				File:  file.GetID(),
+				Owner: owner.GetID(),
+				Tag:   nt,
+			})
+		}
+		select {
+		case nameErrCh <- r.Context().Value(types.TAG).(database.Tagbase).Upsert(filetags...):
+		case <-r.Context().Done():
+		}
+	}()
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go decode.Read(pctx, cncl, file.Name, fs, config.DB, config.T.Path, config.V.GotenPath)
+	go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
@@ -101,7 +121,13 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
-
+	select {
+	case err := <-nameErrCh:
+		if err != nil {
+			panic(err)
+		}
+	case <-r.Context().Done():
+	}
 	w.Set("id", file.GetID())
 	w.Set("name", file.GetName())
 }
@@ -119,6 +145,10 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	URL, err := url.Parse(r.FormValue("url"))
 	if err != nil {
 		panic(srverror.New(err, 400, "Bad URL", r.FormValue("url"), "Unable to Parse"))
+	}
+	nametags, err := tag.BuildNameTags(URL.String())
+	if err != nil {
+		panic(srverror.New(err, 400, "Bad URL", "Unable to tokenize URL", r.FormValue("url")))
 	}
 
 	resp, err := getter.Get(URL.String())
@@ -197,8 +227,23 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
+	nameErrCh := make(chan error, 1)
+	go func() {
+		var filetags []tag.FileTag
+		for _, nt := range nametags {
+			filetags = append(filetags, tag.FileTag{
+				File:  file.GetID(),
+				Owner: owner.GetID(),
+				Tag:   nt,
+			})
+		}
+		select {
+		case nameErrCh <- r.Context().Value(types.TAG).(database.Tagbase).Upsert(filetags...):
+		case <-r.Context().Done():
+		}
+	}()
 	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go decode.Read(pctx, cncl, file.GetName(), fs, config.DB, config.T.Path, config.V.GotenPath)
+	go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
@@ -211,6 +256,13 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+	}
+	select {
+	case err := <-nameErrCh:
+		if err != nil {
+			panic(err)
+		}
+	case <-r.Context().Done():
 	}
 	w.Set("id", file.GetID())
 	w.Set("name", file.GetName())
