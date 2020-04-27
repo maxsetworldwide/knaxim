@@ -187,7 +187,8 @@ export default {
       const fid = row.item.id || ''
       this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 })
       this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 })
-      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 7 })
+      // grab 14 from resources so we can filter out duplicates from topics
+      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 14 })
     },
     expandALL () {
       const expand = !this.anyRowExpanded

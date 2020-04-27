@@ -51,7 +51,20 @@ export default {
       return this.buildGraphData(this.nlpActions[this.fid])
     },
     resourceData () {
-      return this.buildGraphData(this.nlpResources[this.fid])
+      const topics = this.nlpTopics[this.fid]
+        .map((topic) => {
+          return topic.word || ''
+        })
+        .filter((word) => {
+          return word !== ''
+        })
+      return this.buildGraphData(
+        this.nlpResources[this.fid]
+          .filter(({ word }) => {
+            return !topics.includes(word)
+          })
+          .slice(0, 7)
+      )
     },
     ...mapGetters(['filePreview', 'nlpTopics', 'nlpActions', 'nlpResources'])
   },
