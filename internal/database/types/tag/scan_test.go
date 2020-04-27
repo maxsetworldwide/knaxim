@@ -15,3 +15,14 @@ func TestScan(t *testing.T) {
 		t.Fatalf("incorrect result: %v", tags)
 	}
 }
+
+func TestName(t *testing.T) {
+	name := "the_File.txt"
+	tags, err := BuildNameTags(name)
+	if err != nil {
+		t.Fatalf("unable to build name tags: %s", err.Error())
+	}
+	if len(tags) != 4 && tags[0].Word == name {
+		t.Fatalf("incorrect result: %v", tags)
+	}
+}

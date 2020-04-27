@@ -30,6 +30,8 @@ const (
 	USER Type = (1 << 24) << iota
 	// DATE is to record a mapping of a date to a file made by a user.
 	DATE
+	// NAME is to record tags based on the name of a file
+	NAME
 )
 
 // ALLTYPES is the compound of all possible tag types
@@ -39,7 +41,7 @@ const ALLTYPES = Type(math.MaxUint32)
 const ALLSTORE = CONTENT | TOPIC | ACTION | RESOURCE | PROCESS
 
 // ALLFILE are all the types of tags that are associated with a File
-const ALLFILE = USER | DATE
+const ALLFILE = USER | DATE | NAME
 
 // ALLSYNTH is the combination of TOPIC, ACTION, RESOURCE, and PROCESS
 const ALLSYNTH = TOPIC | ACTION | RESOURCE | PROCESS
@@ -56,8 +58,14 @@ func (t Type) String() string {
 		return "process"
 	case RESOURCE:
 		return "resource"
+	case SEARCH:
+		return "search"
 	case USER:
 		return "user"
+	case DATE:
+		return "date"
+	case NAME:
+		return "name"
 	case ALLTYPES:
 		return "alltypes"
 	case ALLSYNTH:
@@ -84,8 +92,14 @@ func DecodeType(s string) (Type, error) {
 		return PROCESS, nil
 	case "resource":
 		return RESOURCE, nil
+	case "search":
+		return SEARCH, nil
 	case "user":
 		return USER, nil
+	case "date":
+		return DATE, nil
+	case "name":
+		return NAME, nil
 	case "alltypes":
 		return ALLTYPES, nil
 	case "allsynth":
