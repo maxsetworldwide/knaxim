@@ -106,8 +106,10 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 		}
 	}()
-	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+	if fs.Perr != nil {
+		pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
+		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+	}
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
@@ -242,8 +244,10 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		case <-r.Context().Done():
 		}
 	}()
-	pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-	go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+	if fs.Perr != nil {
+		pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
+		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+	}
 	if len(r.FormValue("dir")) > 0 {
 		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
 			File:  file.GetID(),
