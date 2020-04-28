@@ -91,26 +91,22 @@ func TestConversion(t *testing.T) {
 			t.Fatalf("Error setting up test: %s", err.Error())
 		}
 		defer testClient.Database(existingName).Drop(testctx)
-		t.Run("Overwrite Off", func(t *testing.T) {
-			err = convertDB(*testURI, *testOldName, existingName, false)
-			if err == nil {
-				t.Fatalf("Expected error from providing existing newDB with no overwrite")
-			}
-		})
-		t.Run("Overwrite On", func(t *testing.T) {
-			err = convertDB(*testURI, *testOldName, existingName, true)
-			if err != nil {
-				t.Fatalf("Expected no error from providing existing newDB with overwrite")
-			}
-		})
+		err = convertDB(*testURI, *testOldName, existingName, false)
+		if err == nil {
+			t.Fatalf("Expected error from providing existing newDB with no overwrite")
+		}
+		err = convertDB(*testURI, *testOldName, existingName, true)
+		if err != nil {
+			t.Fatalf("Expected no error from providing existing newDB with overwrite")
+		}
 	})
 	t.Run("Intended Usage", func(t *testing.T) {
+		if !*noclean {
+			defer testClient.Database(testNewName).Drop(testctx)
+		}
 		err := convertDB(*testURI, *testOldName, testNewName, false)
 		if err != nil {
 			t.Fatalf("Expected no error from proper usage.\nProvided:\nURI:%s\nold:%s\nnew:%s\nError:%s", *uri, *testOldName, testNewName, err.Error())
-		}
-		if !*noclean {
-			defer testClient.Database(testNewName).Drop(testctx)
 		}
 		t.Run("Expected Collections", func(t *testing.T) {
 			var expColls = map[string]int{
