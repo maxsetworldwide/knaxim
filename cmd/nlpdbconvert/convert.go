@@ -93,21 +93,26 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 			fmt.Print(".")
 		}
 
-		nametags, err := tag.BuildNameTags(file.GetName())
+		fs, err := sb.File(nil).Get(file.GetID())
+		if err != nil {
+			return err
+		}
+
+		nametags, err := tag.BuildNameTags(fs.GetName())
 		if err != nil {
 			return err
 		}
 		var fileNameTags []tag.FileTag
 		for _, nt := range nametags {
 			fileNameTags = append(fileNameTags, tag.FileTag{
-				File:  file.GetID(),
-				Owner: file.GetOwner().GetID(),
+				File:  fs.GetID(),
+				Owner: fs.GetOwner().GetID(),
 				Tag:   nt,
 			})
 		}
 		err = sb.Tag(nil).Upsert(fileNameTags...)
 
-		storeID := file.GetID().StoreID
+		storeID := fs.GetID().StoreID
 		if found := foundStoreIDs[storeID.String()]; !found {
 			fs, err := sb.Get(storeID)
 			if err != nil {
