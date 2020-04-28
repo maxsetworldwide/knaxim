@@ -41,7 +41,7 @@ func (cb *Contentbase) Len(id types.StoreID) (count int64, err error) {
 
 // Slice returns slices associated with StoreID within bounds
 func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.ContentLine, error) {
-	fs, err := cb.Store(nil).Get(id)
+	fs, err := cb.Store().Get(id)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.Cont
 
 // RegexSearchFile returns lines associated with StoreID, within bounds, and matches regular expression
 func (cb *Contentbase) RegexSearchFile(regex string, id types.StoreID, start int, end int) ([]types.ContentLine, error) {
-	fs, err := cb.Store(nil).Get(id)
+	fs, err := cb.Store().Get(id)
 	if err != nil {
 		return nil, err
 	}
