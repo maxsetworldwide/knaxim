@@ -81,6 +81,9 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 
 	sb := destDB.Store(ctx)
 	defer sb.Close(ctx)
+
+	var foundStoreIDs = make(map[string]bool)
+
 	if !*quiet {
 		fmt.Printf("Processing %d files:\n", len(files))
 		defer fmt.Println()
@@ -89,12 +92,31 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		if !*quiet {
 			fmt.Print(".")
 		}
-		storeID := file.GetID().StoreID
-		fs, err := sb.Get(storeID)
+
+		nametags, err := tag.BuildNameTags(file.GetName())
 		if err != nil {
 			return err
 		}
-		decode.Read(ctx, nil, file.Name, fs, sb, *tikaPath, *gotenPath)
+		var fileNameTags []tag.FileTag
+		for _, nt := range nametags {
+			fileNameTags = append(fileNameTags, tag.FileTag{
+				File:  file.GetID(),
+				Owner: file.GetOwner().GetID(),
+				Tag:   nt,
+			})
+		}
+		err = sb.Tag(nil).Upsert(fileNameTags...)
+
+		storeID := file.GetID().StoreID
+		if found := foundStoreIDs[storeID.String()]; !found {
+			fs, err := sb.Get(storeID)
+			if err != nil {
+				return err
+			}
+			decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
+		} else {
+			foundStoreIDs[storeID.String()] = true
+		}
 	}
 
 	return nil
