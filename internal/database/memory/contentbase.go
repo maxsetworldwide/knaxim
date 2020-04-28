@@ -53,7 +53,7 @@ func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.Cont
 func (cb *Contentbase) slice(id types.StoreID, start int, end int) ([]types.ContentLine, error) {
 	var perr error
 	{
-		sb := cb.store(nil).(*Storebase)
+		sb := cb.store().(*Storebase)
 		fs, err := sb.get(id)
 		if err != nil {
 			sb.close()
@@ -84,7 +84,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, file types.StoreID, start i
 func (cb *Contentbase) regexSearchFile(regex string, file types.StoreID, start int, end int) ([]types.ContentLine, error) {
 	var perr error
 	{
-		sb := cb.store(nil).(*Storebase)
+		sb := cb.store().(*Storebase)
 		fs, err := sb.get(file)
 		if err != nil {
 			sb.close()

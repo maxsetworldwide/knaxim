@@ -71,114 +71,83 @@ func CurrentOpenConnections() int {
 
 // Owner opens a connection to the database and returns Ownerbase wrapping of the
 // Database
-func (db *Database) Owner(c context.Context) database.Ownerbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Owner() database.Ownerbase {
 	out := &Ownerbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // File opens a connection to the database and returns Filebase wrapping of the
 // Database
-func (db *Database) File(c context.Context) database.Filebase {
-	lock.Lock()
-	defer lock.Unlock()
-	return db.file(c)
+func (db *Database) File() database.Filebase {
+	return db.file()
 }
 
-func (db *Database) file(c context.Context) database.Filebase {
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) file() database.Filebase {
 	out := &Filebase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Store opens a connection to the database and returns Storebase wrapping of the
 // Database
-func (db *Database) Store(c context.Context) database.Storebase {
-	lock.Lock()
-	defer lock.Unlock()
-
-	return db.store(c)
+func (db *Database) Store() database.Storebase {
+	return db.store()
 }
 
-func (db *Database) store(c context.Context) database.Storebase {
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) store() database.Storebase {
 	out := &Storebase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Content opens a connection to the database and returns Contentbase wrapping of the
 // Database
-func (db *Database) Content(c context.Context) database.Contentbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Content() database.Contentbase {
 	out := &Contentbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Tag opens a connection to the database and returns Tagbase wrapping of the
 // Database
-func (db *Database) Tag(c context.Context) database.Tagbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Tag() database.Tagbase {
 	out := &Tagbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Acronym opens a connection to the database and returns Acronymbase wrapping of the Database
-func (db *Database) Acronym(c context.Context) database.Acronymbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Acronym() database.Acronymbase {
 	out := &Acronymbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // View opens a connection to the database and returns Viewbase wrapping of the Database
-func (db *Database) View(c context.Context) database.Viewbase {
+func (db *Database) View() database.Viewbase {
+	out := &Viewbase{
+		Database: *db,
+	}
+	return out
+}
+
+func (db *Database) Connect(ctx context.Context) (database.Database, error) {
 	lock.Lock()
 	defer lock.Unlock()
 	countLock.Lock()
 	defer countLock.Unlock()
-	out := &Viewbase{
-		Database: *db,
-	}
-	out.ctx = c
+	ndb := new(Database)
+	*ndb = *db
+	ndb.ctx = ctx
 	connectionCount++
-	return out
+	return ndb, nil
 }
 
 // Close closes the open connection, meant to be called by wrapping objects
