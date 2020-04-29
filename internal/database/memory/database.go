@@ -138,6 +138,7 @@ func (db *Database) View() database.Viewbase {
 	return out
 }
 
+// Connect simulates connecting to database and tracks open connections
 func (db *Database) Connect(ctx context.Context) (database.Database, error) {
 	lock.Lock()
 	defer lock.Unlock()
