@@ -24,6 +24,7 @@ var expectedTagsPerWord = map[string]int{
 	"_favorites_": 3,
 	"_trash_":     1,
 }
+var expectedNumNameTags = 20
 
 func TestConversion(t *testing.T) {
 	flag.Parse()
@@ -91,26 +92,22 @@ func TestConversion(t *testing.T) {
 			t.Fatalf("Error setting up test: %s", err.Error())
 		}
 		defer testClient.Database(existingName).Drop(testctx)
-		t.Run("Overwrite Off", func(t *testing.T) {
-			err = convertDB(*testURI, *testOldName, existingName, false)
-			if err == nil {
-				t.Fatalf("Expected error from providing existing newDB with no overwrite")
-			}
-		})
-		t.Run("Overwrite On", func(t *testing.T) {
-			err = convertDB(*testURI, *testOldName, existingName, true)
-			if err != nil {
-				t.Fatalf("Expected no error from providing existing newDB with overwrite")
-			}
-		})
+		err = convertDB(*testURI, *testOldName, existingName, false)
+		if err == nil {
+			t.Fatalf("Expected error from providing existing newDB with no overwrite")
+		}
+		err = convertDB(*testURI, *testOldName, existingName, true)
+		if err != nil {
+			t.Fatalf("Expected no error from providing existing newDB with overwrite")
+		}
 	})
 	t.Run("Intended Usage", func(t *testing.T) {
+		if !*noclean {
+			defer testClient.Database(testNewName).Drop(testctx)
+		}
 		err := convertDB(*testURI, *testOldName, testNewName, false)
 		if err != nil {
 			t.Fatalf("Expected no error from proper usage.\nProvided:\nURI:%s\nold:%s\nnew:%s\nError:%s", *uri, *testOldName, testNewName, err.Error())
-		}
-		if !*noclean {
-			defer testClient.Database(testNewName).Drop(testctx)
 		}
 		t.Run("Expected Collections", func(t *testing.T) {
 			var expColls = map[string]int{
@@ -143,7 +140,7 @@ func TestConversion(t *testing.T) {
 			}
 		})
 		t.Run("Num User Tags", func(t *testing.T) {
-			var userTagType tag.Type = 1 << 24
+			userTagType := tag.USER
 			cursor, err := testClient.Database(testNewName).Collection("filetags").Find(testctx, bson.M{
 				"type": userTagType,
 			})
@@ -177,6 +174,23 @@ func TestConversion(t *testing.T) {
 				if expectedNum != val {
 					t.Fatalf("Expected %d %s tags. Received %d. Map: %+v", expectedNum, key, val, tagWords)
 				}
+			}
+		})
+		t.Run("Num Name Tags", func(t *testing.T) {
+			nameTagType := tag.NAME
+			cursor, err := testClient.Database(testNewName).Collection("filetags").Find(testctx, bson.M{
+				"type": nameTagType,
+			})
+			if err != nil {
+				t.Fatalf("Error retrieving name tags: %s", err.Error())
+			}
+			var tags []tag.FileTag
+			err = cursor.All(testctx, &tags)
+			if err != nil {
+				t.Fatalf("Error parsing response: %s", err.Error())
+			}
+			if len(tags) != expectedNumNameTags {
+				t.Fatalf("Expected %d name tags. Received %d.", expectedNumNameTags, len(tags))
 			}
 		})
 	})

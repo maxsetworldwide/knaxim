@@ -63,10 +63,11 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 	return newTags, nil
 }
 
-// Assumes store collection has already been copied over.
-// This function goes through each file record (not file store due to requiring a name),
-// and calls decode.Read() on each one, as if the file was just uploaded. This will
-// add the views, lines, and nlp tags for each file to the database.
+// Assumes the store collection has already been copied over.
+// This function goes through each file record and inserts name tags for each file.
+// It will then clear previous processing errors that have occurred in the past and
+// reprocesses each unique filestore via decode.Read() as if the file was just uploaded.
+// This will add the views, lines, and nlp tags for each file to the database.
 func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Database) error {
 	srcFileColl := client.Database(destDB.DBName).Collection("file")
 	cursor, err := srcFileColl.Find(ctx, bson.D{})
@@ -79,8 +80,16 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		return err
 	}
 
+	err = clearPerrs(ctx, client, destDB.DBName)
+	if err != nil {
+		return err
+	}
+
 	sb := destDB.Store(ctx)
 	defer sb.Close(ctx)
+
+	var foundStoreIDs = make(map[string]bool)
+
 	if !*quiet {
 		fmt.Printf("Processing %d files:\n", len(files))
 		defer fmt.Println()
@@ -89,13 +98,49 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		if !*quiet {
 			fmt.Print(".")
 		}
-		storeID := file.GetID().StoreID
-		fs, err := sb.Get(storeID)
+
+		fs, err := sb.File(nil).Get(file.GetID())
 		if err != nil {
 			return err
 		}
-		decode.Read(ctx, nil, file.Name, fs, sb, *tikaPath, *gotenPath)
+
+		nametags, err := tag.BuildNameTags(fs.GetName())
+		if err != nil {
+			return err
+		}
+		var fileNameTags []tag.FileTag
+		for _, nt := range nametags {
+			fileNameTags = append(fileNameTags, tag.FileTag{
+				File:  fs.GetID(),
+				Owner: fs.GetOwner().GetID(),
+				Tag:   nt,
+			})
+		}
+		err = sb.Tag(nil).Upsert(fileNameTags...)
+
+		storeID := fs.GetID().StoreID
+		if found := foundStoreIDs[storeID.String()]; !found {
+			fs, err := sb.Get(storeID)
+			if err != nil {
+				return err
+			}
+			decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
+			foundStoreIDs[storeID.String()] = true
+		}
 	}
 
+	return nil
+}
+
+func clearPerrs(ctx context.Context, client *mongo.Client, dbName string) error {
+	_, err := client.Database(dbName).Collection("store").UpdateMany(ctx,
+		bson.M{},
+		bson.M{
+			"$unset": bson.M{"perr": ""},
+		},
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }

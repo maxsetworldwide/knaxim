@@ -6,8 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"git.maxset.io/web/knaxim/internal/database/mongo"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	CEErrors "git.maxset.io/web/knaxim/internal/database/types/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	mongoDB "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -125,5 +128,40 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 		return err
 	}
 
-	return nil
+	perrs, err := findPerrs(ctx, mongoClient, newName)
+	if err != nil {
+		return err
+	}
+
+	var errStrs []string
+	for _, perr := range perrs {
+		errStrs = append(errStrs, perr.Error())
+	}
+
+	if len(errStrs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%d processing errors occurred during conversion:\n%s", len(errStrs), strings.Join(errStrs, "\n"))
+}
+
+func findPerrs(ctx context.Context, client *mongoDB.Client, dbName string) ([]CEErrors.Processing, error) {
+	perrs := []CEErrors.Processing{}
+	db := client.Database(dbName)
+	storeColl := db.Collection("store")
+	cursor, err := storeColl.Find(ctx, bson.M{})
+	if err != nil {
+		return perrs, err
+	}
+	var stores []types.FileStore
+	err = cursor.All(ctx, &stores)
+	if err != nil {
+		return perrs, err
+	}
+
+	for _, fs := range stores {
+		if fs.Perr != nil {
+			perrs = append(perrs, *fs.Perr)
+		}
+	}
+	return perrs, nil
 }
