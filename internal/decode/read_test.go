@@ -37,7 +37,7 @@ func TestRead(t *testing.T) {
 		t.Fatalf("unable to create File Store: %s", err.Error())
 	}
 	fs.ContentType = "text/plain"
-	sb := db.Store(testctx)
+	sb := db.Store()
 	if fs.ID, err = sb.Reserve(fs.ID); err != nil {
 		t.Fatalf("unable to reserve id for filestore: %s", err.Error())
 	}

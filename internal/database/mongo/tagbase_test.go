@@ -19,7 +19,7 @@ func putStorePlaceholder(db *Database, sid types.StoreID) error {
 	placeholder.ContentType = "test"
 	placeholder.FileSize = 42
 	placeholder.Perr = nil
-	sb := db.Store(nil)
+	sb := db.Store()
 	_, err = sb.Reserve(sid)
 	if err != nil {
 		return err
@@ -39,7 +39,14 @@ func TestTagbase(t *testing.T) {
 		if err := db.Init(ctx, true); err != nil {
 			t.Fatal("Unable to init database", err)
 		}
-		tb = db.Tag(context.Background()).(*Tagbase)
+		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		tb = mdb.Tag().(*Tagbase)
 	}
 	fileids := []types.FileID{
 		types.FileID{

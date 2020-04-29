@@ -229,10 +229,13 @@ func populateDB() (err error) {
 	}
 	config.T.Path = tikapath
 	config.V.GotenPath = gotenpath
-	userbase := config.DB.Owner(setupctx)
-	defer userbase.Close(setupctx)
-	tagbase := userbase.Tag(nil)
-	defer tagbase.Close(nil)
+	db, err := config.DB.Connect(setupctx)
+	if err != nil {
+		return
+	}
+	defer db.Close(setupctx)
+	userbase := db.Owner()
+	tagbase := userbase.Tag()
 	for i, userdata := range testUsers["users"] {
 		user := types.NewUser(userdata["name"], userdata["password"], userdata["email"])
 		if _, err = userbase.Reserve(user.ID, user.Name); err != nil {

@@ -22,7 +22,14 @@ func TestStorebase(t *testing.T) {
 		if err := db.Init(ctx, true); err != nil {
 			t.Fatal("Unable to init database", err)
 		}
-		sb = db.Store(context.Background()).(*Storebase)
+		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		sb = mdb.Store().(*Storebase)
 	}
 	{
 		input := types.StoreID{

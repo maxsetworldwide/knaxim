@@ -445,7 +445,7 @@ func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) ([]tag.FileTag, error
 
 // SearchOwned returns all fileids that are owned by the owner and match the filtering tags
 func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.FileID, error) {
-	fb := tb.File(nil)
+	fb := tb.File()
 	files, err := fb.GetOwned(oid)
 	if err != nil {
 		return nil, err
@@ -459,7 +459,7 @@ func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.
 
 // SearchAccess returns all fileids that the owner has access to in a particular permission and match the filtering tags
 func (tb *Tagbase) SearchAccess(oid types.OwnerID, pkey string, tags ...tag.FileTag) ([]types.FileID, error) {
-	fb := tb.File(nil)
+	fb := tb.File()
 	files, err := fb.GetPermKey(oid, pkey)
 	if err != nil {
 		return nil, err
