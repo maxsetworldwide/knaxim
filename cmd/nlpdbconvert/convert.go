@@ -79,6 +79,12 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		return err
 	}
 
+	// since we are reprocessing files, we will clear all previous processing errors and start fresh
+	err = clearPerrs(ctx, client, destDB.DBName)
+	if err != nil {
+		return err
+	}
+
 	sb := destDB.Store(ctx)
 	defer sb.Close(ctx)
 
@@ -119,10 +125,22 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 				return err
 			}
 			decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
-		} else {
 			foundStoreIDs[storeID.String()] = true
 		}
 	}
 
+	return nil
+}
+
+func clearPerrs(ctx context.Context, client *mongo.Client, dbName string) error {
+	_, err := client.Database(dbName).Collection("store").UpdateMany(ctx,
+		bson.M{},
+		bson.M{
+			"$unset": bson.M{"perr": ""},
+		},
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
