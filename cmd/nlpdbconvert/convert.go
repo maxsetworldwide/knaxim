@@ -78,9 +78,12 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 	if err != nil {
 		return err
 	}
-
-	sb := destDB.Store(ctx)
-	defer sb.Close(ctx)
+	db, err := destDB.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer db.Close(ctx)
+	sb := db.Store()
 	if !*quiet {
 		fmt.Printf("Processing %d files:\n", len(files))
 		defer fmt.Println()
@@ -94,7 +97,7 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		if err != nil {
 			return err
 		}
-		decode.Read(ctx, nil, file.Name, fs, sb, *tikaPath, *gotenPath)
+		decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
 	}
 
 	return nil
