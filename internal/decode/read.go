@@ -19,7 +19,7 @@ import (
 )
 
 //Read generates meta data from the content of a filestore
-func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.FileStore, dbconfig database.Database, tika string, gotenburg string) {
+func Read(ctx context.Context, cncl context.CancelFunc, fs *types.FileStore, dbconfig database.Database, tika string, gotenburg string) {
 	errlock := new(sync.Mutex)
 	var errs []error
 	pusherr := func(e error) {
@@ -135,20 +135,14 @@ func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.F
 		}(readtexts[0])
 		go func(r io.Reader) {
 			defer wg.Done()
-			tags, err := tag.ExtractContentTags(strings.NewReader(name))
-			if err != nil {
-				pusherr(err)
-				return
-			}
 			//   Split Words > ContentTags
 			ftags, err := tag.ExtractContentTags(r)
 			if err != nil {
 				pusherr(err)
 				return
 			}
-			tags = append(tags, ftags...)
 			select {
-			case tagch <- tags:
+			case tagch <- ftags:
 			case <-ctx.Done():
 				pusherr(ctx.Err())
 				return
@@ -184,7 +178,7 @@ func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.F
 				var err error
 				switch extConst {
 				case process.OFFICE:
-					result, err = converter.ConvertOffice(name, buf.Bytes())
+					result, err = converter.ConvertOffice("knaxim_view", buf.Bytes())
 				}
 				gotenFinished <- err
 			}()
