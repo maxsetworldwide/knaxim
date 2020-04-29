@@ -117,32 +117,32 @@ func ConnectDatabase(next http.Handler) http.Handler {
 		defer cancel()
 		r = r.WithContext(ctx)
 
-		filebase := config.DB.File(r.Context())
-		defer filebase.Close(r.Context())
+		dbConnection, err := config.DB.Connect(r.Context())
+		if err != nil {
+			panic(srverror.New(err, 500, "Server Error", "Failed to Connect to Database"))
+		}
+		defer dbConnection.Close(r.Context())
+		r = r.WithContext(context.WithValue(r.Context(), types.DATABASE, dbConnection))
+
+		filebase := dbConnection.File()
 		r = r.WithContext(context.WithValue(r.Context(), types.FILE, filebase))
 
-		ownerbase := filebase.Owner(nil)
-		defer ownerbase.Close(r.Context())
+		ownerbase := dbConnection.Owner()
 		r = r.WithContext(context.WithValue(r.Context(), types.OWNER, ownerbase))
 
-		storebase := filebase.Store(nil)
-		defer storebase.Close(r.Context())
+		storebase := dbConnection.Store()
 		r = r.WithContext(context.WithValue(r.Context(), types.STORE, storebase))
 
-		contentbase := filebase.Content(nil)
-		defer contentbase.Close(r.Context())
+		contentbase := dbConnection.Content()
 		r = r.WithContext(context.WithValue(r.Context(), types.CONTENT, contentbase))
 
-		tagbase := filebase.Tag(nil)
-		defer tagbase.Close(r.Context())
+		tagbase := dbConnection.Tag()
 		r = r.WithContext(context.WithValue(r.Context(), types.TAG, tagbase))
 
-		viewbase := filebase.View(nil)
-		defer viewbase.Close(r.Context())
+		viewbase := dbConnection.View()
 		r = r.WithContext(context.WithValue(r.Context(), types.VIEW, viewbase))
 
-		acronymbase := filebase.Acronym(nil)
-		defer acronymbase.Close(r.Context())
+		acronymbase := dbConnection.Acronym()
 		r = r.WithContext(context.WithValue(r.Context(), types.ACRONYM, acronymbase))
 
 		next.ServeHTTP(w, r)

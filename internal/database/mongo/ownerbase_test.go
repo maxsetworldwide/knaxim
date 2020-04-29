@@ -21,7 +21,12 @@ func TestOwnerbase(t *testing.T) {
 	}
 	methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	ob = db.Owner(methodtesting).(*Ownerbase)
+	mdb, err := db.Connect(methodtesting)
+	if err != nil {
+		t.Fatalf("Unable to connect to database: %s", err.Error())
+	}
+	defer mdb.Close(methodtesting)
+	ob = mdb.Owner().(*Ownerbase)
 	var ownerids = []types.OwnerID{
 		types.OwnerID{
 			Type:        'u',

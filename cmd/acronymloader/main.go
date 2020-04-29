@@ -54,7 +54,14 @@ func main() {
 	if err != nil {
 		log.Fatal("unable to init database ", err)
 	}
-	ab = ab.Acronym(timeoutctx).(*mongo.Acronymbase)
+	{
+		db, err := ab.Connect(timeoutctx)
+		if err != nil {
+			log.Fatal("unable to connect to database ", err)
+		}
+		defer db.Close(timeoutctx)
+		ab = db.Acronym().(*mongo.Acronymbase)
+	}
 	var pair []string
 	for pair, err = parser.Read(); err == nil; pair, err = parser.Read() {
 		dbErr := ab.Put(pair[0], pair[1])

@@ -185,7 +185,7 @@ func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.
 			panic(r)
 		}
 	}()
-	fb := tb.file(nil).(*Filebase)
+	fb := tb.file().(*Filebase)
 	fs, err := fb.getOwned(oid)
 	defer fb.Close(nil)
 	if err != nil {
@@ -208,7 +208,7 @@ func (tb *Tagbase) SearchAccess(oid types.OwnerID, key string, tags ...tag.FileT
 			panic(r)
 		}
 	}()
-	fb := tb.file(nil).(*Filebase)
+	fb := tb.file().(*Filebase)
 	fs, err := fb.getPermKey(oid, key)
 	defer fb.Close(nil)
 	if err != nil {

@@ -111,7 +111,12 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
-		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
+		db, err := config.DB.Connect(fctx)
+		if err != nil {
+			panic(srverror.New(err, 500, "Failed to add to folder", "Failed to connect to database"))
+		}
+		defer db.Close(fctx)
+		err = db.Tag().Upsert(tag.FileTag{
 			File:  file.GetID(),
 			Owner: owner.GetID(),
 			Tag: tag.Tag{
@@ -249,7 +254,12 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
-		err = config.DB.Tag(fctx).Upsert(tag.FileTag{
+		db, err := config.DB.Connect(fctx)
+		if err != nil {
+			panic(srverror.New(err, 500, "Failed to add to folder", "Failed to connect to database"))
+		}
+		defer db.Close(fctx)
+		err = db.Tag().Upsert(tag.FileTag{
 			File:  file.GetID(),
 			Owner: owner.GetID(),
 			Tag: tag.Tag{
