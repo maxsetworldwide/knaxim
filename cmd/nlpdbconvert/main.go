@@ -140,9 +140,8 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 
 	if len(errStrs) == 0 {
 		return nil
-	} else {
-		return fmt.Errorf("%d processing errors occurred during conversion:\n%s", len(errStrs), strings.Join(errStrs, "\n"))
 	}
+	return fmt.Errorf("%d processing errors occurred during conversion:\n%s", len(errStrs), strings.Join(errStrs, "\n"))
 }
 
 func findPerrs(ctx context.Context, client *mongoDB.Client, dbName string) ([]CEErrors.Processing, error) {
