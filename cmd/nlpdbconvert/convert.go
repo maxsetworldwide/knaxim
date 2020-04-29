@@ -63,10 +63,11 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 	return newTags, nil
 }
 
-// Assumes store collection has already been copied over.
-// This function goes through each file record (not file store due to requiring a name),
-// and calls decode.Read() on each one, as if the file was just uploaded. This will
-// add the views, lines, and nlp tags for each file to the database.
+// Assumes the store collection has already been copied over.
+// This function goes through each file record and inserts name tags for each file.
+// It will then clear previous processing errors that have occurred in the past and
+// reprocesses each unique filestore via decode.Read() as if the file was just uploaded.
+// This will add the views, lines, and nlp tags for each file to the database.
 func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Database) error {
 	srcFileColl := client.Database(destDB.DBName).Collection("file")
 	cursor, err := srcFileColl.Find(ctx, bson.D{})
@@ -79,7 +80,6 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		return err
 	}
 
-	// since we are reprocessing files, we will clear all previous processing errors and start fresh
 	err = clearPerrs(ctx, client, destDB.DBName)
 	if err != nil {
 		return err
