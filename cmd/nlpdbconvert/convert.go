@@ -85,14 +85,6 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		return err
 	}
 
-	// main might already be connecting, and the defer close might close prematurely.
-	db, err := destDB.Connect(ctx)
-	if err != nil {
-		return err
-	}
-	defer db.Close(ctx)
-	sb := db.Store()
-
 	var foundStoreIDs = make(map[string]bool)
 
 	if !*quiet {
@@ -104,7 +96,7 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 			fmt.Print(".")
 		}
 
-		fs, err := db.File().Get(file.GetID())
+		fs, err := destDB.File().Get(file.GetID())
 		if err != nil {
 			return err
 		}
@@ -121,15 +113,15 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 				Tag:   nt,
 			})
 		}
-		err = db.Tag().Upsert(fileNameTags...)
+		err = destDB.Tag().Upsert(fileNameTags...)
 
 		storeID := fs.GetID().StoreID
 		if found := foundStoreIDs[storeID.String()]; !found {
-			fs, err := sb.Get(storeID)
+			fs, err := destDB.Store().Get(storeID)
 			if err != nil {
 				return err
 			}
-			decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
+			decode.Read(ctx, nil, fs, destDB, *tikaPath, *gotenPath)
 			foundStoreIDs[storeID.String()] = true
 		}
 	}
