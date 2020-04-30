@@ -1,15 +1,15 @@
 <template>
   <b-container>
     <b-row align-h="around">
-      <b-col cols="3">
+      <b-col v-if="topicData.length > 0" cols="3">
         <h3>Topics</h3>
         <donut-complete :dataVals="topicData" />
       </b-col>
-      <b-col cols="3">
+      <b-col v-if="actionData.length > 0" cols="3">
         <h3>Actions</h3>
         <donut-complete :dataVals="actionData" />
       </b-col>
-      <b-col cols="3">
+      <b-col v-if="resourceData.length > 0" cols="3">
         <h3>Resources</h3>
         <donut-complete :dataVals="resourceData" />
       </b-col>
