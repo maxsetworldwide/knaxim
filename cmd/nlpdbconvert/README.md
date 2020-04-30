@@ -27,6 +27,8 @@ The provided test file is an integration test that requires external mongodb, go
 
 A manual test should be conducted in tandem with this test, as the test checks for simple easy-to-find errors. Provided is a `./testdata/testDBNotes`, which are notes of the state of the old database. A full manual user test can be done to ensure that the behavior after the conversion matches up with these notes.
 
+If the testDB should be updated, testDB.gz can be overwitten via `mongodump --archive=testDB.gz --gzip --db=DBNAME` where `DBNAME` is usually `conversionTestOldDB`. When you do this, be sure to update the notes with the changes.
+
 ### Test Options
 Running `mongorestore` then `go test` should be sufficient to run the tests as intended, but in case certain parameters need to be changed:
 * `-testuri URI` to specify the mongo URI, defaults to `mongodb://localhost:27017`.
