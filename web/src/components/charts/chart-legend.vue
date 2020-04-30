@@ -14,11 +14,12 @@
     <li
       v-for="(datum, idx) in dataSet"
       :key="idx"
-      :id="labels[idx] + '-' + idx"
+      :id="`${labels[idx]}-${idx}`"
       ref="items"
       @click="handleClick(idx)"
     >
-      <div class="color-box" :style="{ backgroundColor: colors[idx] }" />
+      <canvas v-if="isPatterned" ref="canvases" height="10" width="10" />
+      <div v-else class="color-box" :style="{ backgroundColor: colors[idx] }" />
       <span> {{ labels[idx] }} </span>
     </li>
   </ul>
@@ -31,11 +32,6 @@ export default {
     chart: {
       type: Object,
       required: true
-    }
-  },
-  data () {
-    return {
-      overflowedItems: []
     }
   },
   computed: {
@@ -56,12 +52,33 @@ export default {
         return this.chart.data.datasets[0].data || []
       }
       return []
+    },
+    isPatterned () {
+      return (
+        this.chart.data &&
+        typeof this.chart.data.datasets[0].backgroundColor[0] === 'object'
+      )
     }
   },
   methods: {
     handleClick (idx) {
       this.$emit('click', this.labels[idx])
+    },
+    drawCanvases () {
+      this.$refs['canvases'].forEach((canvas, idx) => {
+        let pattern = this.colors[idx]
+        let ctx = canvas.getContext('2d')
+        ctx.fillStyle = pattern
+        ctx.fillRect(0, 0, 10, 10)
+      })
     }
+  },
+  mounted () {
+    this.$nextTick(() => {
+      if (this.isPatterned) {
+        this.drawCanvases()
+      }
+    })
   }
 }
 </script>
