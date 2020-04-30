@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// AttachSearch adds handlers for searching the tags of files
 func AttachSearch(r *mux.Router) {
 	r.Use(ConnectDatabase)
 	r.Use(UserCookie)

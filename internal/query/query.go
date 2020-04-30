@@ -10,11 +10,13 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
+//Q is the primary query type that represents the combination of Context and Matching condition
 type Q struct {
 	Context []C `json:"context"`
 	Match   []M `json:"match"`
 }
 
+// UnmarshalJSON reads json into Query object
 func (q *Q) UnmarshalJSON(b []byte) error {
 	var target struct {
 		C interface{} `json:"context"`
@@ -33,6 +35,7 @@ func (q *Q) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// FindMatching finds all matching fileids based on query
 func (q *Q) FindMatching(ctx context.Context, dbConfig database.Database) (files []types.FileID, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()

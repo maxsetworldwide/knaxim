@@ -7,6 +7,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
+// M is the matching condition to filter file ids by
 type M struct {
 	Tag   tag.Type      `json:"tagtype"`
 	Word  string        `json:"word"`
@@ -65,6 +66,7 @@ func decodeM(i interface{}) (matches []M, err error) {
 	return
 }
 
+// SearchTag builds a tag.FileTag the represents the same data as the M so that it can be used to search tags
 func (m M) SearchTag() tag.FileTag {
 	ft := tag.FileTag{
 		Owner: m.Owner,

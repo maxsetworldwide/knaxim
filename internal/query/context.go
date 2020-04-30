@@ -8,10 +8,13 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
+// CType determines how the context is generated. More specifically, it determines how the id value is to be interpreted,
 type CType uint8
 
 const (
+	// OWNER means that the id is an OwnerID
 	OWNER CType = iota
+	// FILE means that the id is a FileID
 	FILE
 )
 
@@ -30,12 +33,16 @@ func decodeCType(s string) (CType, error) {
 	}
 }
 
+// CRestriction gives greater specificity to context types
 type CRestriction uint8
 
 const (
-	ALL   CRestriction = 3
+	// ALL means both owned and viewable files appear in the context
+	ALL CRestriction = 3
+	// OWNED means only owned files appear in the context
 	OWNED CRestriction = 1
-	VIEW  CRestriction = 2
+	// VIEW means only viewable file appear in the context
+	VIEW CRestriction = 2
 )
 
 func decodeCRestriction(s string) (CRestriction, error) {
@@ -57,6 +64,7 @@ func decodeCRestriction(s string) (CRestriction, error) {
 	}
 }
 
+// C is the context that the search is performed over. Data is used to identify a list of files
 type C struct {
 	Type  CType        `json:"type"`
 	ID    string       `json:"id"`
@@ -111,6 +119,7 @@ func decodeC(i interface{}) (contexts []C, err error) {
 	return
 }
 
+// GetFileSet returns the list of fileids that the context maps to
 func (c C) GetFileSet(ctx context.Context, dbConfig database.Database) ([]types.FileID, error) {
 	db, err := dbConfig.Connect(ctx)
 	if err != nil {
@@ -158,6 +167,7 @@ func (c C) getFileSet(db database.Database) ([]types.FileID, error) {
 	}
 }
 
+// CheckAccess returns true if the provided owner has permission to access the files contexts, extra provides additional permissions to check on file type contexts
 func (c C) CheckAccess(o types.Owner, dbConnection database.Database, extra ...string) (bool, error) {
 	switch c.Type {
 	case OWNER:
