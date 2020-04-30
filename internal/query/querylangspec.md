@@ -51,10 +51,12 @@ Each element of an array will be interpreted as a match value and collectively o
   - Optional
     - "regex"  
     indicates that the "word" is the be interpreted as a regular expression to match tags against instead of just equality. As long as regex is present and not null the "word" will be interpreted as a regular expression.
+    - "owner"  
+    This is the owner id to search for associated with the word. Important for tag types of user, date, and name.
 
 - String  
-will be interpreted as a regular expression seartching the content "tagtype".  
-`cat` becomes  
+will be interpreted as a regular expression searching the content "tagtype".  
+`"cat"` becomes  
 ```json
 {
   "tagtype": "content",

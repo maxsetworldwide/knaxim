@@ -1,6 +1,12 @@
 package query
 
-import "errors"
+import (
+	"context"
+	"errors"
+
+	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+)
 
 type CType uint8
 
@@ -27,9 +33,9 @@ func decodeCType(s string) (CType, error) {
 type CRestriction uint8
 
 const (
-	ALL CRestriction = iota
-	OWNED
-	VIEW
+	ALL   CRestriction = 3
+	OWNED CRestriction = 1
+	VIEW  CRestriction = 2
 )
 
 func decodeCRestriction(s string) (CRestriction, error) {
@@ -103,4 +109,51 @@ func decodeC(i interface{}) (contexts []C, err error) {
 		return nil, errors.New("unrecognized Context Value")
 	}
 	return
+}
+
+func (c C) GetFileSet(ctx context.Context, dbConfig database.Database) ([]types.FileID, error) {
+	db, err := dbConfig.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close(ctx)
+	return c.getFileSet(db)
+}
+
+func (c C) getFileSet(db database.Database) ([]types.FileID, error) {
+	switch c.Type {
+	case OWNER:
+		id, err := types.DecodeObjectIDString(c.ID)
+		if err != nil {
+			return nil, err
+		}
+		var list []types.FileID
+		if c.Limit&OWNED != 0 {
+			owned, err := db.File().GetOwned(id)
+			if err != nil {
+				return nil, err
+			}
+			for _, file := range owned {
+				list = append(list, file.GetID())
+			}
+		}
+		if c.Limit&VIEW != 0 {
+			viewable, err := db.File().GetPermKey(id, "view")
+			if err != nil {
+				return nil, err
+			}
+			for _, file := range viewable {
+				list = append(list, file.GetID())
+			}
+		}
+		return list, nil
+	case FILE:
+		id, err := types.DecodeFileID(c.ID)
+		if err != nil {
+			return nil, err
+		}
+		return []types.FileID{id}, nil
+	default:
+		return nil, errors.New("Unrecognized Context Type")
+	}
 }

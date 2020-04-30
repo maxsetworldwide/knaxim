@@ -3,13 +3,15 @@ package query
 import (
 	"errors"
 
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
 type M struct {
-	Tag   tag.Type    `json:"tagtype"`
-	Word  string      `json:"word"`
-	Regex interface{} `json:"regex,omitempty"`
+	Tag   tag.Type      `json:"tagtype"`
+	Word  string        `json:"word"`
+	Owner types.OwnerID `json:"owner,omitempty"`
+	Regex interface{}   `json:"regex,omitempty"`
 }
 
 func decodeM(i interface{}) (matches []M, err error) {
@@ -37,10 +39,19 @@ func decodeM(i interface{}) (matches []M, err error) {
 		if !ok {
 			return nil, errors.New("Missing word")
 		}
+		var owner types.OwnerID
+		if v["owner"] != nil {
+			o, ok := v["owner"].(string)
+			if !ok {
+				return nil, errors.New("owner must be a string in match condition")
+			}
+			owner, err = types.DecodeObjectIDString(o)
+		}
 		matches = append(matches, M{
 			Tag:   t,
 			Word:  w,
 			Regex: v["regex"],
+			Owner: owner,
 		})
 	case string:
 		matches = append(matches, M{
@@ -52,4 +63,24 @@ func decodeM(i interface{}) (matches []M, err error) {
 		return nil, errors.New("Unrecognized Match Value")
 	}
 	return
+}
+
+func (m M) SearchTag() tag.FileTag {
+	ft := tag.FileTag{
+		Owner: m.Owner,
+		Tag: tag.Tag{
+			Word: m.Word,
+			Type: m.Tag,
+		},
+	}
+	if m.Regex != nil {
+		ft.Type = ft.Type | tag.SEARCH
+		ft.Data = tag.Data{
+			tag.SEARCH: map[string]interface{}{
+				"regex":        true,
+				"regexoptions": "i",
+			},
+		}
+	}
+	return ft
 }
