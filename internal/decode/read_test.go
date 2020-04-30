@@ -37,7 +37,7 @@ func TestRead(t *testing.T) {
 		t.Fatalf("unable to create File Store: %s", err.Error())
 	}
 	fs.ContentType = "text/plain"
-	sb := db.Store(testctx)
+	sb := db.Store()
 	if fs.ID, err = sb.Reserve(fs.ID); err != nil {
 		t.Fatalf("unable to reserve id for filestore: %s", err.Error())
 	}
@@ -45,7 +45,7 @@ func TestRead(t *testing.T) {
 		t.Fatalf("unable to insert filestore: %s", err.Error())
 	}
 	sb.Close(testctx)
-	Read(testctx, cancel, "test file alpha", fs, db, tikapath, gotenburgpath)
+	Read(testctx, cancel, fs, db, tikapath, gotenburgpath)
 	databasejson, err := json.MarshalIndent(db, "", "\t")
 	if err != nil {
 		t.Fatalf("unable to produce database output: %s", err.Error())

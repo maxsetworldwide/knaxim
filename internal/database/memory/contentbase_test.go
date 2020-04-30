@@ -8,8 +8,9 @@ import (
 
 func TestContent(t *testing.T) {
 	defer testingComplete.Done()
-	cb := DB.Content(nil)
-	defer cb.Close(nil)
+	DB.Connect(nil)
+	cb := DB.Content()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	lines := []types.ContentLine{

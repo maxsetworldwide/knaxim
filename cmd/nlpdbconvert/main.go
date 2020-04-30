@@ -96,7 +96,12 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 	if err := newDB.Init(ctx, true); err != nil {
 		return err
 	}
-
+	newdb, err := newDB.Connect(ctx)
+	if err != nil {
+		return nil
+	}
+	defer newdb.Close(ctx)
+	newDB = newdb.(*mongo.Database)
 	if !*quiet {
 		fmt.Println("Copying unchanged collections...")
 	}
@@ -112,7 +117,7 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 	if err != nil {
 		return err
 	}
-	err = newDB.Tag(ctx).Upsert(userTags...)
+	err = newDB.Tag().Upsert(userTags...)
 	if err != nil {
 		return err
 	}

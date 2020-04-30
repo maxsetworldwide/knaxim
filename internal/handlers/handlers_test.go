@@ -208,7 +208,14 @@ func TestMain(m *testing.M) {
 	config.V.MinFileTimeout = configTimeout
 	config.V.MaxFileTimeout = configTimeout
 
-	os.Exit(m.Run())
+	status := m.Run()
+	if status == 0 {
+		if oc := memory.CurrentOpenConnections(); oc != 0 {
+			status = 2
+			fmt.Printf("Database Connections not handled: %d connections\n", oc)
+		}
+	}
+	os.Exit(status)
 }
 
 // TODO: move config stuff to separate function
@@ -229,10 +236,13 @@ func populateDB() (err error) {
 	}
 	config.T.Path = tikapath
 	config.V.GotenPath = gotenpath
-	userbase := config.DB.Owner(setupctx)
-	defer userbase.Close(setupctx)
-	tagbase := userbase.Tag(nil)
-	defer tagbase.Close(nil)
+	db, err := config.DB.Connect(setupctx)
+	if err != nil {
+		return
+	}
+	defer db.Close(setupctx)
+	userbase := db.Owner()
+	tagbase := userbase.Tag()
 	for i, userdata := range testUsers["users"] {
 		user := types.NewUser(userdata["name"], userdata["password"], userdata["email"])
 		if _, err = userbase.Reserve(user.ID, user.Name); err != nil {
@@ -271,7 +281,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		decode.Read(setupctx, nil, adminFiles[i].file.GetName(), adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -299,7 +309,7 @@ func populateDB() (err error) {
 			fmt.Printf("injest file failed")
 			return
 		}
-		decode.Read(setupctx, nil, publicFiles[i].file.GetName(), publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -309,7 +319,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		decode.Read(setupctx, nil, testFiles[i].file.GetName(), testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}

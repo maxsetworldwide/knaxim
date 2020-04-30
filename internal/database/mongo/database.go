@@ -333,90 +333,71 @@ func initcoll(c map[string]string) map[string]string {
 	return c
 }
 
-func (d *Database) inittracking(buildform *Database) {
-	if d.gotten == nil {
-		if buildform.gotten == nil {
-			d.trackOwners = newTrackOwners()
-		} else {
-			d.trackOwners = buildform.trackOwners
-		}
-	}
-}
-
-func (d *Database) initclient(c context.Context) {
-	if c != nil {
-		var err error
-		d.ctx, d.cancel = context.WithCancel(c)
-		d.client, err = mongo.Connect(d.ctx, options.Client().ApplyURI(d.URI))
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
 // Owner opens a new connection to the database if provided a context and returns Ownerbase type
 // if provided context is nil the resulting Ownerbase will reuse the existing connection
-func (d *Database) Owner(c context.Context) database.Ownerbase {
+func (d *Database) Owner() database.Ownerbase {
 	n := new(Ownerbase)
 	n.Database = *d
-	n.inittracking(d)
-	n.initclient(c)
 	return n
 }
 
 // File opens a new connection to the database if provided a context and returns Filebase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) File(c context.Context) database.Filebase {
+func (d *Database) File() database.Filebase {
 	n := new(Filebase)
 	n.Database = *d
-	n.inittracking(d)
-	n.initclient(c)
 	return n
 }
 
 // Store opens a new connection to the database if provided a context and returns Storebase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) Store(c context.Context) database.Storebase {
+func (d *Database) Store() database.Storebase {
 	n := new(Storebase)
 	n.Database = *d
-	n.initclient(c)
 	return n
 }
 
 // Content opens a new connection to the database if provided a context and returns Contentbase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) Content(c context.Context) database.Contentbase {
+func (d *Database) Content() database.Contentbase {
 	n := new(Contentbase)
 	n.Database = *d
-	n.initclient(c)
 	return n
 }
 
 // Tag opens a new connection to the database if provided a context and returns Tagbase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) Tag(c context.Context) database.Tagbase {
+func (d *Database) Tag() database.Tagbase {
 	n := new(Tagbase)
 	n.Database = *d
-	n.initclient(c)
 	return n
 }
 
 // Acronym opens a new connection to the database if provided a context and returns Acronymbase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) Acronym(c context.Context) database.Acronymbase {
+func (d *Database) Acronym() database.Acronymbase {
 	n := new(Acronymbase)
 	n.Database = *d
-	n.initclient(c)
 	return n
 }
 
 // View opens a new connection to the database if provided a context and returns Viewbase type
 // if provided context is nil it will reuse the existing connection
-func (d *Database) View(c context.Context) database.Viewbase {
+func (d *Database) View() database.Viewbase {
 	n := new(Viewbase)
 	n.Database = *d
-	n.initclient(c)
 	return n
+}
+
+// Connect establishes a new connection to the mongodb
+func (d *Database) Connect(ctx context.Context) (database.Database, error) {
+	nd := new(Database)
+	*nd = *d
+	nd.trackOwners = newTrackOwners()
+	var err error
+	nd.ctx, nd.cancel = context.WithCancel(ctx)
+	nd.client, err = mongo.Connect(nd.ctx, options.Client().ApplyURI(d.URI))
+	return nd, err
 }
 
 // Close stops the active connection necessary or else there can be memory leak from unclosed connections
@@ -426,9 +407,6 @@ func (d *Database) Close(ctx context.Context) error {
 		d.cancel = nil
 		d.ctx = nil
 	}()
-	if d.cancel != nil {
-		d.cancel()
-	}
 	if ctx == nil {
 		ctx = d.ctx
 	}
@@ -436,6 +414,9 @@ func (d *Database) Close(ctx context.Context) error {
 		if err := d.client.Disconnect(ctx); err != nil {
 			return srverror.New(err, 500, "Database Error 101", "unable to close connection to Database")
 		}
+	}
+	if d.cancel != nil {
+		d.cancel()
 	}
 	return nil
 }

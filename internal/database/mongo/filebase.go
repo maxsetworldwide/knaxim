@@ -91,7 +91,7 @@ func (fb *Filebase) Get(fid types.FileID) (types.FileI, error) {
 		return nil, srverror.New(err, 500, "Database Error F3", "Unable to get file")
 	}
 	f := fd.File()
-	err := f.Populate(fb.Owner(nil))
+	err := f.Populate(fb.Owner())
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]types.FileI, error) {
 		files = append(files, ref.File())
 	}
 	for _, file := range files {
-		err := file.Populate(fb.Owner(nil))
+		err := file.Populate(fb.Owner())
 		if err != nil {
 			return nil, err
 		}

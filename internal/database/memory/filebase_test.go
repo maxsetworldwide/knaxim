@@ -13,8 +13,9 @@ var fid = types.FileID{
 
 func TestFiles(t *testing.T) {
 	defer testingComplete.Done()
-	fb := DB.File(nil)
-	defer fb.Close(nil)
+	DB.Connect(nil)
+	fb := DB.File()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	storedid, err := fb.Reserve(fid)

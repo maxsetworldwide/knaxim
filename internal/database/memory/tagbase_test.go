@@ -9,8 +9,9 @@ import (
 
 func TestTag(t *testing.T) {
 	defer testingComplete.Done()
-	tb := DB.Tag(nil)
-	defer tb.Close(nil)
+	DB.Connect(nil)
+	tb := DB.Tag()
+	defer DB.Close(nil)
 	t.Parallel()
 	fileids := []types.FileID{
 		types.FileID{
@@ -154,15 +155,14 @@ func TestTag(t *testing.T) {
 		},
 	}
 	{
-		ob := tb.Owner(nil)
+		ob := tb.Owner()
 		if _, err := ob.Reserve(owner.GetID(), owner.GetName()); err != nil {
 			t.Fatalf("unable to reserve owner: %s", err.Error())
 		}
 		if err := ob.Insert(owner); err != nil {
 			t.Fatalf("unable to insert owner: %s", err.Error())
 		}
-		ob.Close(nil)
-		fb := tb.File(nil)
+		fb := tb.File()
 		for _, fid := range fileids {
 			if _, err := fb.Reserve(fid); err != nil {
 				t.Fatalf("unable to reserve fid: %s", fid.String())
@@ -173,7 +173,6 @@ func TestTag(t *testing.T) {
 				t.Fatalf("unable to insert file %d", i)
 			}
 		}
-		fb.Close(nil)
 	}
 	t.Log("SearchOwned")
 	{
