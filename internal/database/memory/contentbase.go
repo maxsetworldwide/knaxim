@@ -56,13 +56,11 @@ func (cb *Contentbase) slice(id types.StoreID, start int, end int) ([]types.Cont
 		sb := cb.store().(*Storebase)
 		fs, err := sb.get(id)
 		if err != nil {
-			sb.close()
 			return nil, err
 		}
 		if fs.Perr != nil {
 			perr = fs.Perr
 		}
-		sb.close()
 	}
 	if len(cb.Lines[id.String()]) < end {
 		end = len(cb.Lines[id.String()])
@@ -87,13 +85,11 @@ func (cb *Contentbase) regexSearchFile(regex string, file types.StoreID, start i
 		sb := cb.store().(*Storebase)
 		fs, err := sb.get(file)
 		if err != nil {
-			sb.close()
 			return nil, err
 		}
 		if fs.Perr != nil {
 			perr = fs.Perr
 		}
-		sb.close()
 	}
 	rgx, err := regexp.Compile(regex)
 	if err != nil {

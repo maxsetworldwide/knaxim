@@ -187,7 +187,6 @@ func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.
 	}()
 	fb := tb.file().(*Filebase)
 	fs, err := fb.getOwned(oid)
-	defer fb.Close(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +209,6 @@ func (tb *Tagbase) SearchAccess(oid types.OwnerID, key string, tags ...tag.FileT
 	}()
 	fb := tb.file().(*Filebase)
 	fs, err := fb.getPermKey(oid, key)
-	defer fb.Close(nil)
 	if err != nil {
 		return nil, err
 	}
