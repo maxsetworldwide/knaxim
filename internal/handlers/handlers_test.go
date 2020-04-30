@@ -212,7 +212,7 @@ func TestMain(m *testing.M) {
 	if status == 0 {
 		if oc := memory.CurrentOpenConnections(); oc != 0 {
 			status = 2
-			fmt.Printf("Database Connections not handled: %d connection\n", oc)
+			fmt.Printf("Database Connections not handled: %d connections\n", oc)
 		}
 	}
 	os.Exit(status)
