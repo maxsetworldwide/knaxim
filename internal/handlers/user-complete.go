@@ -155,7 +155,7 @@ func (cp *CompletePackage) addGroup(g types.GroupI, currentUser types.UserI, own
 
 func (cp *CompletePackage) addRecord(u types.UserI, r types.FileI, db database.Database) error {
 	if _, ok := cp.Records[r.GetID().String()]; !ok {
-		sb := db.Store(nil)
+		sb := db.Store()
 		fs, err := sb.Get(r.GetID().StoreID)
 		if err != nil {
 			return err

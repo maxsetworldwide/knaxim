@@ -12,7 +12,7 @@ import (
 )
 
 // InjestFile builds a file and file store from data and adds to database
-func InjestFile(ctx context.Context, file types.FileI, contenttype string, stream io.Reader, db database.Database) (fs *types.FileStore, err error) {
+func InjestFile(ctx context.Context, file types.FileI, contenttype string, stream io.Reader, dbconfig database.Database) (fs *types.FileStore, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fs = nil
@@ -31,10 +31,14 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 		panic(err)
 	}
 	fs.ContentType = contenttype
+	db, err := dbconfig.Connect(ctx)
+	if err != nil {
+		panic(srverror.New(err, 500, "Server Error", "Unable to connect to the database"))
+	}
+	defer db.Close(ctx)
 
 	{
-		ownerbase := db.Owner(ctx)
-		defer ownerbase.Close(ctx)
+		ownerbase := db.Owner()
 		currentspace, err := ownerbase.GetSpace(file.GetOwner().GetID())
 		if err != nil {
 			panic(err)
@@ -48,8 +52,7 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 		}
 	}
 	{
-		sb := db.Store(ctx)
-		defer sb.Close(ctx)
+		sb := db.Store()
 		matches, err := sb.MatchHash(fs.ID.Hash)
 		if err != nil {
 			panic(err)
@@ -74,8 +77,7 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 		}
 	}
 	{
-		fb := db.File(ctx)
-		defer fb.Close(ctx)
+		fb := db.File()
 		tempID, err := fb.Reserve(types.NewFileID(fs.ID))
 		if err != nil {
 			panic(err)
@@ -88,20 +90,3 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 	}
 	return fs, nil
 }
-
-//
-// func generateContentTags(ctx context.Context, fs *types.FileStore, db types.Database) {
-// 	go func() {
-// 		rcontent, err := fs.Reader()
-// 		if err != nil {
-// 			return
-// 		}
-// 		tags, err := tag.ExtractContentTags(rcontent)
-// 		if err != nil {
-// 			return
-// 		}
-// 		tb := db.Tag(ctx)
-// 		defer tb.Close(ctx)
-// 		tb.UpsertStore(fs.ID, tags...)
-// 	}()
-// }

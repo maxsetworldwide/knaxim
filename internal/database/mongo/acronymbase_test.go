@@ -20,7 +20,12 @@ func TestAcronym(t *testing.T) {
 		}
 		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		ab = db.Acronym(methodtesting).(*Acronymbase)
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		ab = mdb.Acronym().(*Acronymbase)
 	}
 	t.Run("Put", func(t *testing.T) {
 		err := ab.Put("ab", "Acronymbase")
