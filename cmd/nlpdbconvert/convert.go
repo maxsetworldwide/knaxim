@@ -42,7 +42,7 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 	for _, currTag := range oldTags {
 		if idMap, ok := currTag.Data["user"]; ok {
 			for id, val := range idMap {
-				userID, err := types.DecodeObjectIDString(id)
+				userID, err := types.DecodeOwnerIDString(id)
 				if err != nil {
 					return nil, err
 				}
