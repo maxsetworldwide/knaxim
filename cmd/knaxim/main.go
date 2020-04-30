@@ -106,6 +106,7 @@ func main() {
 		handlers.AttachPublic(apirouter.PathPrefix("/public").Subrouter())
 		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
 		handlers.AttachNLP(apirouter.PathPrefix("/nlp").Subrouter())
+		handlers.AttachSearch(apirouter.PathPrefix("/search").Subrouter())
 	}
 	if len(config.V.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()
