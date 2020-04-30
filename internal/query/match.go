@@ -45,7 +45,7 @@ func decodeM(i interface{}) (matches []M, err error) {
 			if !ok {
 				return nil, errors.New("owner must be a string in match condition")
 			}
-			owner, err = types.DecodeObjectIDString(o)
+			owner, err = types.DecodeOwnerIDString(o)
 		}
 		matches = append(matches, M{
 			Tag:   t,

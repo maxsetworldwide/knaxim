@@ -123,7 +123,7 @@ func (c C) GetFileSet(ctx context.Context, dbConfig database.Database) ([]types.
 func (c C) getFileSet(db database.Database) ([]types.FileID, error) {
 	switch c.Type {
 	case OWNER:
-		id, err := types.DecodeObjectIDString(c.ID)
+		id, err := types.DecodeOwnerIDString(c.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -161,7 +161,15 @@ func (c C) getFileSet(db database.Database) ([]types.FileID, error) {
 func (c C) CheckAccess(o types.Owner, dbConnection database.Database, extra ...string) (bool, error) {
 	switch c.Type {
 	case OWNER:
-		oid, err := types.DecodeObjectIDString(c.ID)
+		oid, err := types.DecodeOwnerIDString(c.ID)
+		if err != nil {
+			return false, err
+		}
+		O, err := dbConnection.Owner().Get(oid)
+		if err != nil {
+			return false, err
+		}
+		return O.Match(o), nil
 	case FILE:
 		fid, err := types.DecodeFileID(c.ID)
 		if err != nil {
