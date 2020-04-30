@@ -235,4 +235,5 @@ func Read(ctx context.Context, cncl context.CancelFunc, fs *types.FileStore, dbc
 		return
 	}
 	db.Store().UpdateMeta(fs)
+	db.Close(errctx)
 }

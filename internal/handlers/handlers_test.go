@@ -208,7 +208,14 @@ func TestMain(m *testing.M) {
 	config.V.MinFileTimeout = configTimeout
 	config.V.MaxFileTimeout = configTimeout
 
-	os.Exit(m.Run())
+	status := m.Run()
+	if status == 0 {
+		if oc := memory.CurrentOpenConnections(); oc != 0 {
+			status = 2
+			fmt.Printf("Database Connections not handled: %d connections\n", oc)
+		}
+	}
+	os.Exit(status)
 }
 
 // TODO: move config stuff to separate function
