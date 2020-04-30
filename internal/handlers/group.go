@@ -19,7 +19,7 @@ func groupMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		groupidstr := r.FormValue("group")
 		if len(groupidstr) > 0 {
-			groupid, err := types.DecodeObjectIDString(groupidstr)
+			groupid, err := types.DecodeOwnerIDString(groupidstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
@@ -40,7 +40,7 @@ func groupidMiddleware(checkmembership bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			groupidstr := mux.Vars(r)["id"]
-			groupid, err := types.DecodeObjectIDString(groupidstr)
+			groupid, err := types.DecodeOwnerIDString(groupidstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
@@ -254,7 +254,7 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 		}
 		ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		for _, idstr := range r.Form["id"] {
-			id, err := types.DecodeObjectIDString(idstr)
+			id, err := types.DecodeOwnerIDString(idstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Bad Member ID"))
 			}

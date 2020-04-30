@@ -58,8 +58,8 @@ func (oid OwnerID) String() string {
 	return out.String()
 }
 
-// DecodeObjectIDString inverse operation of String()
-func DecodeObjectIDString(s string) (oid OwnerID, err error) {
+// DecodeOwnerIDString inverse operation of String()
+func DecodeOwnerIDString(s string) (oid OwnerID, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			oid = OwnerID{}
@@ -106,7 +106,7 @@ func (oid *OwnerID) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	*oid, err = DecodeObjectIDString(oidstr)
+	*oid, err = DecodeOwnerIDString(oidstr)
 	return err
 }
 
