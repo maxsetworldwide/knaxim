@@ -39,7 +39,7 @@ func TestPermission(t *testing.T) {
 	var db memory.Database
 	db.Init(nil, true)
 	{
-		ob := db.Owner(nil)
+		ob := db.Owner()
 		savedid, err := ob.Reserve(owner.GetID(), owner.GetName())
 		if err != nil {
 			t.Fatalf("unable to reseve owner id: %s", err)
@@ -92,7 +92,7 @@ func TestPermission(t *testing.T) {
 			t.Fatalf("unable to UnmarshalJSON: %s", err)
 		}
 		t.Logf("np: %+v", np)
-		err = np.Populate(db.Owner(nil))
+		err = np.Populate(db.Owner())
 		if err != nil {
 			t.Fatalf("Populate threw err: %s", err)
 		}
@@ -111,7 +111,7 @@ func TestPermission(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unable to UnmarshalBSON: %s, %#v", err, pbson)
 		}
-		err = np.Populate(db.Owner(nil))
+		err = np.Populate(db.Owner())
 		if err != nil {
 			t.Fatalf("Populate threw err: %s", err)
 		}

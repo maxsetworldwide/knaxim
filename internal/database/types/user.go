@@ -176,7 +176,7 @@ func GetCookieUID(r *http.Request) (OwnerID, error) {
 	if err != nil {
 		return OwnerID{}, srverror.New(err, 401, "Unable to identity user")
 	}
-	return DecodeObjectIDString(cookie.Value)
+	return DecodeOwnerIDString(cookie.Value)
 }
 
 // Match returns true if owner is equal to user

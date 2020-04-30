@@ -157,3 +157,26 @@ func (c C) getFileSet(db database.Database) ([]types.FileID, error) {
 		return nil, errors.New("Unrecognized Context Type")
 	}
 }
+
+func (c C) CheckAccess(o types.Owner, dbConnection database.Database, extra ...string) (bool, error) {
+	switch c.Type {
+	case OWNER:
+		oid, err := types.DecodeObjectIDString(c.ID)
+	case FILE:
+		fid, err := types.DecodeFileID(c.ID)
+		if err != nil {
+			return false, err
+		}
+		file, err := dbConnection.File().Get(fid)
+		if err != nil {
+			return false, err
+		}
+		access := file.GetOwner().Match(o)
+		for _, ex := range extra {
+			access = access || file.CheckPerm(o, ex)
+		}
+		return access, nil
+	default:
+		return false, errors.New("unrecognized context type")
+	}
+}

@@ -287,7 +287,7 @@ func populateDB() (err error) {
 		}
 	}
 	var publicOwnerID types.OwnerID
-	publicOwnerID, err = types.DecodeObjectIDString(testUsers["admin"][1]["id"])
+	publicOwnerID, err = types.DecodeOwnerIDString(testUsers["admin"][1]["id"])
 	if err != nil {
 		return
 	}

@@ -62,7 +62,7 @@ func pullPerm(w http.ResponseWriter, r *http.Request) types.PermissionI {
 	var permobj types.PermissionI
 	if vals["type"] == "group" {
 		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
-		id, err := types.DecodeObjectIDString(vals["id"])
+		id, err := types.DecodeOwnerIDString(vals["id"])
 		if err != nil {
 			panic(srverror.New(err, 400, "Bad Group ID"))
 		}
@@ -114,7 +114,7 @@ func setPermission(permval bool) func(http.ResponseWriter, *http.Request) {
 		}
 		r.PostFormValue("id")
 		for _, idstr := range r.PostForm["id"] {
-			id, err := types.DecodeObjectIDString(idstr)
+			id, err := types.DecodeOwnerIDString(idstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Bad Target ID"))
 			}
