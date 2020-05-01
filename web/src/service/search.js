@@ -51,12 +51,16 @@ const SearchService = {
     }
     return out
   },
-  newMatchCondition (find, type = 'content', regex = true, owner) {
-    return {
-      tagtype: type,
-      word: find,
-      regex: regex,
-      owner: owner
+  newMatchCondition (find, type, regex = true, owner) {
+    if (type) {
+      return {
+        tagtype: type,
+        word: find,
+        regex: regex,
+        owner: owner
+      }
+    } else {
+      return find
     }
   }
 }

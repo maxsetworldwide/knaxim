@@ -88,8 +88,8 @@ describe('Search module', function () {
     })
     it('searches', async function () {
       mock
-        .onGet('group/gid/search', {
-          params: {
+        .onPost('/search/tags', {
+          context: {
             find: 'find'
           }
         }).reply(200, {
