@@ -178,7 +178,7 @@ func Read(ctx context.Context, cncl context.CancelFunc, fs *types.FileStore, dbc
 				var err error
 				switch extConst {
 				case process.OFFICE:
-					result, err = converter.ConvertOffice("knaxim_view", buf.Bytes())
+					result, err = converter.ConvertOffice("knaxim_view.odt", buf.Bytes())
 				}
 				gotenFinished <- err
 			}()
