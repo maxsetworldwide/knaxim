@@ -24,6 +24,40 @@ const SearchService = {
     return ApiService.query(`user/search`, { find }).catch(error => {
       throw buildError('SearchService.userFiles', error)
     })
+  },
+  FileTags ({ context, match }) {
+    return ApiService.post(`search/tags`, {
+      context,
+      match,
+      _sendJSON: true
+    }).catch(error => {
+      throw buildError('SearchService.FileTags', error)
+    })
+  },
+  newOwnerContext (oid, limit) {
+    let out = {
+      type: 'owner',
+      id: oid
+    }
+    if (limit) {
+      out['only'] = limit
+    }
+    return out
+  },
+  newFileContext (fid) {
+    let out = {
+      type: 'file',
+      id: fid
+    }
+    return out
+  },
+  newMatchCondition (find, type = 'content', regex = true, owner) {
+    return {
+      tagtype: type,
+      word: find,
+      regex: regex,
+      owner: owner
+    }
   }
 }
 
