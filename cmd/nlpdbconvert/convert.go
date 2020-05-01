@@ -42,7 +42,7 @@ func convertUserTags(ctx context.Context, client *mongo.Client, src string) ([]t
 	for _, currTag := range oldTags {
 		if idMap, ok := currTag.Data["user"]; ok {
 			for id, val := range idMap {
-				userID, err := types.DecodeObjectIDString(id)
+				userID, err := types.DecodeOwnerIDString(id)
 				if err != nil {
 					return nil, err
 				}
@@ -85,9 +85,6 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 		return err
 	}
 
-	sb := destDB.Store(ctx)
-	defer sb.Close(ctx)
-
 	var foundStoreIDs = make(map[string]bool)
 
 	if !*quiet {
@@ -99,7 +96,7 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 			fmt.Print(".")
 		}
 
-		fs, err := sb.File(nil).Get(file.GetID())
+		fs, err := destDB.File().Get(file.GetID())
 		if err != nil {
 			return err
 		}
@@ -116,15 +113,15 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 				Tag:   nt,
 			})
 		}
-		err = sb.Tag(nil).Upsert(fileNameTags...)
+		err = destDB.Tag().Upsert(fileNameTags...)
 
 		storeID := fs.GetID().StoreID
 		if found := foundStoreIDs[storeID.String()]; !found {
-			fs, err := sb.Get(storeID)
+			fs, err := destDB.Store().Get(storeID)
 			if err != nil {
 				return err
 			}
-			decode.Read(ctx, nil, fs, sb, *tikaPath, *gotenPath)
+			decode.Read(ctx, nil, fs, destDB, *tikaPath, *gotenPath)
 			foundStoreIDs[storeID.String()] = true
 		}
 	}

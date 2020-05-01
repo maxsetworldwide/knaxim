@@ -37,11 +37,11 @@ func TestInjustFile(t *testing.T) {
 	file := &types.File{
 		Name: "test.txt",
 	}
-	_, err = db.Owner(injestctx).Reserve(testOwner.GetID(), testOwner.GetName())
+	_, err = db.Owner().Reserve(testOwner.GetID(), testOwner.GetName())
 	if err != nil {
 		t.Fatal("unable to reserve testOwner:", err)
 	}
-	err = db.Owner(injestctx).Insert(testOwner)
+	err = db.Owner().Insert(testOwner)
 	if err != nil {
 		t.Fatalf("Failed to insert test Owner")
 	}

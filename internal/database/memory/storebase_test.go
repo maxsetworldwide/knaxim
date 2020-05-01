@@ -23,8 +23,9 @@ func fillstores(db *Database) {
 
 func TestStore(t *testing.T) {
 	defer testingComplete.Done()
-	sb := DB.Store(nil)
-	defer sb.Close(nil)
+	DB.Connect(nil)
+	sb := DB.Store()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	var sid = types.StoreID{

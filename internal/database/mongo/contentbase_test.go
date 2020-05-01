@@ -22,7 +22,12 @@ func TestContenbase(t *testing.T) {
 		}
 		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		cb = db.Content(methodtesting).(*Contentbase)
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		cb = mdb.Content().(*Contentbase)
 	}
 	var fileids = []types.StoreID{
 		types.StoreID{
@@ -49,7 +54,7 @@ func TestContenbase(t *testing.T) {
 		},
 	}
 	{
-		sb := cb.Store(nil)
+		sb := cb.Store()
 		for _, fs := range fileStores {
 			_, err := sb.Reserve(fs.ID)
 			if err != nil {

@@ -24,7 +24,12 @@ func TestFilebase(t *testing.T) {
 		}
 		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
-		fb = db.File(methodtesting).(*Filebase)
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		fb = mdb.File().(*Filebase)
 	}
 	var fileids = []types.FileID{
 		types.FileID{
@@ -110,7 +115,7 @@ func TestFilebase(t *testing.T) {
 			Name: "Second.txt",
 		},
 	}
-	ob := fb.Owner(fb.GetContext())
+	ob := fb.Owner()
 	for i, oid := range ownerids {
 		tempoid, err := ob.Reserve(oid, owners[i].(interface{ GetName() string }).GetName())
 		if err != nil {

@@ -19,8 +19,9 @@ var inputVS = &types.ViewStore{
 
 func TestViewbase(t *testing.T) {
 	defer testingComplete.Done()
-	vb := DB.View(nil)
-	defer vb.Close(nil)
+	DB.Connect(nil)
+	vb := DB.View()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	t.Log("View Insert")

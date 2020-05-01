@@ -59,7 +59,11 @@ func setup() {
 	if config.V.GuestUser != nil {
 		guestUser := types.NewUser(config.V.GuestUser.Name, config.V.GuestUser.Pass, config.V.GuestUser.Email)
 		guestUser.SetRole("Guest", true)
-		userbase := config.DB.Owner(setupctx)
+		db, err := config.DB.Connect(setupctx)
+		if err != nil {
+			log.Fatalf("unable to connect to database: %v", err)
+		}
+		userbase := db.Owner()
 		if preexisting, err := userbase.FindUserName(config.V.GuestUser.Name); preexisting != nil {
 			log.Printf("Guest User Already Exists")
 		} else if se, ok := err.(srverror.Error); !ok || se.Status() == errors.ErrNotFound.Status() {
@@ -72,7 +76,7 @@ func setup() {
 		} else {
 			log.Fatalf("Error setting up guest user: %v", err)
 		}
-		userbase.Close(setupctx)
+		db.Close(setupctx)
 	}
 }
 
@@ -102,6 +106,7 @@ func main() {
 		handlers.AttachPublic(apirouter.PathPrefix("/public").Subrouter())
 		handlers.AttachAcronym(apirouter.PathPrefix("/acronym").Subrouter())
 		handlers.AttachNLP(apirouter.PathPrefix("/nlp").Subrouter())
+		handlers.AttachSearch(apirouter.PathPrefix("/search").Subrouter())
 	}
 	if len(config.V.StaticPath) > 0 {
 		staticrouter := mainR.PathPrefix("/").Subrouter()

@@ -184,7 +184,7 @@ func userInfo(out http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(USER).(types.UserI)
 	userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	if r.FormValue("id") != "" {
-		oid, err := types.DecodeObjectIDString(r.FormValue("id"))
+		oid, err := types.DecodeOwnerIDString(r.FormValue("id"))
 		if err != nil {
 			panic(srverror.New(err, 400, "Unable to Decode UserID"))
 		}

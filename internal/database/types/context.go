@@ -5,7 +5,8 @@ type ContextKey byte
 
 // Context Keys for each type of database connection
 const (
-	OWNER ContextKey = iota
+	DATABASE ContextKey = iota
+	OWNER
 	FILE
 	STORE
 	CONTENT

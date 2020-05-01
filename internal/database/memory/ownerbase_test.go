@@ -37,8 +37,9 @@ func fillowners(db *Database) {
 
 func TestOwners(t *testing.T) {
 	defer testingComplete.Done()
-	ob := DB.Owner(nil)
-	defer ob.Close(nil)
+	DB.Connect(nil)
+	ob := DB.Owner()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	newUser := types.NewUser("testuser3", "testuserpass3", "test3@test.test")

@@ -10,13 +10,14 @@ import (
 // Database is the root Database interface
 type Database interface {
 	Init(context.Context, bool) error
-	Owner(context.Context) Ownerbase
-	File(context.Context) Filebase
-	Store(context.Context) Storebase
-	Content(context.Context) Contentbase
-	Tag(context.Context) Tagbase
-	Acronym(context.Context) Acronymbase
-	View(context.Context) Viewbase
+	Owner() Ownerbase
+	File() Filebase
+	Store() Storebase
+	Content() Contentbase
+	Tag() Tagbase
+	Acronym() Acronymbase
+	View() Viewbase
+	Connect(context.Context) (Database, error)
 	Close(context.Context) error
 	GetContext() context.Context
 }
