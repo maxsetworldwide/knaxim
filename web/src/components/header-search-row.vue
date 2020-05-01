@@ -74,7 +74,7 @@ export default {
   },
   computed: {
     rows () {
-      return this.matches.matched.slice(0, 4).map(row => {
+      return this.matches.matched.slice(0, 4).map((row) => {
         return {
           text: row.Content[0] || '',
           lineNo: row.Position
@@ -94,7 +94,7 @@ export default {
       // Highlight an acronym and its subject OR every word; Largest Words First
       const pattern = this.acr
         ? `${this.find}|${this.acr}`
-        : (match => {
+        : ((match) => {
           return match
             .split('"')
             .reduce((acc, phrase, indx) => {
@@ -105,12 +105,12 @@ export default {
                 return acc
               }
             }, [])
-            .filter(word => word.length > 0)
+            .filter((word) => word.length > 0)
             .sort((a, b) => b.length - a.length)
             .join('|')
         })(this.find)
       // this.find.split(' ').sort((a, b) => b.length - a.length).join('|')
-      return summary.replace(new RegExp(pattern, 'gi'), match => {
+      return summary.replace(new RegExp(pattern, 'gi'), (match) => {
         return `<span class="lite">${match}</span>`
       })
     },
@@ -128,7 +128,7 @@ export default {
         '/': '&#x2F;'
       }
       const regex = new RegExp(Object.keys(replacements).join('|'), 'gi')
-      summary = summary.replace(regex, match => {
+      summary = summary.replace(regex, (match) => {
         return replacements[match]
       })
       return summary
@@ -156,7 +156,7 @@ li {
   width: 25px;
   height: 25px;
 }
-.lite {
+::v-deep .lite {
   background: lightyellow;
 }
 .unrecognized {
