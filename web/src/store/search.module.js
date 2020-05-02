@@ -1,7 +1,12 @@
 import Vue from 'vue'
 import FileService from '@/service/file'
 import SearchService from '@/service/search'
-import { SEARCH, LOAD_MATCHED_LINES, LOAD_FILE_MATCH_LINES } from './actions.type'
+import {
+  SEARCH,
+  SEARCH_TAG,
+  LOAD_MATCHED_LINES,
+  LOAD_FILE_MATCH_LINES
+} from './actions.type'
 import {
   SEARCH_LOADING,
   PUSH_ERROR,
@@ -40,35 +45,48 @@ const actions = {
           reject(new Error('search canceled'))
         })
         commit(NEW_SEARCH, { find })
-        let ag = getters.activeGroup
-        if (ag) {
-          SearchService.groupFiles({ gid: ag.id, find: find }).then(({ data }) => {
-            if (data.matched && data.matched.length > 0) {
-              return data.matched.map(item => {
-                return {
-                  ...item.file,
-                  count: item.count
-                }
-              })
-            }
-            return []
-          }).then(r => resolve(r)).catch(e => reject(e))
-        } else {
-          SearchService.userFiles({ find }).then(({ data }) => {
-            if (data.matched && data.matched.length > 0) {
-              return data.matched.map(item => {
-                return {
-                  ...item.file,
-                  count: item.count
-                }
-              })
-            }
-            return []
-          }).then(r => resolve(r)).catch(e => reject(e))
-        }
+        let context = SearchService.newOwnerContext((getters.activeGroup && getters.activeGroup.id) || getters.currentUser.id)
+        let match = SearchService.newMatchCondition(find)
+        SearchService.FileTags({ context, match }).then(({ data }) => {
+          if (data.matched && data.matched.length > 0) {
+            return data.matched.map(item => {
+              return {
+                ...item.file,
+                count: item.count
+              }
+            })
+          }
+        }).then(r => resolve(r)).catch(e => reject(e))
       })
       commit(SET_MATCHES, fileList)
       await dispatch(LOAD_MATCHED_LINES, { find, files: fileList })
+    } catch (err) {
+      commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
+    } finally {
+      commit(SEARCH_LOADING, -1)
+    }
+  },
+  async [SEARCH_TAG] ({ commit, dispatch }, { context, match }) {
+    commit(SEARCH_LOADING, 1)
+    try {
+      let fileList = await new Promise((resolve, reject) => {
+        commit('cancelSearch', () => {
+          reject(new Error('search canceled'))
+        })
+        commit(NEW_SEARCH, { find: match.word })
+        SearchService.FileTags({ context, match }).then(({ data }) => {
+          if (data.matched && data.matched.length > 0) {
+            return data.matched.map(item => {
+              return {
+                ...item.file,
+                count: item.count
+              }
+            })
+          }
+        }).then(r => resolve(r)).catch(e => reject(e))
+      })
+      commit(SET_MATCHES, fileList)
+      await dispatch(LOAD_MATCHED_LINES, { find: match.word, files: fileList })
     } catch (err) {
       commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
     } finally {
