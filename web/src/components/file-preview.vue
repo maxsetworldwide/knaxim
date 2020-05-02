@@ -44,6 +44,7 @@ export default {
         ? this.filePreview[this.fid].lines.join(' ')
         : ''
     },
+    // TODO: move this logic to a renderless component
     topicData () {
       return this.buildGraphData(this.nlpTopics[this.fid])
     },
