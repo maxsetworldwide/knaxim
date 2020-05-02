@@ -1,6 +1,6 @@
 <template>
-  <b-col class="h-100" cols="2">
-    <b-row>
+  <b-col class="h-100 d-none d-lg-inline" cols="2">
+    <b-row class="d-none d-lg-inline">
       <b-col cols="4" offset-md="4">
         <b-dropdown
           :disabled="selections.length < 2"
@@ -17,9 +17,9 @@
         </b-dropdown>
       </b-col>
     </b-row>
-    <b-col v-if="currSelection === 'Searches'">
-      <div class="sidebar ml-auto">
-        <div class="sidebar-search-list d-none d-md-inline">
+    <b-col v-if="currSelection === 'Searches'" class="h-100 d-none d-lg-inline">
+      <div class="sidebar-content ml-auto">
+        <div class="sidebar-search-list">
           <!-- Search History Items  -->
           <b-link
             v-for="item in expandedSearchMatches"
@@ -38,10 +38,10 @@
     </b-col>
     <b-col
       v-else-if="currSelection === 'Graphs'"
-      class="h-100 d-none d-md-inline"
+      class="h-100 d-none d-lg-inline"
       cols="2"
     >
-      <div class="sidebar ml-auto">
+      <div class="sidebar-content ml-auto">
         <file-side-graphs :fid="$route.params.id" />
       </div>
     </b-col>
@@ -109,13 +109,9 @@ export default {
   }
 }
 
-.sidebar {
-  height: 100%;
+.sidebar-content {
+  height: 85%;
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.sidebar-toggle-switch {
-  cursor: pointer;
 }
 </style>

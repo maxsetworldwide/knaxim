@@ -30,7 +30,7 @@ events:
       />
       <span> / {{ maxPages }}</span>
     </b-col>
-    <b-col offset="2" offset-md="0" cols="6" md="4">
+    <b-col offset="1" offset-md="0" cols="6" md="4">
       <h4 class="title text-center">{{ file.name }}</h4>
     </b-col>
     <b-col class="d-none d-md-flex" offset="1" md="1">

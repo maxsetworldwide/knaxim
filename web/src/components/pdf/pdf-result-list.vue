@@ -13,7 +13,7 @@ events:
                         indicating a desire to toggle sentence highlighting.
 -->
 <template>
-  <div class="list h-100 w-100 d-none d-md-inline">
+  <div class="list h-100 w-100 d-none d-lg-inline">
     <b-list-group v-if="matchList.length > 0">
       <span class="text-center">
         <!--
