@@ -1,6 +1,6 @@
 <template>
-  <b-col class="h-100" cols="2">
-    <b-row>
+  <b-col class="h-100 d-none d-lg-inline" cols="2">
+    <b-row class=" d-none d-lg-inline">
       <b-col cols="4" offset-md="4">
         <b-dropdown
           :disabled="selections.length < 2"
@@ -17,9 +17,9 @@
         </b-dropdown>
       </b-col>
     </b-row>
-    <b-col v-if="currSelection === 'Searches'">
+    <b-col v-if="currSelection === 'Searches'" class=" d-none d-lg-inline">
       <div class="sidebar ml-auto">
-        <div class="sidebar-search-list d-none d-md-inline">
+        <div class="sidebar-search-list">
           <!-- Search History Items  -->
           <b-link
             v-for="item in expandedSearchMatches"
@@ -38,7 +38,7 @@
     </b-col>
     <b-col
       v-else-if="currSelection === 'Graphs'"
-      class="h-100 d-none d-md-inline"
+      class="h-100 d-none d-lg-inline"
       cols="2"
     >
       <div class="sidebar ml-auto">

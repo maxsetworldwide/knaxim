@@ -18,7 +18,11 @@
         @page-input="pageInput"
       />
       <b-row class="pdf-row" align-h="start">
-        <b-col v-if="currentSearch.length > 0" cols="2">
+        <b-col
+          v-if="currentSearch.length > 0"
+          class="d-none d-lg-inline"
+          cols="2"
+        >
           <pdf-result-list
             class="h-100 result-list"
             :matchList="matchList"
@@ -94,7 +98,7 @@ export default {
       let result = []
       for (let page in this.matchContexts) {
         let matchList = this.matchContexts[page]
-        matchList.forEach(match => {
+        matchList.forEach((match) => {
           match.page = page
           result.push(match)
         })
@@ -157,7 +161,7 @@ export default {
     fetchPdf () {
       pdfjs
         .getDocument(this.url)
-        .promise.then(pdf => {
+        .promise.then((pdf) => {
           this.pdf = pdf
         })
         .catch(() => {
@@ -177,7 +181,7 @@ export default {
         promises.push(pdf.getPage(i))
       }
       Promise.all(promises)
-        .then(pages => {
+        .then((pages) => {
           this.pages = pages
           this.fitToWidth()
         })
