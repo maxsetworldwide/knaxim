@@ -23,7 +23,6 @@
  -->
 <script>
 import { Doughnut } from 'vue-chartjs'
-import Pattern from 'patternomaly'
 
 export default {
   name: 'donut',
@@ -36,10 +35,6 @@ export default {
     dataVals: {
       type: Array,
       required: true
-    },
-    patterned: {
-      type: Boolean,
-      default: true
     }
   },
   computed: {
@@ -51,20 +46,9 @@ export default {
     },
     defaultColors () {
       const pallette = this.defaultColorPallette
-      const palletteToSize = this.dataVals.map((_, idx) => {
+      return this.dataVals.map((_, idx) => {
         return pallette[idx % pallette.length]
       })
-      if (!this.patterned) {
-        return palletteToSize
-      }
-      const patterns = this.defaultPatterns
-      const patternsToSize = palletteToSize.map((_, idx) => {
-        return patterns[idx % patterns.length]
-      })
-      const result = palletteToSize.map((color, idx) => {
-        return Pattern.draw(patternsToSize[idx], color)
-      })
-      return result
     }
   },
   data () {
@@ -77,15 +61,6 @@ export default {
         '#ff7f00',
         '#ffff33',
         '#a65628'
-      ],
-      defaultPatterns: [
-        'plus',
-        'disc',
-        'ring',
-        'zigzag',
-        'square',
-        'triangle',
-        'diamond-box'
       ],
       options: {
         responsive: true,
