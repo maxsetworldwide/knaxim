@@ -4,15 +4,27 @@
     <b-container v-else class="donut">
       <b-row>
         <h3>Topics</h3>
-        <donut-complete class="w-100" :dataVals="topicData" />
+        <donut-complete
+          class="w-100"
+          :dataVals="topicData"
+          @click="handleGraphClick('topic', $event)"
+        />
       </b-row>
       <b-row>
         <h3>Actions</h3>
-        <donut-complete class="w-100" :dataVals="actionData" />
+        <donut-complete
+          class="w-100"
+          :dataVals="actionData"
+          @click="handleGraphClick('action', $event)"
+        />
       </b-row>
       <b-row>
         <h3>Resources</h3>
-        <donut-complete class="w-100" :dataVals="resourceData" />
+        <donut-complete
+          class="w-100"
+          :dataVals="resourceData"
+          @click="handleGraphClick('resource', $event)"
+        />
       </b-row>
     </b-container>
   </div>
@@ -71,6 +83,9 @@ export default {
         })
       }
       return result
+    },
+    handleGraphClick (tag, label) {
+      this.$router.push({ path: `/search/${label}/tag/${tag}` })
     },
     ...mapActions([NLP_DATA])
   },

@@ -3,7 +3,7 @@
   <b-container v-else fluid class="header-search-list">
     <b-row>
       <b-col>
-        <file-actions :checkedFiles="found"/>
+        <file-actions :checkedFiles="found" />
       </b-col>
     </b-row>
     <header-search-row
@@ -22,7 +22,8 @@
 <script>
 import headerSearchRow from '@/components/header-search-row'
 import fileActions from '@/components/file-actions'
-import { SEARCH } from '@/store/actions.type'
+import SearchService from '@/service/search'
+import { SEARCH, SEARCH_TAG } from '@/store/actions.type'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -35,26 +36,45 @@ export default {
       type: String,
       required: true
     },
-    acr: String
+    acr: String,
+    tag: String
   },
   name: 'header-search-list',
   // TODO: Merge the watch and before Mount logic or create a method to handle
   //  both use cases.  One is for first render the other is for prop change.
   watch: {
     find (val) {
-      this.$store.dispatch(SEARCH, { find: val, acr: this.acr })
+      this.search()
     },
     activeGroup () {
-      this.$store.dispatch(SEARCH, { find: this.find, acr: this.acr })
+      this.search()
     }
   },
   beforeMount () {
-    this.$store.dispatch(SEARCH, { find: this.find, acr: this.acr })
+    this.search()
+  },
+  methods: {
+    search () {
+      if (this.tag) {
+        const owner =
+          (this.activeGroup && this.activeGroup.id) || this.currentUser.id
+        const context = SearchService.newOwnerContext(owner)
+        const match = SearchService.newMatchCondition(
+          this.find,
+          this.tag,
+          false,
+          owner
+        )
+        this.$store.dispatch(SEARCH_TAG, { context, match })
+      } else {
+        this.$store.dispatch(SEARCH, { find: this.find, acr: this.acr })
+      }
+    }
   },
   computed: {
     rows () {
       return this.searchMatches
-        .map(file => {
+        .map((file) => {
           let splits = file.name.split('.')
           let row = {
             id: file.id,
@@ -71,9 +91,16 @@ export default {
         })
     },
     found () {
-      return this.populateFiles(this.searchMatches.map(f => f.id))
+      return this.populateFiles(this.searchMatches.map((f) => f.id))
     },
-    ...mapGetters(['searchMatches', 'searchLines', 'activeGroup', 'loading', 'populateFiles'])
+    ...mapGetters([
+      'searchMatches',
+      'searchLines',
+      'activeGroup',
+      'currentUser',
+      'loading',
+      'populateFiles'
+    ])
   }
 }
 </script>
