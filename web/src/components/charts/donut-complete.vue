@@ -20,6 +20,7 @@
         <donut
           class="chart"
           :dataVals="dataVals"
+          :colors="colors"
           @rendered="chart = $event"
           @click="$emit('click', $event)"
         />
@@ -42,7 +43,8 @@ export default {
     dataVals: {
       type: Array,
       required: true
-    }
+    },
+    colors: Array
   },
   data () {
     return {
