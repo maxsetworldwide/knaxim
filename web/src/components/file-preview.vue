@@ -5,6 +5,7 @@
         <h3>Topics</h3>
         <donut-complete
           :dataVals="topicData"
+          :colors="topicColors"
           @click="handleGraphClick('topic', $event)"
         />
       </b-col>
@@ -12,6 +13,7 @@
         <h3>Actions</h3>
         <donut-complete
           :dataVals="actionData"
+          :colors="actionColors"
           @click="handleGraphClick('action', $event)"
         />
       </b-col>
@@ -19,6 +21,7 @@
         <h3>Resources</h3>
         <donut-complete
           :dataVals="resourceData"
+          :colors="resourceColors"
           @click="handleGraphClick('resource', $event)"
         />
       </b-col>
@@ -35,6 +38,7 @@
 <script>
 import donutComplete from '@/components/charts/donut-complete'
 import { mapGetters } from 'vuex'
+import { Color } from '@/components/charts/presets'
 
 export default {
   name: 'file-preview',
@@ -48,6 +52,15 @@ export default {
     }
   },
   computed: {
+    topicColors () {
+      return Color.Topics
+    },
+    actionColors () {
+      return Color.Actions
+    },
+    resourceColors () {
+      return Color.Resources
+    },
     summary () {
       return this.filePreview[this.fid].lines
         ? this.filePreview[this.fid].lines.join(' ')

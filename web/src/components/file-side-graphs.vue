@@ -7,6 +7,7 @@
         <donut-complete
           class="w-100"
           :dataVals="topicData"
+          :colors="topicColors"
           @click="handleGraphClick('topic', $event)"
         />
       </b-row>
@@ -15,6 +16,7 @@
         <donut-complete
           class="w-100"
           :dataVals="actionData"
+          :colors="actionsColors"
           @click="handleGraphClick('action', $event)"
         />
       </b-row>
@@ -23,6 +25,7 @@
         <donut-complete
           class="w-100"
           :dataVals="resourceData"
+          :colors="resourceColors"
           @click="handleGraphClick('resource', $event)"
         />
       </b-row>
@@ -32,6 +35,7 @@
 
 <script>
 import DonutComplete from '@/components/charts/donut-complete'
+import { Color } from '@/components/charts/presets'
 import { mapGetters, mapActions } from 'vuex'
 import { NLP_DATA } from '@/store/actions.type'
 
@@ -48,6 +52,15 @@ export default {
   },
   computed: {
     // TODO: this is repeated logic from file-preview. Move this to a renderless component.
+    topicColors () {
+      return Color.Topics
+    },
+    actionsColors () {
+      return Color.Actions
+    },
+    resourceColors () {
+      return Color.Resources
+    },
     topicData () {
       return this.buildGraphData(this.nlpTopics[this.fid])
     },
