@@ -1,4 +1,4 @@
-import { SEARCH, LOAD_MATCHED_LINES, LOAD_FILE_MATCH_LINES } from '@/store/actions.type'
+import { SEARCH, SEARCH_TAG, LOAD_MATCHED_LINES, LOAD_FILE_MATCH_LINES } from '@/store/actions.type'
 import {
   SEARCH_LOADING,
   NEW_SEARCH,
@@ -88,59 +88,30 @@ describe('Search module', function () {
     })
     it('searches', async function () {
       mock
-        .onPost('/search/tags', {
+        .onPost('search/tags', {
           context: {
-            find: 'find'
-          }
+            type: 'owner',
+            id: 'user'
+          },
+          match: 'find',
+          _sendJSON: true
         }).reply(200, {
           matched: [
             { file: { id: 'fid' }, count: 1 }
           ]
         })
-        .onGet('user/search', {
-          params: {
-            find: 'find'
-          }
+        .onPost('search/tags', {
+          context: {
+            id: 'gid',
+            type: 'owner'
+          },
+          match: 'find',
+          _sendJSON: true
         }).reply(200, {
           matched: [
             { file: { id: 'fid' }, count: 2 }
           ]
         })
-      await testAction(
-        a[SEARCH],
-        {
-          find: 'find'
-        },
-        {
-          mutations: [
-            { type: SEARCH_LOADING, payload: 1 },
-            { type: 'cancelSearch', ignorePayload: true },
-            { type: NEW_SEARCH, payload: { find: 'find' } },
-            {
-              type: SET_MATCHES,
-              payload: [
-                { id: 'fid', count: 2 }
-              ]
-            },
-            { type: SEARCH_LOADING, payload: -1 }
-          ],
-          actions: [
-            {
-              type: LOAD_MATCHED_LINES,
-              payload: {
-                find: 'find',
-                files: [
-                  { id: 'fid', count: 2 }
-                ]
-              }
-            }
-          ]
-        },
-        {},
-        {
-          activeGroup: null
-        }
-      )
       await testAction(
         a[SEARCH],
         {
@@ -173,7 +144,99 @@ describe('Search module', function () {
         },
         {},
         {
+          activeGroup: null,
+          currentUser: {
+            id: 'user'
+          }
+        }
+      )
+      await testAction(
+        a[SEARCH],
+        {
+          find: 'find'
+        },
+        {
+          mutations: [
+            { type: SEARCH_LOADING, payload: 1 },
+            { type: 'cancelSearch', ignorePayload: true },
+            { type: NEW_SEARCH, payload: { find: 'find' } },
+            {
+              type: SET_MATCHES,
+              payload: [
+                { id: 'fid', count: 2 }
+              ]
+            },
+            { type: SEARCH_LOADING, payload: -1 }
+          ],
+          actions: [
+            {
+              type: LOAD_MATCHED_LINES,
+              payload: {
+                find: 'find',
+                files: [
+                  { id: 'fid', count: 2 }
+                ]
+              }
+            }
+          ]
+        },
+        {},
+        {
           activeGroup: { id: 'gid' }
+        }
+      )
+    })
+    it('searches tags', async function () {
+      mock
+        .onPost('search/tags', {
+          _sendJSON: true,
+          context: {
+            type: 'file',
+            id: 'fid'
+          },
+          match: {
+            tagtype: 'test',
+            word: 'find'
+          }
+        }).reply(200, { matched: [
+          { file: { id: 'fid' }, count: 1 }
+        ] })
+      await testAction(
+        a[SEARCH_TAG],
+        {
+          context: {
+            type: 'file',
+            id: 'fid'
+          },
+          match: {
+            tagtype: 'test',
+            word: 'find'
+          }
+        },
+        {
+          mutations: [
+            { type: SEARCH_LOADING, payload: 1 },
+            { type: 'cancelSearch', ignorePayload: true },
+            { type: NEW_SEARCH, payload: { find: 'find' } },
+            {
+              type: SET_MATCHES,
+              payload: [
+                { id: 'fid', count: 1 }
+              ]
+            },
+            { type: SEARCH_LOADING, payload: -1 }
+          ],
+          actions: [
+            {
+              type: LOAD_MATCHED_LINES,
+              payload: {
+                find: 'find',
+                files: [
+                  { id: 'fid', count: 1 }
+                ]
+              }
+            }
+          ]
         }
       )
     })

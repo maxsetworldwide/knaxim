@@ -66,14 +66,14 @@ const actions = {
       commit(SEARCH_LOADING, -1)
     }
   },
-  async [SEARCH_TAG] ({ commit, dispatch, getters }, { context, match }) {
+  async [SEARCH_TAG] ({ commit, dispatch }, { context, match }) {
     commit(SEARCH_LOADING, 1)
     try {
       let fileList = await new Promise((resolve, reject) => {
         commit('cancelSearch', () => {
           reject(new Error('search canceled'))
         })
-        commit(NEW_SEARCH, { find })
+        commit(NEW_SEARCH, { find: match.word })
         SearchService.FileTags({ context, match }).then(({ data }) => {
           if (data.matched && data.matched.length > 0) {
             return data.matched.map(item => {
@@ -86,7 +86,7 @@ const actions = {
         }).then(r => resolve(r)).catch(e => reject(e))
       })
       commit(SET_MATCHES, fileList)
-      await dispatch(LOAD_MATCHED_LINES, { find, files: fileList })
+      await dispatch(LOAD_MATCHED_LINES, { find: match.word, files: fileList })
     } catch (err) {
       commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
     } finally {
