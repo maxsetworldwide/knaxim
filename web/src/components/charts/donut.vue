@@ -33,7 +33,7 @@ export default {
   props: {
     borderColor: {
       type: String,
-      default: 'rgba(0, 0, 0, 0)'
+      default: '#FFFFFF'
     },
     colors: {
       type: Array,
