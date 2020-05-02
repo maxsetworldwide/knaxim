@@ -1,6 +1,6 @@
 <template>
   <b-col class="h-100 d-none d-lg-inline" cols="2">
-    <b-row class=" d-none d-lg-inline">
+    <b-row class="d-none d-lg-inline">
       <b-col cols="4" offset-md="4">
         <b-dropdown
           :disabled="selections.length < 2"
@@ -17,8 +17,8 @@
         </b-dropdown>
       </b-col>
     </b-row>
-    <b-col v-if="currSelection === 'Searches'" class=" d-none d-lg-inline">
-      <div class="sidebar ml-auto">
+    <b-col v-if="currSelection === 'Searches'" class="h-100 d-none d-lg-inline">
+      <div class="sidebar-content ml-auto">
         <div class="sidebar-search-list">
           <!-- Search History Items  -->
           <b-link
@@ -41,7 +41,7 @@
       class="h-100 d-none d-lg-inline"
       cols="2"
     >
-      <div class="sidebar ml-auto">
+      <div class="sidebar-content ml-auto">
         <file-side-graphs :fid="$route.params.id" />
       </div>
     </b-col>
@@ -109,13 +109,9 @@ export default {
   }
 }
 
-.sidebar {
-  height: 100%;
+.sidebar-content {
+  height: 85%;
   overflow-y: auto;
   overflow-x: hidden;
-}
-
-.sidebar-toggle-switch {
-  cursor: pointer;
 }
 </style>
