@@ -15,13 +15,17 @@ const ApiService = {
     axios.defaults.withCredentials = true
     axios.defaults.transformRequest = [
       function (data, header) {
-        let fdata = new FormData()
-        for (let key in data) {
-          if (typeof data[key] !== 'undefined') {
-            fdata.append(key, data[key])
+        if (data && data._sendJSON) {
+          return JSON.stringify(data)
+        } else {
+          let fdata = new FormData()
+          for (let key in data) {
+            if (typeof data[key] !== 'undefined') {
+              fdata.append(key, data[key])
+            }
           }
+          return fdata
         }
-        return fdata
       }
     ]
 
