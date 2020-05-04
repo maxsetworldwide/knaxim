@@ -83,14 +83,7 @@ export default {
           displayColors: false,
           callbacks: {
             label: function (tooltipItem, data) {
-              const label = data.labels[tooltipItem.index] || ''
-              const dataset = data.datasets[tooltipItem.datasetIndex].data
-              const total = dataset.reduce((acc, val) => {
-                return acc + val
-              }, 0)
-              const curr = dataset[tooltipItem.index]
-              const percent = ((curr / total) * 100).toFixed(1) + '%'
-              return [`${label}:`, `${percent}`]
+              return data.labels[tooltipItem.index] || ''
             }
           }
         },
