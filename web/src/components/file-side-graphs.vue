@@ -2,7 +2,7 @@
   <div class="w-100">
     <b-spinner v-if="nlpLoading" />
     <b-container v-else class="donut">
-      <b-row>
+      <b-row v-if="topicData.length > 0">
         <h3>Topics</h3>
         <donut-complete
           class="w-100"
@@ -11,7 +11,7 @@
           @click="handleGraphClick('topic', $event)"
         />
       </b-row>
-      <b-row>
+      <b-row v-if="actionData.length > 0">
         <h3>Actions</h3>
         <donut-complete
           class="w-100"
@@ -20,7 +20,7 @@
           @click="handleGraphClick('action', $event)"
         />
       </b-row>
-      <b-row>
+      <b-row v-if="resourceData.length > 0">
         <h3>Resources</h3>
         <donut-complete
           class="w-100"
