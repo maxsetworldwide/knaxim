@@ -85,9 +85,6 @@ const shallowMountFa = (
   })
 }
 
-// it renders three graphs with the given data and a preview
-// it renders no graph when no data is given
-// it pushes router
 describe('FilePreview', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
