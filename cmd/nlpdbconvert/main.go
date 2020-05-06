@@ -60,11 +60,11 @@ func getMongoClient(ctx context.Context, uri string) (*mongoDB.Client, error) {
 }
 
 func convertDB(uri, oldName, newName string, overwrite bool) error {
-	if oldName == newName {
-		return errors.New("old name and new name should not be the same")
-	}
 	if len(oldName) == 0 || len(newName) == 0 {
-		return errors.New("oldName and newName should not be empty")
+		return errors.New("-oldname and -newname should not be empty")
+	}
+	if oldName == newName {
+		return errors.New("-oldname and -newname should not be the same")
 	}
 	ctx := context.Background()
 	if !*quiet {
@@ -101,7 +101,7 @@ func convertDB(uri, oldName, newName string, overwrite bool) error {
 	}
 	newdb, err := newDB.Connect(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer newdb.Close(ctx)
 	newDB = newdb.(*mongo.Database)

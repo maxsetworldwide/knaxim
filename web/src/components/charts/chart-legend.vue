@@ -14,7 +14,7 @@
     <li
       v-for="(datum, idx) in dataSet"
       :key="idx"
-      :id="labels[idx] + '-' + idx"
+      :id="`${labels[idx]}-${idx}`"
       ref="items"
       @click="handleClick(idx)"
     >
@@ -31,11 +31,6 @@ export default {
     chart: {
       type: Object,
       required: true
-    }
-  },
-  data () {
-    return {
-      overflowedItems: []
     }
   },
   computed: {

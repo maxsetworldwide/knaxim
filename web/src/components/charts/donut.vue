@@ -5,6 +5,9 @@
  -    borderColor:
  -      string representing the color to border and separate each slice.
  -      Defaults to 'rgba(0, 0, 0, 0)'
+ -    colors:
+ -      array of strings representing the slice colors to cycle through.
+ -      There are default contrasting colors if this property is not defined.
  -    dataVals:
  -      array of objects representing the data to pass to the chart
  -    dataVals[i].label:
@@ -30,7 +33,19 @@ export default {
   props: {
     borderColor: {
       type: String,
-      default: 'rgba(0, 0, 0, 0)'
+      default: '#FFFFFF'
+    },
+    colors: {
+      type: Array,
+      default: () => [
+        '#e41a1c',
+        '#377eb8',
+        '#4daf4a',
+        '#984ea3',
+        '#ff7f00',
+        '#ffff33',
+        '#a65628'
+      ]
     },
     dataVals: {
       type: Array,
@@ -44,8 +59,8 @@ export default {
     dataPoints () {
       return this.dataVals.map((val) => val.data || 0)
     },
-    defaultColors () {
-      const pallette = this.defaultColorPallette
+    colorsToSize () {
+      const pallette = this.colors
       return this.dataVals.map((_, idx) => {
         return pallette[idx % pallette.length]
       })
@@ -53,15 +68,6 @@ export default {
   },
   data () {
     return {
-      defaultColorPallette: [
-        '#e41a1c',
-        '#377eb8',
-        '#4daf4a',
-        '#984ea3',
-        '#ff7f00',
-        '#ffff33',
-        '#a65628'
-      ],
       options: {
         responsive: true,
         maintainAspectRatio: true,
@@ -77,14 +83,7 @@ export default {
           displayColors: false,
           callbacks: {
             label: function (tooltipItem, data) {
-              const label = data.labels[tooltipItem.index] || ''
-              const dataset = data.datasets[tooltipItem.datasetIndex].data
-              const total = dataset.reduce((acc, val) => {
-                return acc + val
-              }, 0)
-              const curr = dataset[tooltipItem.index]
-              const percent = ((curr / total) * 100).toFixed(1) + '%'
-              return [`${label}:`, `${percent}`]
+              return data.labels[tooltipItem.index] || ''
             }
           }
         },
@@ -108,7 +107,7 @@ export default {
       labels: this.labels,
       datasets: [
         {
-          backgroundColor: this.defaultColors,
+          backgroundColor: this.colorsToSize,
           borderColor: this.borderColor,
           data: this.dataPoints
         }

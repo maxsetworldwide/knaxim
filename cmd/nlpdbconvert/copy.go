@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,9 +31,13 @@ func copyColls(ctx context.Context, client *mongo.Client, src, dest string) erro
 		}
 		var result []interface{}
 		if err := cursor.All(ctx, &result); err == nil {
-			_, err = destColl.InsertMany(ctx, result)
-			if err != nil {
-				return err
+			if len(result) > 0 {
+				_, err = destColl.InsertMany(ctx, result)
+				if err != nil {
+					return err
+				}
+			} else if !*quiet {
+				fmt.Printf("No data in %s collection\n", coll)
 			}
 		} else if err != mongo.ErrNoDocuments {
 			return err

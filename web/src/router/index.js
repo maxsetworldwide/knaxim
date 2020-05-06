@@ -19,28 +19,39 @@ const routes = [
       default: FileList,
       sideview: MemberList
     }
-  }, {
+  },
+  {
     path: '/reset/:passkey',
     name: 'reset',
     components: {
       default: FileList,
       sideview: MemberList
     }
-  }, {
+  },
+  {
     path: '/profile/newpassword',
     name: 'changepass',
     component: Profile
-  }, {
+  },
+  {
     path: '/search/:find',
     name: 'search',
     props: true,
     component: HeaderSearchList
-  }, {
+  },
+  {
     path: '/search/:find/acronym/:acr',
     name: 'searchWithAcronym',
     props: true,
     component: HeaderSearchList
-  }, {
+  },
+  {
+    path: '/search/:find/tag/:tag',
+    name: 'searchWithTag',
+    props: true,
+    component: HeaderSearchList
+  },
+  {
     path: '/file/:id',
     name: 'file',
     components: {
@@ -51,7 +62,8 @@ const routes = [
       default: true,
       sideview: true
     }
-  }, {
+  },
+  {
     path: '/file/:id/acronym/:acr',
     name: 'fileWithAcronym',
     components: {
@@ -62,7 +74,8 @@ const routes = [
       default: true,
       sideview: true
     }
-  }, {
+  },
+  {
     path: '/list/:src',
     name: 'filteredFiles',
     components: {
