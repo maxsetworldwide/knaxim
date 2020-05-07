@@ -3,13 +3,13 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
-var test1 = database.NewUser("testuser1", "testuserpass1", "test1@test.test")
-var test2 = database.NewUser("testuser2", "testuserpass2", "test2@test.test")
-var group1 = database.NewGroup("group1", test1)
-var group2 = database.NewGroup("group2", group1)
+var test1 = types.NewUser("testuser1", "testuserpass1", "test1@test.test")
+var test2 = types.NewUser("testuser2", "testuserpass2", "test2@test.test")
+var group1 = types.NewGroup("group1", test1)
+var group2 = types.NewGroup("group2", group1)
 
 func fillowners(db *Database) {
 	//Users
@@ -37,12 +37,13 @@ func fillowners(db *Database) {
 
 func TestOwners(t *testing.T) {
 	defer testingComplete.Done()
-	ob := DB.Owner(nil)
-	defer ob.Close(nil)
+	DB.Connect(nil)
+	ob := DB.Owner()
+	defer DB.Close(nil)
 	t.Parallel()
 
-	newUser := database.NewUser("testuser3", "testuserpass3", "test3@test.test")
-	newGroup := database.NewGroup("group3", newUser)
+	newUser := types.NewUser("testuser3", "testuserpass3", "test3@test.test")
+	newGroup := types.NewGroup("group3", newUser)
 	t.Run("Reserve", func(t *testing.T) {
 		var err error
 		newUser.ID, err = ob.Reserve(newUser.ID, newUser.Name)

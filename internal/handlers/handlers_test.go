@@ -18,9 +18,12 @@ import (
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
-	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/process"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
+	"git.maxset.io/web/knaxim/internal/decode"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 	"github.com/gorilla/mux"
 )
 
@@ -62,29 +65,65 @@ var testUsers = map[string][]map[string]string{
 }
 
 type testFile struct {
-	file    database.FileI
-	store   *database.FileStore
+	file    types.FileI
+	store   *types.FileStore
 	ctype   string
 	content string
+	tags    []tag.Tag
 }
 
 var testFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "first.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is the first test file.",
+		tags: []tag.Tag{
+			tag.Tag{
+				Word: "a",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 0,
+						"count":        42,
+						"first":        0,
+					},
+				},
+			},
+			tag.Tag{
+				Word: "b",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 1,
+						"count":        41,
+						"first":        0,
+					},
+				},
+			},
+			tag.Tag{
+				Word: "c",
+				Type: tag.TOPIC,
+				Data: tag.Data{
+					tag.TOPIC: map[string]interface{}{
+						"significance": 2,
+						"count":        40,
+						"first":        0,
+					},
+				},
+			},
+		},
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "second.txt",
 		},
 		ctype:   "text/plain",
 		content: "This is the second file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "third.txt",
 		},
 		ctype:   "text/plain",
@@ -94,14 +133,14 @@ var testFiles = []testFile{
 
 var adminFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "admin.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is an admin's file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "secrets.txt",
 		},
 		ctype:   "text/plain",
@@ -111,28 +150,28 @@ var adminFiles = []testFile{
 
 var publicFiles = []testFile{
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public1.txt",
 		},
 		ctype:   "text/plain",
 		content: "this is a public file.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public2.txt",
 		},
 		ctype:   "text/plain",
 		content: "This is public file number two. It has two sentences!",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public3.txt",
 		},
 		ctype:   "text/plain",
 		content: "The quick brown fox jumped over the lazy dog.",
 	},
 	testFile{
-		file: &database.File{
+		file: &types.File{
 			Name: "public4.txt",
 		},
 		ctype:   "text/plain",
@@ -150,6 +189,7 @@ func sliceContains(slice []string, s string) bool {
 }
 
 func TestMain(m *testing.M) {
+	srverror.DEBUG = true
 	testRouter = mux.NewRouter().PathPrefix("/api").Subrouter()
 	testRouter.Use(Recovery)
 	if err := populateDB(); err != nil {
@@ -168,7 +208,14 @@ func TestMain(m *testing.M) {
 	config.V.MinFileTimeout = configTimeout
 	config.V.MaxFileTimeout = configTimeout
 
-	os.Exit(m.Run())
+	status := m.Run()
+	if status == 0 {
+		if oc := memory.CurrentOpenConnections(); oc != 0 {
+			status = 2
+			fmt.Printf("Database Connections not handled: %d connections\n", oc)
+		}
+	}
+	os.Exit(status)
 }
 
 // TODO: move config stuff to separate function
@@ -189,10 +236,15 @@ func populateDB() (err error) {
 	}
 	config.T.Path = tikapath
 	config.V.GotenPath = gotenpath
-	userbase := config.DB.Owner(setupctx)
-	defer userbase.Close(setupctx)
+	db, err := config.DB.Connect(setupctx)
+	if err != nil {
+		return
+	}
+	defer db.Close(setupctx)
+	userbase := db.Owner()
+	tagbase := userbase.Tag()
 	for i, userdata := range testUsers["users"] {
-		user := database.NewUser(userdata["name"], userdata["password"], userdata["email"])
+		user := types.NewUser(userdata["name"], userdata["password"], userdata["email"])
 		if _, err = userbase.Reserve(user.ID, user.Name); err != nil {
 			return
 		}
@@ -201,14 +253,14 @@ func populateDB() (err error) {
 		}
 		userdata["id"] = user.GetID().String()
 		switch v := testFiles[i].file.(type) {
-		case *database.File:
+		case *types.File:
 			v.Own = user
-		case *database.WebFile:
+		case *types.WebFile:
 			v.Own = user
 		}
 	}
 	for i, admindata := range testUsers["admin"] {
-		admin := database.NewUser(admindata["name"], admindata["password"], admindata["email"])
+		admin := types.NewUser(admindata["name"], admindata["password"], admindata["email"])
 		admin.SetRole("admin", true)
 		if admin.ID, err = userbase.Reserve(admin.ID, admin.Name); err != nil {
 			return err
@@ -218,9 +270,9 @@ func populateDB() (err error) {
 		}
 		admindata["id"] = admin.GetID().String()
 		switch v := adminFiles[i].file.(type) {
-		case *database.File:
+		case *types.File:
 			v.Own = admin
-		case *database.WebFile:
+		case *types.WebFile:
 			v.Own = admin
 		}
 	}
@@ -229,35 +281,35 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		err = processContent(setupctx, nil, adminFiles[i].file, adminFiles[i].store)
+		decode.Read(setupctx, nil, adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
 	}
-	var publicOwnerID database.OwnerID
-	publicOwnerID, err = database.DecodeObjectIDString(testUsers["admin"][1]["id"])
+	var publicOwnerID types.OwnerID
+	publicOwnerID, err = types.DecodeOwnerIDString(testUsers["admin"][1]["id"])
 	if err != nil {
 		return
 	}
-	var publicOwner database.Owner
+	var publicOwner types.Owner
 	publicOwner, err = userbase.Get(publicOwnerID)
 	if err != nil {
 		return
 	}
 	for i, file := range publicFiles {
 		switch f := file.file.(type) {
-		case *database.File:
+		case *types.File:
 			f.Own = publicOwner
-		case *database.WebFile:
+		case *types.WebFile:
 			f.Own = publicOwner
 		}
-		file.file.SetPerm(database.Public, "view", true)
+		file.file.SetPerm(types.Public, "view", true)
 		publicFiles[i].store, err = process.InjestFile(setupctx, file.file, file.ctype, strings.NewReader(file.content), userbase)
 		if err != nil {
 			fmt.Printf("injest file failed")
 			return
 		}
-		err = processContent(setupctx, nil, publicFiles[i].file, publicFiles[i].store)
+		decode.Read(setupctx, nil, publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -267,19 +319,27 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		err = processContent(setupctx, nil, testFiles[i].file, testFiles[i].store)
+		decode.Read(setupctx, nil, testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
 		// fmt.Printf("i:%d, ID:%+#v", i, testFiles[i].file.GetID())
 		if i > 0 {
-			perm := file.file.(database.PermissionI)
-			var targetUser database.UserI
+			perm := file.file.(types.PermissionI)
+			var targetUser types.UserI
 			targetUser, err = userbase.FindUserName(testUsers["users"][i-1]["name"])
 			if err != nil {
 				return
 			}
 			perm.SetPerm(targetUser, "view", true)
+		}
+		for _, t := range file.tags {
+			ftag := tag.FileTag{
+				File:  file.file.GetID(),
+				Owner: file.file.GetOwner().GetID(),
+				Tag:   t,
+			}
+			tagbase.Upsert(ftag)
 		}
 	}
 	return nil

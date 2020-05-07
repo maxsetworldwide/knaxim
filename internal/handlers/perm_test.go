@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func setupPerm(t *testing.T) {
@@ -195,7 +195,7 @@ func TestPermAPI(t *testing.T) {
 			t.Fatalf("Expected a single viewer for file: response: %+#v\nBody:%s", results, responseBodyString(res))
 		}
 		receivedID := results.Permission.View[0]
-		publicID := database.Public.GetID().String()
+		publicID := types.Public.GetID().String()
 		if receivedID != publicID {
 			t.Fatalf("Expected received ID to be the public owner: got %s, expected %s", receivedID, publicID)
 		}

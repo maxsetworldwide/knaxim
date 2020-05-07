@@ -3,18 +3,18 @@ package mongo
 import (
 	"errors"
 
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 type contentchunk struct {
-	ID    filehash.StoreID `bson:"id"`
-	Index uint32           `bson:"idx"`
-	Data  []byte           `bson:"data"`
+	ID    types.StoreID `bson:"id"`
+	Index uint32        `bson:"idx"`
+	Data  []byte        `bson:"data"`
 }
 
 const chunksize = 15 << 20
 
-func chunkify(ID filehash.StoreID, content []byte) []interface{} {
+func chunkify(ID types.StoreID, content []byte) []interface{} {
 	var chunks []interface{}
 	var i uint32
 	for start := 0; start < len(content); start += chunksize {

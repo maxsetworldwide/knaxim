@@ -4,8 +4,9 @@ import "testing"
 
 func TestAcronym(t *testing.T) {
 	defer testingComplete.Done()
-	ab := DB.Acronym(nil)
-	defer ab.Close(nil)
+	DB.Connect(nil)
+	ab := DB.Acronym()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	t.Log("Acronym Put")

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 var fileUserIdx = 2
@@ -242,10 +242,10 @@ type lineResults struct {
 	Size int `json:"size"`
 }
 
-func executeLineTest(t *testing.T, test lineTest, uploadfid filehash.FileID, search bool) {
+func executeLineTest(t *testing.T, test lineTest, uploadfid types.FileID, search bool) {
 	// if the test has a specified fileidx other than 0, testFiles[fileidx] will
 	// take precedence over the given uploadfid param
-	var fid filehash.FileID
+	var fid types.FileID
 	if test.fileidx != 0 {
 		fid = testFiles[test.fileidx].file.GetID()
 	} else {
@@ -288,11 +288,11 @@ func executeLineTest(t *testing.T, test lineTest, uploadfid filehash.FileID, sea
 	t.Logf("json response: %+v", jsonResponse)
 	var allMatches []string
 	var allPositions []int
-	var receivedID filehash.StoreID
+	var receivedID types.StoreID
 	for _, line := range jsonResponse.Lines {
 		allMatches = append(allMatches, line.Content[0])
 		allPositions = append(allPositions, line.Position)
-		nextID := filehash.StoreID{
+		nextID := types.StoreID{
 			Hash:  line.ID.Hash,
 			Stamp: line.ID.Stamp,
 		}
@@ -334,7 +334,7 @@ func executeLineTest(t *testing.T, test lineTest, uploadfid filehash.FileID, sea
 
 func TestFileAPI(t *testing.T) {
 	setupFileAPI(t)
-	var uploadfid filehash.FileID
+	var uploadfid types.FileID
 	var uploadTime time.Time
 	t.Run("Upload", func(t *testing.T) {
 		body := new(bytes.Buffer)
@@ -371,7 +371,7 @@ func TestFileAPI(t *testing.T) {
 		if err := json.NewDecoder(res.Body).Decode(&responseBody); err != nil {
 			t.Fatalf("Unable to decode response: %s\n", err)
 		}
-		uploadfid, err = filehash.DecodeFileID(responseBody["id"])
+		uploadfid, err = types.DecodeFileID(responseBody["id"])
 		uploadTime = time.Now()
 		if err != nil {
 			t.Fatalf("Unable to get file ID from upload: %s\n%+#v", err, responseBody)
@@ -422,7 +422,7 @@ func TestFileAPI(t *testing.T) {
 			t.Fatalf("Received incorrect file name: received %s, expected %s", jsonResponse.File.Name, uploadFileName)
 		}
 	})
-	var uploadWebFid filehash.FileID
+	var uploadWebFid types.FileID
 	t.Run("WebpageUpload", func(t *testing.T) {
 		params := map[string]string{
 			"url": "https://www.google.com/",
@@ -445,7 +445,7 @@ func TestFileAPI(t *testing.T) {
 		if err := json.NewDecoder(res.Body).Decode(&responseBody); err != nil {
 			t.Fatalf("Unable to decode response: %s\n", err)
 		}
-		uploadWebFid, err = filehash.DecodeFileID(responseBody["id"])
+		uploadWebFid, err = types.DecodeFileID(responseBody["id"])
 		if err != nil {
 			t.Fatalf("Unable to get webpage file ID from webpage upload: %s\n%+#v", err, responseBody)
 		}

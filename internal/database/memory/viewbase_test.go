@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 var contentString = "View version of a file for the memory database"
 
-var inputVS = &database.ViewStore{
-	ID: filehash.StoreID{
+var inputVS = &types.ViewStore{
+	ID: types.StoreID{
 		Hash:  98765,
 		Stamp: 4321,
 	},
@@ -20,8 +19,9 @@ var inputVS = &database.ViewStore{
 
 func TestViewbase(t *testing.T) {
 	defer testingComplete.Done()
-	vb := DB.View(nil)
-	defer vb.Close(nil)
+	DB.Connect(nil)
+	vb := DB.View()
+	defer DB.Close(nil)
 	t.Parallel()
 
 	t.Log("View Insert")

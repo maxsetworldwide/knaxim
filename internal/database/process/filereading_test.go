@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	. "git.maxset.io/web/knaxim/internal/database/process"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestInjustFile(t *testing.T) {
@@ -18,8 +18,8 @@ func TestInjustFile(t *testing.T) {
   How do you know this is correct. Well you got this text back.
   Good Bye.`
 
-	var testOwner = &database.User{
-		ID: database.OwnerID{
+	var testOwner = &types.User{
+		ID: types.OwnerID{
 			Type:        'u',
 			UserDefined: [3]byte{'a', 'b', 'c'},
 			Stamp:       []byte("test"),
@@ -34,14 +34,14 @@ func TestInjustFile(t *testing.T) {
 	}
 	injestctx, cancel2 := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel2()
-	file := &database.File{
+	file := &types.File{
 		Name: "test.txt",
 	}
-	_, err = db.Owner(injestctx).Reserve(testOwner.GetID(), testOwner.GetName())
+	_, err = db.Owner().Reserve(testOwner.GetID(), testOwner.GetName())
 	if err != nil {
 		t.Fatal("unable to reserve testOwner:", err)
 	}
-	err = db.Owner(injestctx).Insert(testOwner)
+	err = db.Owner().Insert(testOwner)
 	if err != nil {
 		t.Fatalf("Failed to insert test Owner")
 	}

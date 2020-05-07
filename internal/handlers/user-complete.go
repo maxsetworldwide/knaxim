@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srvjson"
@@ -46,7 +47,7 @@ type groupProfile struct {
 	} `json:"files"`
 }
 
-func buildGP(g database.GroupI, isOwned bool, gown, gm, d, fo, fv []string) groupProfile {
+func buildGP(g types.GroupI, isOwned bool, gown, gm, d, fo, fv []string) groupProfile {
 	var out groupProfile
 	out.ID = g.GetID().String()
 	out.Name = g.GetName()
@@ -64,18 +65,18 @@ func buildGP(g database.GroupI, isOwned bool, gown, gm, d, fo, fv []string) grou
 }
 
 type fileProfile struct {
-	ID      string            `json:"id"`
-	Name    string            `json:"name"`
-	Type    string            `json:"type"`
-	Owner   string            `json:"owner"`
-	IsOwned bool              `json:"isOwned"`
-	Date    database.FileTime `json:"date"`
-	Size    int64             `json:"size"`
-	URL     string            `json:"url,omitempty"`
-	Viewers []string          `json:"viewers"`
+	ID      string         `json:"id"`
+	Name    string         `json:"name"`
+	Type    string         `json:"types"`
+	Owner   string         `json:"owner"`
+	IsOwned bool           `json:"isOwned"`
+	Date    types.FileTime `json:"date"`
+	Size    int64          `json:"size"`
+	URL     string         `json:"url,omitempty"`
+	Viewers []string       `json:"viewers"`
 }
 
-func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
+func buildFP(r types.FileI, isOwned bool, size int64) fileProfile {
 	var out fileProfile
 	out.ID = r.GetID().String()
 	out.Name = r.GetName()
@@ -84,14 +85,14 @@ func buildFP(r database.FileI, isOwned bool, size int64) fileProfile {
 	for _, viewer := range r.GetPerm("view") {
 		out.Viewers = append(out.Viewers, viewer.GetID().String())
 	}
-	if _, ok := r.(*database.WebFile); ok {
+	if _, ok := r.(*types.WebFile); ok {
 		out.Type = "webpage"
 	} else {
 		out.Type = "file"
 	}
 	out.Date = r.GetDate()
 	out.Size = size
-	if wf, ok := r.(*database.WebFile); ok {
+	if wf, ok := r.(*types.WebFile); ok {
 		out.URL = wf.URL
 	}
 	return out
@@ -107,7 +108,7 @@ type CompletePackage struct {
 	Records map[string]fileProfile  `json:"files"`
 }
 
-func (cp *CompletePackage) addGroup(g database.GroupI, currentUser database.UserI, ownerbase database.Ownerbase, filebase database.Filebase, tagbase database.Tagbase) error {
+func (cp *CompletePackage) addGroup(g types.GroupI, currentUser types.UserI, ownerbase database.Ownerbase, filebase database.Filebase, tagbase database.Tagbase) error {
 	if _, ok := cp.Groups[g.GetID().String()]; !ok {
 		var gown, gm, d, fo, fv []string
 		if owned, member, err := ownerbase.GetGroups(g.GetID()); err == nil {
@@ -122,9 +123,13 @@ func (cp *CompletePackage) addGroup(g database.GroupI, currentUser database.User
 		} else {
 			return err
 		}
-		if tags, err := tagbase.SearchData(tag.USER, tag.Data{tag.USER: map[string]string{g.GetID().String(): dirflag}}); err == nil {
+		if tags, err := tagbase.GetAll(tag.USER, g.GetID()); err == nil {
+			wordset := make(map[string]bool)
 			for _, t := range tags {
-				d = append(d, t.Word)
+				if !wordset[t.Word] {
+					wordset[t.Word] = true
+					d = append(d, t.Word)
+				}
 			}
 		} else {
 			return err
@@ -148,9 +153,9 @@ func (cp *CompletePackage) addGroup(g database.GroupI, currentUser database.User
 	return nil
 }
 
-func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI, db database.Database) error {
+func (cp *CompletePackage) addRecord(u types.UserI, r types.FileI, db database.Database) error {
 	if _, ok := cp.Records[r.GetID().String()]; !ok {
-		sb := db.Store(nil)
+		sb := db.Store()
 		fs, err := sb.Get(r.GetID().StoreID)
 		if err != nil {
 			return err
@@ -162,13 +167,13 @@ func (cp *CompletePackage) addRecord(u database.UserI, r database.FileI, db data
 
 func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	user := r.Context().Value(USER).(database.UserI)
+	user := r.Context().Value(USER).(types.UserI)
 
 	var info CompletePackage
 	info.Groups = make(map[string]groupProfile)
 	info.Records = make(map[string]fileProfile)
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
-	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	var err error
 	info.User.ID = user.GetID().String()
@@ -185,14 +190,14 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	}
 	if owned, members, err := ownerbase.GetGroups(user.GetID()); err == nil {
 		for _, o := range owned {
-			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(types.TAG).(database.Tagbase)); err != nil {
 				util.VerboseRequest(r, "error adding group")
 				panic(err)
 			}
 			info.User.Groups.Own = append(info.User.Groups.Own, o.GetID().String())
 		}
 		for _, m := range members {
-			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(database.TAG).(database.Tagbase)); err != nil {
+			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(types.TAG).(database.Tagbase)); err != nil {
 				util.VerboseRequest(r, "error adding member group")
 				panic(err)
 			}
@@ -202,9 +207,13 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 		util.VerboseRequest(r, "error getting groups")
 		panic(err)
 	}
-	if tags, err := r.Context().Value(database.TAG).(database.Tagbase).SearchData(tag.USER, tag.Data{tag.USER: map[string]string{user.GetID().String(): dirflag}}); err == nil {
+	if tags, err := r.Context().Value(types.TAG).(database.Tagbase).GetAll(tag.USER, user.GetID()); err == nil {
+		wordset := make(map[string]bool)
 		for _, t := range tags {
-			info.User.Dirs = append(info.User.Dirs, t.Word)
+			if !wordset[t.Word] {
+				wordset[t.Word] = true
+				info.User.Dirs = append(info.User.Dirs, t.Word)
+			}
 		}
 	} else {
 		util.VerboseRequest(r, "error searching tag data")
@@ -228,7 +237,7 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 		util.VerboseRequest(r, "unable to find Perm Key")
 		panic(err)
 	}
-	if public, err := filebase.GetPermKey(database.Public.GetID(), "view"); err == nil {
+	if public, err := filebase.GetPermKey(types.Public.GetID(), "view"); err == nil {
 		for _, p := range public {
 			info.addRecord(user, p, filebase)
 			info.Public = append(info.Public, p.GetID().String())

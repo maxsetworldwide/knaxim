@@ -2,414 +2,825 @@ package mongo
 
 import (
 	"context"
-	"strings"
 	"sync"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/pkg/srverror"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-type tagbson struct {
-	File  *filehash.FileID  `bson:"file,omitempty" json:"file,omitempty"`
-	Store *filehash.StoreID `bson:"store,omitempty" json:"store,omitempty"`
-	Word  string            `bson:"word" json:"word"`
-	Type  tag.Type          `bson:"type" json:"type"`
-	Data  *tag.Data         `bson:"data,omitempty" json:"data,omitempty"`
-}
-
-func filetag(f filehash.FileID, t tag.Tag) tagbson {
-	r := tagbson{
-		File: &f,
-		Word: t.Word,
-		Type: t.Type,
-	}
-	if t.Data != nil {
-		r.Data = &t.Data
-	}
-	return r
-}
-
-func (tb *tagbson) Tag() tag.Tag {
-	t := tag.Tag{
-		Type: tb.Type,
-		Word: tb.Word,
-	}
-	if tb.Data != nil {
-		t.Data = *tb.Data
-	}
-	return t
-}
-
-func storetag(s filehash.StoreID, t tag.Tag) tagbson {
-	r := tagbson{
-		Store: &s,
-		Word:  t.Word,
-		Type:  t.Type,
-	}
-	if t.Data != nil {
-		r.Data = &t.Data
-	}
-	return r
-}
 
 // Tagbase is a connection to the database with tag operations
 type Tagbase struct {
 	Database
 }
 
-// UpsertFile adds tags associated with file id
-func (tb *Tagbase) UpsertFile(id filehash.FileID, tags ...tag.Tag) error {
-	var data []tagbson
+func divideTags(tags []tag.FileTag) ([]tag.StoreTag, []tag.FileTag) {
+	stags := make([]tag.StoreTag, 0, len(tags))
+	ftags := make([]tag.FileTag, 0, len(tags))
 	for _, t := range tags {
-		data = append(data, filetag(id, t))
-	}
-	upsertctx, cancel := context.WithCancel(tb.ctx)
-	defer cancel()
-	errch := make(chan error)
-	var wg sync.WaitGroup
-	wg.Add(len(data))
-	collection := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"])
-	for _, d := range data {
-		go func(tag tagbson) {
-			defer wg.Done()
-			updateops := bson.M{
-				"$setOnInsert": bson.M{
-					"file": tag.File,
-					"word": strings.ToLower(tag.Word),
-				},
-				"$bit": bson.M{"type": bson.M{"or": tag.Type}},
-			}
-			if tag.Data != nil {
-				set := make(bson.M)
-				for typ, fields := range *tag.Data {
-					key := "data." + typ.String() + "."
-					for k, v := range fields {
-						set[key+k] = v
-					}
-				}
-				updateops["$set"] = set
-			}
-			_, err := collection.UpdateOne(
-				upsertctx,
-				bson.M{
-					"file": tag.File,
-					"word": strings.ToLower(tag.Word),
-				},
-				updateops,
-				options.Update().SetUpsert(true),
-			)
-			if err != nil {
-				errch <- srverror.New(err, 500, "Database Error T1", "unable to upsert file tag")
-			}
-		}(d)
-	}
-	go func() {
-		wg.Wait()
-		close(errch)
-	}()
-	return <-errch
-}
-
-// UpsertStore adds tags associated with store id
-func (tb *Tagbase) UpsertStore(id filehash.StoreID, tags ...tag.Tag) error {
-	var data []tagbson
-	for _, t := range tags {
-		data = append(data, storetag(id, t))
-	}
-	upsertctx, cancel := context.WithCancel(tb.ctx)
-	defer cancel()
-	errch := make(chan error)
-	var wg sync.WaitGroup
-	wg.Add(len(data))
-	collection := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"])
-	for _, d := range data {
-		go func(tag tagbson) {
-			defer wg.Done()
-			updateops := bson.M{
-				"$setOnInsert": bson.M{
-					"store": tag.Store,
-					"word":  strings.ToLower(tag.Word),
-				},
-				"$bit": bson.M{"type": bson.M{"or": tag.Type}},
-			}
-			if tag.Data != nil {
-				set := make(bson.M)
-				for typ, fields := range *tag.Data {
-					key := "data." + typ.String() + "."
-					for k, v := range fields {
-						set[key+k] = v
-					}
-				}
-				updateops["$set"] = set
-			}
-			_, err := collection.UpdateOne(
-				upsertctx,
-				bson.M{
-					"store": tag.Store,
-					"word":  strings.ToLower(tag.Word),
-				},
-				updateops,
-				options.Update().SetUpsert(true),
-			)
-			if err != nil {
-				errch <- srverror.New(err, 500, "Database Error T2", "unable to upsert store tag")
-			}
-		}(d)
-	}
-	go func() {
-		wg.Wait()
-		close(errch)
-	}()
-	return <-errch
-}
-
-// FileTags returns all tags associated with file
-func (tb *Tagbase) FileTags(files ...filehash.FileID) (map[string][]tag.Tag, error) {
-	stores := make([]filehash.StoreID, 0, len(files))
-	for _, f := range files {
-		stores = append(stores, f.StoreID)
-	}
-	var perr error
-	{
-		sb := tb.Store(nil)
-		for _, sid := range stores {
-			fs, err := sb.Get(sid)
-			if err != nil {
-				return nil, err
-			}
-			if fs.Perr != nil {
-				perr = fs.Perr
-				break
-			}
+		if st := t.StoreTag(); st.Type != 0 {
+			stags = append(stags, t.StoreTag())
+		}
+		if ft := t.Pure(); ft.Type != 0 {
+			ftags = append(ftags, t.Pure())
 		}
 	}
-	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"]).Find(
+	return stags, ftags
+}
+
+// Upsert adds tag to the database
+func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
+	stags, ftags := divideTags(tags)
+	upsertctx, cancel := context.WithCancel(tb.ctx)
+	defer cancel()
+	errch := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(len(stags) + len(ftags))
+	if len(stags) > 0 { // upsert store tags
+		storeColl := tb.client.Database(tb.DBName).Collection(tb.CollNames["storetags"])
+		for _, st := range stags {
+			go func(st tag.StoreTag) {
+				defer wg.Done()
+				updatefields := bson.M{
+					"$setOnInsert": bson.M{
+						"store": st.Store,
+						"word":  st.Word,
+					},
+					"$bit": bson.M{"type": bson.M{"or": st.Type}},
+				}
+				if st.Data != nil {
+					set := make(bson.M)
+					for t, info := range st.Data {
+						for k, v := range info {
+							set["data."+t.String()+"."+k] = v
+						}
+					}
+					updatefields["$set"] = set
+				}
+				_, err := storeColl.UpdateOne(
+					upsertctx,
+					bson.M{
+						"store": st.Store,
+						"word":  st.Word,
+					},
+					updatefields,
+					options.Update().SetUpsert(true),
+				)
+				if err != nil {
+					err = srverror.New(err, 500, "Database Error T1.1", "Upserting store tag failed")
+					select {
+					case errch <- err:
+					case <-upsertctx.Done():
+					}
+				}
+			}(st)
+		}
+	}
+	if len(ftags) > 0 { // upsert file tags
+		fileColl := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"])
+		for _, ft := range ftags {
+			go func(ft tag.FileTag) {
+				defer wg.Done()
+				updatefields := bson.M{
+					"$setOnInsert": bson.M{
+						"file":  ft.File,
+						"owner": ft.Owner,
+						"word":  ft.Word,
+					},
+					"$bit": bson.M{"type": bson.M{"or": ft.Type}},
+				}
+				if ft.Data != nil {
+					set := make(bson.M)
+					for t, info := range ft.Data {
+						for k, v := range info {
+							set["data."+t.String()+"."+k] = v
+						}
+					}
+					updatefields["$set"] = set
+				}
+				_, err := fileColl.UpdateOne(
+					upsertctx,
+					bson.M{
+						"file":  ft.File,
+						"owner": ft.Owner,
+						"word":  ft.Word,
+					},
+					updatefields,
+					options.Update().SetUpsert(true),
+				)
+				if err != nil {
+					err = srverror.New(err, 500, "Database Error T1.2", "Upserting file tag failed")
+					select {
+					case errch <- err:
+					case <-upsertctx.Done():
+					}
+				}
+			}(ft)
+		}
+	}
+	go func() {
+		wg.Wait()
+		close(errch)
+	}()
+	return <-errch
+}
+
+// Remove tags from database
+func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
+	stags, ftags := divideTags(tags)
+	rmctx, cancel := context.WithCancel(tb.ctx)
+	defer cancel()
+	errch := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(len(stags) + len(ftags))
+	if len(stags) > 0 {
+		storecoll := tb.client.Database(tb.DBName).Collection(tb.CollNames["storetags"])
+		for _, st := range stags {
+			go func(st tag.StoreTag) {
+				defer wg.Done()
+				var err error
+				if st.Type == tag.ALLSTORE {
+					_, err = storecoll.DeleteOne(rmctx, bson.M{
+						"word":  st.Word,
+						"store": st.Store,
+					})
+				} else {
+					removeData := bson.M{
+						"$bit": bson.M{"type": bson.M{"and": ^st.Type}},
+					}
+					if st.Data != nil {
+						unset := make(bson.M)
+						for t, mapping := range st.Data {
+							if t&st.Type == 0 {
+								for k := range mapping {
+									unset["data."+t.String()+"."+k] = ""
+								}
+							} else {
+								unset["data."+t.String()] = ""
+							}
+						}
+						removeData["$unset"] = unset
+					}
+					_, err = storecoll.UpdateOne(
+						rmctx,
+						bson.M{
+							"word":  st.Word,
+							"store": st.Store,
+						},
+						removeData,
+					)
+				}
+				if err != nil {
+					select {
+					case errch <- srverror.New(err, 500, "Database Error T2.1", "unable to remove storetag"):
+					case <-rmctx.Done():
+					}
+				}
+			}(st)
+		}
+	}
+	if len(ftags) > 0 {
+		fileColl := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"])
+		for _, ft := range ftags {
+			go func(ft tag.FileTag) {
+				defer wg.Done()
+				var err error
+				if ft.Type == tag.ALLFILE {
+					_, err = fileColl.DeleteOne(rmctx, bson.M{
+						"word":  ft.Word,
+						"file":  ft.File,
+						"owner": ft.Owner,
+					})
+				} else {
+					removeData := bson.M{
+						"$bit": bson.M{"type": bson.M{"and": ^ft.Type}},
+					}
+					if ft.Data != nil {
+						unset := make(bson.M)
+						for t, mapping := range ft.Data {
+							if t&ft.Type == 0 {
+								for k := range mapping {
+									unset["data."+t.String()+"."+k] = ""
+								}
+							} else {
+								unset["data."+t.String()] = ""
+							}
+						}
+						removeData["$unset"] = unset
+					}
+					_, err = fileColl.UpdateOne(
+						rmctx,
+						bson.M{
+							"word":  ft.Word,
+							"file":  ft.File,
+							"owner": ft.Owner,
+						},
+						removeData,
+					)
+				}
+				if err != nil {
+					select {
+					case errch <- srverror.New(err, 500, "Database Error T2.2", "unable to remove filetag"):
+					case <-rmctx.Done():
+					}
+				}
+			}(ft)
+		}
+	}
+	go func() {
+		wg.Wait()
+		close(errch)
+	}()
+	return <-errch
+}
+
+// Get returns all filetags for a particular file id and owner
+func (tb *Tagbase) Get(fid types.FileID, oid types.OwnerID) ([]tag.FileTag, error) {
+	return tb.GetType(fid, oid, tag.ALLTYPES)
+}
+
+// GetType returns FileTags of a particular file, for a particular owner, with a match to a particular type
+func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([]tag.FileTag, error) {
+	type result struct {
+		tags []tag.FileTag
+		err  error
+	}
+	out := make(chan result)
+	errch := make(chan error)
+	storetags := make(chan []tag.StoreTag)
+	filetags := make(chan []tag.FileTag)
+	getctx, cancel := context.WithCancel(tb.ctx)
+	defer cancel()
+	go func() {
+		select {
+		case err := <-errch:
+			select {
+			case out <- result{err: err}:
+			case <-getctx.Done():
+			}
+		case <-getctx.Done():
+		}
+	}()
+	go func() { // Get Store Tags
+		if typ&tag.ALLSTORE == 0 {
+			select {
+			case storetags <- nil:
+			case <-getctx.Done():
+			}
+			return
+		}
+		cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["storetags"]).Find(
+			getctx,
+			bson.M{
+				"store": fid.StoreID,
+				"type": bson.M{
+					"$bitsAnySet": typ,
+				},
+			},
+		)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				select {
+				case errch <- nil:
+				case <-getctx.Done():
+				}
+				return
+			}
+			select {
+			case errch <- srverror.New(err, 500, "Database Error T3.1", "unable to find on storetags"):
+			case <-getctx.Done():
+			}
+			return
+		}
+		var results []tag.StoreTag
+		err = cursor.All(getctx, &results)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				select {
+				case storetags <- nil:
+				case <-getctx.Done():
+				}
+				return
+			}
+			select {
+			case errch <- srverror.New(err, 500, "Database Error T3.2", "unable to decode storetags"):
+			case <-getctx.Done():
+			}
+			return
+		}
+		select {
+		case storetags <- results:
+		case <-getctx.Done():
+		}
+	}()
+	go func() { // Get File Tags
+		if typ&tag.ALLFILE == 0 {
+			select {
+			case filetags <- nil:
+			case <-getctx.Done():
+			}
+			return
+		}
+		cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"]).Find(
+			getctx,
+			bson.M{
+				"file":  fid,
+				"owner": oid,
+				"type": bson.M{
+					"$bitsAnySet": typ,
+				},
+			},
+		)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				select {
+				case filetags <- nil:
+				case <-getctx.Done():
+				}
+				return
+			}
+			select {
+			case errch <- srverror.New(err, 500, "Database Error T3.3", "unable to find on filetags"):
+			case <-getctx.Done():
+			}
+			return
+		}
+		var results []tag.FileTag
+		err = cursor.All(getctx, &results)
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				select {
+				case filetags <- nil:
+				case <-getctx.Done():
+				}
+				return
+			}
+			select {
+			case errch <- srverror.New(err, 500, "Database Error T3.4", "unable to decode filetags"):
+			case <-getctx.Done():
+			}
+			return
+		}
+		select {
+		case filetags <- results:
+		case <-getctx.Done():
+		}
+	}()
+	go func() {
+		collecting := make(map[string]tag.FileTag)
+		for i := 0; i < 2; i++ {
+			select {
+			case stags := <-storetags:
+				for _, st := range stags {
+					collecting[st.Word] = tag.FileTag{
+						Tag:   collecting[st.Word].Tag.Update(st.Tag),
+						File:  fid,
+						Owner: oid,
+					}
+				}
+			case ftags := <-filetags:
+				for _, ft := range ftags {
+					collecting[ft.Word] = tag.FileTag{
+						Tag:   collecting[ft.Word].Tag.Update(ft.Tag),
+						File:  fid,
+						Owner: oid,
+					}
+				}
+			case <-getctx.Done():
+				return
+			}
+		}
+		if len(collecting) == 0 {
+			select {
+			case errch <- errors.ErrNoResults.Extend("no tags"):
+			case <-getctx.Done():
+			}
+			return
+		}
+		var res result
+		res.tags = make([]tag.FileTag, 0, len(collecting))
+		for _, v := range collecting {
+			res.tags = append(res.tags, v)
+		}
+		select {
+		case out <- res:
+		case <-getctx.Done():
+		}
+	}()
+
+	res := <-out
+	return res.tags, res.err
+}
+
+// GetAll returns all FileTags that have a particular type and and owner.
+// Since it looks for owner association, store tags are not searched
+func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) ([]tag.FileTag, error) {
+	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"]).Find(
 		tb.ctx,
 		bson.M{
-			"$or": bson.A{
-				bson.M{"file": bson.M{"$in": files}},
-				bson.M{"store": bson.M{"$in": stores}},
-			},
+			"type":  bson.M{"$bitsAnySet": typ},
+			"owner": oid,
 		},
 	)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			if perr != nil {
-				return nil, perr
-			}
-			return nil, database.ErrNoResults.Extend("no tags")
+			return nil, errors.ErrNoResults.Extend("no file tags")
 		}
-		return nil, srverror.New(err, 500, "Database Error T3", "unable to find tags")
+		return nil, srverror.New(err, 500, "Database Error T4.1", "unable to get file tags")
 	}
-	var matches []*tagbson
-	if err := cursor.All(tb.ctx, &matches); err != nil {
-		if err == mongo.ErrNoDocuments {
-			if perr != nil {
-				return nil, perr
-			}
-			return nil, database.ErrNoResults.Extend("no tags decoded")
-		}
-		return nil, srverror.New(err, 500, "Database Error T3.1", "unable to decode tags")
-	}
-	if len(matches) == 0 {
-		if perr != nil {
-			return nil, perr
-		}
-		return nil, database.ErrNoResults.Extend("no tags found for files")
-	}
-	out := make(map[string][]tag.Tag)
-	for _, match := range matches {
-		if match.File != nil {
-			out[match.File.String()] = append(out[match.File.String()], match.Tag())
-		}
-		if match.Store != nil {
-			for _, fid := range files {
-				if fid.StoreID.Equal(*match.Store) {
-					out[fid.String()] = append(out[fid.String()], match.Tag())
-				}
-			}
-		}
-	}
-	return out, perr
-}
-
-type tagAggReturn struct {
-	Store filehash.StoreID `bson:"_id"`
-	Tags  []tagbson        `bson:"tags"`
-}
-
-// GetFiles returns file ids and store ids that have matching tags
-// if any files are given in context, then only tags of those files are searched
-func (tb *Tagbase) GetFiles(filters []tag.Tag, context ...filehash.FileID) ([]filehash.FileID, []filehash.StoreID, error) {
-	//Build Aggregation Pipeline
-	aggmatch := make(bson.A, 0, len(filters))
-	for _, filter := range filters {
-		match := bson.M{
-			"word": strings.ToLower(filter.Word),
-			"type": bson.M{"$bitsAnySet": filter.Type},
-		}
-		for typ, fields := range filter.Data {
-			prefix := "data." + typ.String() + "."
-			for k, v := range fields {
-				match[prefix+k] = v
-			}
-		}
-		aggmatch = append(aggmatch, match)
-	}
-	initmatch := make(bson.M)
-	if len(context) == 0 {
-		initmatch["$or"] = aggmatch
-	} else {
-		storeids := make([]filehash.StoreID, 0, len(context))
-		for _, fid := range context {
-			storeids = append(storeids, fid.StoreID)
-		}
-		initmatch["$and"] = bson.A{
-			bson.M{"$or": aggmatch},
-			bson.M{"$or": bson.A{
-				bson.M{"file": bson.M{"$in": context}},
-				bson.M{"store": bson.M{"$in": storeids}},
-			}}}
-	}
-	agg := bson.A{
-		bson.M{"$match": initmatch},
-		bson.M{"$group": bson.M{
-			"_id": bson.M{"$ifNull": bson.A{"$store", "$file.storeid"}},
-			"tags": bson.M{"$push": bson.M{
-				"file": "$file",
-				"word": "$word",
-				"type": "$type",
-				"data": "$data",
-			}},
-		}},
-	}
-	for _, filter := range aggmatch {
-		agg = append(agg, bson.M{
-			"$match": bson.M{
-				"tags": bson.M{"$elemMatch": filter},
-			},
-		})
-	}
-	//Run Aggregation
-	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"]).Aggregate(
-		tb.ctx,
-		agg,
-	)
+	var results []tag.FileTag
+	err = cursor.All(tb.ctx, &results)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("no files match tags")
+			return nil, errors.ErrNoResults.Extend("no file tags")
 		}
-		return nil, nil, srverror.New(err, 500, "Database Error T4.1", "unable to get aggregate tags")
+		return nil, srverror.New(err, 500, "Database Error T4.2", "unable to decode file tags")
 	}
-	var results []tagAggReturn
-	if err := cursor.All(tb.ctx, &results); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil, database.ErrNoResults.Extend("no files decoded matching tags")
+	return results, nil
+}
+
+// SearchOwned returns all fileids that are owned by the owner and match the filtering tags
+func (tb *Tagbase) SearchOwned(oid types.OwnerID, tags ...tag.FileTag) ([]types.FileID, error) {
+	fb := tb.File()
+	files, err := fb.GetOwned(oid)
+	if err != nil {
+		return nil, err
+	}
+	fids := make([]types.FileID, 0, len(files))
+	for _, f := range files {
+		fids = append(fids, f.GetID())
+	}
+	return tb.SearchFiles(fids, tags...)
+}
+
+// SearchAccess returns all fileids that the owner has access to in a particular permission and match the filtering tags
+func (tb *Tagbase) SearchAccess(oid types.OwnerID, pkey string, tags ...tag.FileTag) ([]types.FileID, error) {
+	fb := tb.File()
+	files, err := fb.GetPermKey(oid, pkey)
+	if err != nil {
+		return nil, err
+	}
+	fids := make([]types.FileID, 0, len(files))
+	for _, f := range files {
+		fids = append(fids, f.GetID())
+	}
+	return tb.SearchFiles(fids, tags...)
+}
+
+// SearchFiles returns all the fileids that match the tags which define the filter conditions
+func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]types.FileID, error) {
+	if len(tags) == 0 {
+		return fids, nil
+	}
+	var searchStoreTags bool
+	var searchFileTags bool
+	for _, t := range tags {
+		if t.Type&tag.ALLSTORE > 0 {
+			searchStoreTags = true
 		}
-		return nil, nil, srverror.New(err, 500, "Database Error T4", "unable to decode data")
+		if t.Type&tag.ALLFILE > 0 {
+			searchFileTags = true
+		}
 	}
-	//assemble fileids and storeids for return; check that fileids meet all filter conditions
-	var fids []filehash.FileID
-	var sids []filehash.StoreID
-	for _, result := range results {
-		sids = append(sids, result.Store)
-	NEXTTAG:
-		for _, tag := range result.Tags {
-			if tag.File != nil && func() bool {
-				for _, foundid := range fids {
-					if tag.File.Equal(foundid) {
-						return false
-					}
-				}
-				return true
-			}() {
-			NEXTFILTER:
-				for _, filter := range filters {
-					for _, t := range result.Tags {
-						if (t.File == nil || tag.File.Equal(*t.File)) && t.Word == filter.Word && t.Type&filter.Type != 0 && func() bool {
-							for typ, fields := range filter.Data {
-								for k, v := range fields {
-									if t.Data == nil || *t.Data == nil || (*t.Data)[typ] == nil || (*t.Data)[typ][k] != v {
-										return false
-									}
-								}
+	if !searchStoreTags && !searchFileTags {
+		return fids, nil
+	}
+	type result struct {
+		ids []types.FileID
+		err error
+	}
+	type storeagg struct {
+		Store types.StoreID `bson:"_id"`
+		Tags  []tag.Tag     `bson:"tags"`
+	}
+	type ftag struct {
+		Owner types.OwnerID `bson:"owner"`
+		Tag   tag.Tag       `bson:",inline"`
+	}
+	type fileagg struct {
+		File types.FileID `bson:"_id"`
+		Tags []ftag       `bson:"tags"`
+	}
+	out := make(chan result)
+	errch := make(chan error)
+	storeresults := make(chan []storeagg)
+	fileresults := make(chan []fileagg)
+	searchctx, cancel := context.WithCancel(tb.ctx)
+	defer cancel()
+	go func() {
+		select {
+		case err := <-errch:
+			select {
+			case out <- result{err: err}:
+			case <-searchctx.Done():
+			}
+		case <-searchctx.Done():
+		}
+	}()
+
+	if searchStoreTags {
+		go func() { // Search StoreTags
+			words := make([]string, 0, len(tags))
+			regexs := make([]bson.M, 0, len(tags))
+			for _, t := range tags {
+				if t.Type&tag.ALLSTORE > 0 {
+					if t.Type&tag.SEARCH > 0 {
+						if data := t.Data[tag.SEARCH]; data != nil {
+							if searchwithregex, ok := data["regex"].(bool); ok && searchwithregex {
+								regexoptions, _ := data["regexoptions"].(string)
+								regexs = append(regexs, bson.M{
+									"word": bson.M{
+										"$regex":   t.Word,
+										"$options": regexoptions,
+									},
+								})
+								continue
 							}
-							return true
-						}() {
-							continue NEXTFILTER
 						}
 					}
-					continue NEXTTAG
+					words = append(words, t.Word)
 				}
-				fids = append(fids, *tag.File)
+			}
+			sids := make([]types.StoreID, 0, len(fids))
+			for _, id := range fids {
+				sids = append(sids, id.StoreID)
+			}
+			wordConditions := []bson.M{
+				bson.M{"word": bson.M{"$in": words}},
+			}
+			if len(regexs) > 0 {
+				wordConditions = append(wordConditions, bson.M{"$or": regexs})
+			}
+			pipeline := []bson.M{
+				bson.M{
+					"$match": bson.M{
+						"$or":   wordConditions,
+						"store": bson.M{"$in": sids},
+					},
+				},
+				bson.M{
+					"$group": bson.M{
+						"_id": "$store",
+						"tags": bson.M{
+							"$push": bson.M{
+								"word": "$word",
+								"type": "$type",
+							},
+						},
+					},
+				},
+			}
+			for _, t := range tags {
+				if t.Type&tag.ALLSTORE > 0 {
+					match := make(bson.M)
+					isRegex := false
+					if t.Type&tag.SEARCH > 0 {
+						if data := t.Data[tag.SEARCH]; data != nil {
+							if searchwithregex, ok := data["regex"].(bool); ok && searchwithregex {
+								regexoptions, _ := data["regexoptions"].(string)
+								match["word"] = bson.M{
+									"$regex":   t.Word,
+									"$options": regexoptions,
+								}
+								isRegex = true
+							}
+						}
+					}
+					if !isRegex {
+						match["word"] = t.Word
+					}
+					match["type"] = bson.M{
+						"$bitsAnySet": t.Type,
+					}
+					pipeline = append(pipeline, bson.M{
+						"$match": bson.M{
+							"tags": bson.M{
+								"$elemMatch": match,
+							},
+						},
+					})
+				}
+			}
+			cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["storetags"]).Aggregate(searchctx, pipeline)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					select {
+					case storeresults <- nil:
+					case <-searchctx.Done():
+					}
+					return
+				}
+				select {
+				case errch <- srverror.New(err, 500, "Database Error T5.1", "unable to aggregate store tags"):
+				case <-searchctx.Done():
+				}
+				return
+			}
+			var results []storeagg
+			err = cursor.All(searchctx, &results)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					select {
+					case storeresults <- nil:
+					case <-searchctx.Done():
+					}
+					return
+				}
+				select {
+				case errch <- srverror.New(err, 500, "Database Error T5.2", "unable to decode store tags"):
+				case <-searchctx.Done():
+				}
+				return
+			}
+			select {
+			case storeresults <- results:
+			case <-searchctx.Done():
+			}
+		}()
+	} else {
+		go func() {
+			select {
+			case storeresults <- nil:
+			case <-searchctx.Done():
+			}
+		}()
+	}
+	if searchFileTags {
+		go func() { // Search File Tags
+			words := make([]string, 0, len(tags))
+			regexs := make([]bson.M, 0, len(tags))
+			for _, t := range tags {
+				if t.Type&tag.ALLFILE > 0 {
+					if t.Type&tag.SEARCH > 0 {
+						if data := t.Data[tag.SEARCH]; data != nil {
+							if searchwithregex, ok := data["regex"].(bool); ok && searchwithregex {
+								regexoptions, _ := data["regexoptions"].(string)
+								regexs = append(regexs, bson.M{
+									"word": bson.M{
+										"$regex":   t.Word,
+										"$options": regexoptions,
+									},
+								})
+								continue
+							}
+						}
+					}
+					words = append(words, t.Word)
+				}
+			}
+			wordConditions := []bson.M{
+				bson.M{"word": bson.M{"$in": words}},
+			}
+			if len(regexs) > 0 {
+				wordConditions = append(wordConditions, bson.M{
+					"$or": regexs,
+				})
+			}
+			pipeline := []bson.M{
+				bson.M{
+					"$match": bson.M{
+						"$or":  wordConditions,
+						"file": bson.M{"$in": fids},
+					},
+				},
+				bson.M{
+					"$group": bson.M{
+						"_id": "$file",
+						"tags": bson.M{
+							"$push": bson.M{
+								"owner": "$owner",
+								"word":  "$word",
+								"type":  "$type",
+							},
+						},
+					},
+				},
+			}
+			for _, t := range tags {
+				if t.Type&tag.ALLFILE > 0 {
+					match := make(bson.M)
+					isRegex := false
+					if t.Type&tag.SEARCH > 0 {
+						if data := t.Data[tag.SEARCH]; data != nil {
+							if searchwithregex, ok := data["regex"].(bool); ok && searchwithregex {
+								regexoptions, _ := data["regexoptions"].(string)
+								match["word"] = bson.M{
+									"$regex":   t.Word,
+									"$options": regexoptions,
+								}
+								isRegex = true
+							}
+						}
+					}
+					if !isRegex {
+						match["word"] = t.Word
+					}
+					match["type"] = bson.M{
+						"$bitsAnySet": t.Type,
+					}
+					if !t.Owner.Equal(types.OwnerID{}) {
+						match["owner"] = t.Owner
+					}
+					pipeline = append(pipeline, bson.M{
+						"$match": bson.M{
+							"tags": bson.M{
+								"$elemMatch": match,
+							},
+						},
+					})
+				}
+			}
+			cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["filetags"]).Aggregate(searchctx, pipeline)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					select {
+					case fileresults <- nil:
+					case <-searchctx.Done():
+					}
+					return
+				}
+				select {
+				case errch <- srverror.New(err, 500, "Database Error T5.3", "unable to aggregate file tags"):
+				case <-searchctx.Done():
+				}
+				return
+			}
+			var results []fileagg
+			err = cursor.All(searchctx, &results)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					select {
+					case fileresults <- nil:
+					case <-searchctx.Done():
+					}
+					return
+				}
+				select {
+				case errch <- srverror.New(err, 500, "Database Error T5.4", "unable to decode file tags"):
+				case <-searchctx.Done():
+				}
+				return
+			}
+			select {
+			case fileresults <- results:
+			case <-searchctx.Done():
+			}
+		}()
+	} else {
+		go func() {
+			select {
+			case fileresults <- nil:
+			case <-searchctx.Done():
+			}
+		}()
+	}
+	go func() {
+		var stores []storeagg
+		var files []fileagg
+		for i := 0; i < 2; i++ {
+			select {
+			case stores = <-storeresults:
+			case files = <-fileresults:
+			case <-searchctx.Done():
+				return
 			}
 		}
-	}
-	//If context provided add fileids that match to store ids
-	if len(context) > 0 {
-		for _, id := range context {
-			if func() bool {
-				for _, s := range sids {
-					if s.Equal(id.StoreID) {
-						return true
+		var res result
+		if searchStoreTags && searchFileTags {
+			for _, file := range files {
+				for _, store := range stores {
+					if store.Store.Equal(file.File.StoreID) {
+						res.ids = append(res.ids, file.File)
+						break
 					}
 				}
-				return false
-			}() && func() bool {
-				for _, fid := range fids {
-					if fid.Equal(id) {
-						return false
+			}
+		} else if searchStoreTags {
+			for _, fid := range fids {
+				for _, store := range stores {
+					if store.Store.Equal(fid.StoreID) {
+						res.ids = append(res.ids, fid)
+						break
 					}
 				}
-				return true
-			}() {
-				fids = append(fids, id)
+			}
+		} else if searchFileTags {
+			for _, file := range files {
+				res.ids = append(res.ids, file.File)
 			}
 		}
-	}
-	if len(fids) == 0 && len(sids) == 0 {
-		return nil, nil, database.ErrNoResults.Extend("no full matching files")
-	}
-	return fids, sids, nil
-}
-
-// SearchData returns tags that contain a particular type and matching data fields
-func (tb *Tagbase) SearchData(typ tag.Type, data tag.Data) ([]tag.Tag, error) {
-	//TODO: bit-wise-or the keys of data rather then pass tag.Type
-	filter := make(bson.M)
-	filter["type"] = bson.M{"$bitsAnySet": typ}
-	for t, m := range data {
-		prefix := "data." + t.String() + "."
-		for k, v := range m {
-			filter[prefix+k] = v
+		if len(res.ids) == 0 {
+			res.err = errors.ErrNoResults.Extend("no matching file ids")
 		}
-	}
-	cursor, err := tb.client.Database(tb.DBName).Collection(tb.CollNames["tag"]).Find(
-		tb.ctx,
-		filter,
-	)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no matching tags")
+		select {
+		case out <- res:
+		case <-searchctx.Done():
 		}
-		return nil, srverror.New(err, 500, "Database Error T5", "tag.searchData mongo error")
-	}
-	var returned []tagbson
-	if err := cursor.All(tb.ctx, &returned); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no decoded tags")
-		}
-		return nil, srverror.New(err, 500, "Database Error T5.1", "tag.searchData decode error")
-	}
-	result := make([]tag.Tag, 0, len(data))
-	for _, d := range returned {
-		result = append(result, d.Tag())
-	}
-	return result, nil
+	}()
+	res := <-out
+	return res.ids, res.err
 }

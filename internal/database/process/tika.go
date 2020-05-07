@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"github.com/google/go-tika/tika"
@@ -61,9 +61,9 @@ func NewContentExtractor(httpClient *http.Client, urlString string) *ContentExtr
 }
 
 // ExtractText process a file stream assuming it is some kind of text file
-func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
+func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Reader) ([]types.ContentLine, error) {
 
-	out := make([]database.ContentLine, 0, 128)
+	out := make([]types.ContentLine, 0, 128)
 
 	text, err := ((*tika.Client)(ce)).Parse(ctx, filecontent)
 	if err != nil {
@@ -73,7 +73,7 @@ func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Read
 	scanner.Split(SentenceSplitter)
 	count := 0
 	for scanner.Scan() {
-		out = append(out, database.ContentLine{
+		out = append(out, types.ContentLine{
 			Position: count,
 			Content:  []string{scanner.Text()},
 		})
@@ -82,7 +82,7 @@ func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Read
 	if err = scanner.Err(); err != nil {
 		return nil, err
 	}
-	//Generate database.ContentLines based on meta
+	//Generate types.ContentLines based on meta
 	return out, nil
 }
 
@@ -94,9 +94,9 @@ var csvSep = regexp.MustCompile("[,\t]")
 // var csvRow = regexp.MustCompile("^.*(,.*)*$")
 
 // ExtractCSV process a byte stream assuming it is a type of comma or tab separated values
-func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reader) ([]database.ContentLine, error) {
+func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reader) ([]types.ContentLine, error) {
 
-	out := make([]database.ContentLine, 0, 128)
+	out := make([]types.ContentLine, 0, 128)
 
 	text, err := ((*tika.Client)(ce)).Parse(ctx, filecontent)
 	if err != nil {
@@ -110,7 +110,7 @@ func (ce *ContentExtractor) ExtractCSV(ctx context.Context, filecontent io.Reade
 		if xlsNewSheet.MatchString(line) {
 			page++
 		} else if csvRow.MatchString(line) {
-			out = append(out, database.ContentLine{
+			out = append(out, types.ContentLine{
 				//PageNum:  page,
 				Position: count,
 				Content:  csvSep.Split(line, -1),

@@ -1,0 +1,42 @@
+Users (all passwords Hunter2)
+  hankhill, hank@hill.us
+    Favorited shared files:
+      notafiletype.abc
+    files:
+      hoi90-41.pdf
+        Favorited and removed
+        Trashed and restored
+        shared: bobbyhill
+      hoi90-41COPY.pdf
+      492Sprint3.odt
+        shared: bobbyhill
+
+  peggyhill, peggy@hill.us
+    files:
+      escapeTest.txt
+        favorited and removed
+        shared: Hill Family
+      492Sprint3COPY.odt
+
+  bobbyhill, bobby@hill.us
+    trashed shared files:
+      hoi90-41.pdf
+    files:
+      notafiletype.abc
+        Favorited
+        shared: 
+          Hill Family
+          hankhill
+
+  justin, justin@maxset.org
+    Forgot Password Sent
+
+
+Groups
+  Hill Family
+    Leader: peggyhill
+    members:
+      hankhill
+      bobbyhill
+    favorited files (is possible on front end, but not shown on front end):
+      escapeTest.txt

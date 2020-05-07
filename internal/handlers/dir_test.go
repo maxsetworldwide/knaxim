@@ -177,7 +177,9 @@ func TestDirAPI(t *testing.T) {
 			t.Fatalf("JSON Decode error:\n%s", err)
 		}
 		expected := fid.String()
-		if len(results.Matches) != 1 || results.Matches[0] != expected {
+		if len(results.Matches) == 0 {
+			t.Fatalf("Expected %s to return a single file. zero matches", expected)
+		} else if len(results.Matches) != 1 || results.Matches[0] != expected {
 			t.Fatalf("Expected %s to be the sole returned file. Received %s.", expected, results.Matches[0])
 		}
 	})

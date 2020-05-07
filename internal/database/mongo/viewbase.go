@@ -3,8 +3,8 @@ package mongo
 import (
 	"fmt"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,7 +17,7 @@ type Viewbase struct {
 }
 
 // Insert adds pdf view to the database
-func (vb *Viewbase) Insert(vs *database.ViewStore) error {
+func (vb *Viewbase) Insert(vs *types.ViewStore) error {
 	chunks := chunkify(vs.ID, vs.Content)
 	_, err := vb.client.Database(vb.DBName).Collection(vb.CollNames["view"]).InsertMany(
 		vb.ctx,
@@ -31,7 +31,7 @@ func (vb *Viewbase) Insert(vs *database.ViewStore) error {
 }
 
 // Get view from database
-func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error) {
+func (vb *Viewbase) Get(id types.StoreID) (out *types.ViewStore, err error) {
 	var chunks []*contentchunk
 	cursor, err := vb.client.Database(vb.DBName).Collection(vb.CollNames["view"]).Find(
 		vb.ctx,
@@ -42,7 +42,7 @@ func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error
 	}
 	if err = cursor.All(vb.ctx, &chunks); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNotFound.Extend("no View", id.String())
+			return nil, errors.ErrNotFound.Extend("no View", id.String())
 		}
 		return nil, srverror.New(err, 500, "Database Error V5", "failed to decode view chunks")
 	}
@@ -58,7 +58,7 @@ func (vb *Viewbase) Get(id filehash.StoreID) (out *database.ViewStore, err error
 			}
 		}
 	}()
-	out = new(database.ViewStore)
+	out = new(types.ViewStore)
 	out.Content = appendchunks(chunksort(chunks))
 	out.ID = id
 	return

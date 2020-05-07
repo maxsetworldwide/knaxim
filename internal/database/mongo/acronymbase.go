@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,7 +63,7 @@ func (ab *Acronymbase) Get(a string) ([]string, error) {
 	var result []acronym
 	if err := cursor.All(ab.ctx, &result); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, database.ErrNoResults.Extend("no acronyms")
+			return nil, errors.ErrNoResults.Extend("no acronyms")
 		}
 		return nil, srverror.New(err, 500, "Database Error A2.1", "Failed to decode acronym")
 	}

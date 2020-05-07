@@ -6,8 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestViewbase(t *testing.T) {
@@ -22,12 +21,19 @@ func TestViewbase(t *testing.T) {
 		if err := db.Init(ctx, true); err != nil {
 			t.Fatalf("Unable to init database: %s", err)
 		}
-		vb = db.View(context.Background()).(*Viewbase)
+		methodtesting, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		mdb, err := db.Connect(methodtesting)
+		if err != nil {
+			t.Fatalf("Unable to connect to database: %s", err.Error())
+		}
+		defer mdb.Close(methodtesting)
+		vb = mdb.View().(*Viewbase)
 	}
 	{
 		contentString := "View version of a file FFFFF*****"
-		inputVS := &database.ViewStore{
-			ID: filehash.StoreID{
+		inputVS := &types.ViewStore{
+			ID: types.StoreID{
 				Hash:  12345,
 				Stamp: 678,
 			},

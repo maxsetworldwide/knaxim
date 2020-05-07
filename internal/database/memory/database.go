@@ -9,7 +9,8 @@ import (
 	"sync"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 )
 
 var lock = new(sync.RWMutex)
@@ -19,17 +20,17 @@ type Database struct {
 	ctx context.Context
 
 	Owners struct {
-		ID        map[string]database.Owner // key Owner.ID.String()
-		UserName  map[string]database.UserI
-		GroupName map[string]database.GroupI
-		Reset     map[string]database.OwnerID
+		ID        map[string]types.Owner // key Owner.ID.String()
+		UserName  map[string]types.UserI
+		GroupName map[string]types.GroupI
+		Reset     map[string]types.OwnerID
 	}
-	Files     map[string]database.FileI         // key filehash.FileID.String()
-	Stores    map[string]*database.FileStore    // key filehash.StoreID.String()
-	Lines     map[string][]database.ContentLine // key filehash.StoreID.String()
-	TagFiles  map[string]map[string]tag.Tag     // key filehash.FileID.String() => word string => tag
-	TagStores map[string]map[string]tag.Tag     // key filehash.StoreID.String() => word string => tag
-	Views     map[string]*database.ViewStore    // key filehash.StoreID.String()
+	Files     map[string]types.FileI                       // key filehash.FileID.String()
+	Stores    map[string]*types.FileStore                  // key filehash.StoreID.String()
+	Lines     map[string][]types.ContentLine               // key filehash.StoreID.String()
+	TagFiles  map[string]map[string]map[string]tag.FileTag // key filehash.FileID.String() => ownerid => word string => tag
+	TagStores map[string]map[string]tag.StoreTag           // key filehash.StoreID.String() => word string => tag
+	Views     map[string]*types.ViewStore                  // key filehash.StoreID.String()
 	Acronyms  map[string][]string
 }
 
@@ -44,16 +45,16 @@ func (db *Database) Init(_ context.Context, reset bool) error {
 	}
 	lock.Lock()
 	defer lock.Unlock()
-	db.Owners.ID = make(map[string]database.Owner)
-	db.Owners.UserName = make(map[string]database.UserI)
-	db.Owners.GroupName = make(map[string]database.GroupI)
-	db.Owners.Reset = make(map[string]database.OwnerID)
-	db.Files = make(map[string]database.FileI)
-	db.Stores = make(map[string]*database.FileStore)
-	db.Lines = make(map[string][]database.ContentLine)
-	db.TagFiles = make(map[string]map[string]tag.Tag)
-	db.TagStores = make(map[string]map[string]tag.Tag)
-	db.Views = make(map[string]*database.ViewStore)
+	db.Owners.ID = make(map[string]types.Owner)
+	db.Owners.UserName = make(map[string]types.UserI)
+	db.Owners.GroupName = make(map[string]types.GroupI)
+	db.Owners.Reset = make(map[string]types.OwnerID)
+	db.Files = make(map[string]types.FileI)
+	db.Stores = make(map[string]*types.FileStore)
+	db.Lines = make(map[string][]types.ContentLine)
+	db.TagFiles = make(map[string]map[string]map[string]tag.FileTag)
+	db.TagStores = make(map[string]map[string]tag.StoreTag)
+	db.Views = make(map[string]*types.ViewStore)
 	db.Acronyms = make(map[string][]string)
 	return nil
 }
@@ -70,110 +71,84 @@ func CurrentOpenConnections() int {
 
 // Owner opens a connection to the database and returns Ownerbase wrapping of the
 // Database
-func (db *Database) Owner(c context.Context) database.Ownerbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Owner() database.Ownerbase {
 	out := &Ownerbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // File opens a connection to the database and returns Filebase wrapping of the
 // Database
-func (db *Database) File(c context.Context) database.Filebase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) File() database.Filebase {
+	return db.file()
+}
+
+func (db *Database) file() database.Filebase {
 	out := &Filebase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Store opens a connection to the database and returns Storebase wrapping of the
 // Database
-func (db *Database) Store(c context.Context) database.Storebase {
-	lock.Lock()
-	defer lock.Unlock()
-
-	return db.store(c)
+func (db *Database) Store() database.Storebase {
+	return db.store()
 }
 
-func (db *Database) store(c context.Context) database.Storebase {
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) store() database.Storebase {
 	out := &Storebase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Content opens a connection to the database and returns Contentbase wrapping of the
 // Database
-func (db *Database) Content(c context.Context) database.Contentbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Content() database.Contentbase {
 	out := &Contentbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Tag opens a connection to the database and returns Tagbase wrapping of the
 // Database
-func (db *Database) Tag(c context.Context) database.Tagbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Tag() database.Tagbase {
 	out := &Tagbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // Acronym opens a connection to the database and returns Acronymbase wrapping of the Database
-func (db *Database) Acronym(c context.Context) database.Acronymbase {
-	lock.Lock()
-	defer lock.Unlock()
-	countLock.Lock()
-	defer countLock.Unlock()
+func (db *Database) Acronym() database.Acronymbase {
 	out := &Acronymbase{
 		Database: *db,
 	}
-	out.ctx = c
-	connectionCount++
 	return out
 }
 
 // View opens a connection to the database and returns Viewbase wrapping of the Database
-func (db *Database) View(c context.Context) database.Viewbase {
+func (db *Database) View() database.Viewbase {
+	out := &Viewbase{
+		Database: *db,
+	}
+	return out
+}
+
+// Connect simulates connecting to database and tracks open connections
+func (db *Database) Connect(ctx context.Context) (database.Database, error) {
 	lock.Lock()
 	defer lock.Unlock()
 	countLock.Lock()
 	defer countLock.Unlock()
-	out := &Viewbase{
-		Database: *db,
-	}
-	out.ctx = c
+	ndb := new(Database)
+	*ndb = *db
+	ndb.ctx = ctx
 	connectionCount++
-	return out
+	return ndb, nil
 }
 
 // Close closes the open connection, meant to be called by wrapping objects

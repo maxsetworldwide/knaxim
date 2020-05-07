@@ -3,22 +3,23 @@ package memory
 import (
 	"testing"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 )
 
 func TestContent(t *testing.T) {
 	defer testingComplete.Done()
-	cb := DB.Content(nil)
-	defer cb.Close(nil)
+	DB.Connect(nil)
+	cb := DB.Content()
+	defer DB.Close(nil)
 	t.Parallel()
 
-	lines := []database.ContentLine{
-		database.ContentLine{
+	lines := []types.ContentLine{
+		types.ContentLine{
 			ID:       sid,
 			Position: 0,
 			Content:  []string{"this is the first line"},
 		},
-		database.ContentLine{
+		types.ContentLine{
 			ID:       sid,
 			Position: 1,
 			Content:  []string{"2nd line in content"},

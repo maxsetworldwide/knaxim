@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"git.maxset.io/web/knaxim/internal/database"
-	"git.maxset.io/web/knaxim/internal/database/filehash"
-	"git.maxset.io/web/knaxim/internal/database/tag"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/tag"
 	"git.maxset.io/web/knaxim/internal/util"
 
 	"git.maxset.io/web/knaxim/pkg/srverror"
@@ -19,15 +19,15 @@ func groupMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		groupidstr := r.FormValue("group")
 		if len(groupidstr) > 0 {
-			groupid, err := database.DecodeObjectIDString(groupidstr)
+			groupid, err := types.DecodeOwnerIDString(groupidstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
-			group, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(groupid)
+			group, err := r.Context().Value(types.OWNER).(database.Ownerbase).Get(groupid)
 			if err != nil {
 				panic(err)
 			}
-			if !group.Match(r.Context().Value(USER).(database.Owner)) {
+			if !group.Match(r.Context().Value(USER).(types.Owner)) {
 				panic(srverror.Basic(403, "Not Group Member"))
 			}
 			r = r.WithContext(context.WithValue(r.Context(), GROUP, group))
@@ -40,16 +40,16 @@ func groupidMiddleware(checkmembership bool) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			groupidstr := mux.Vars(r)["id"]
-			groupid, err := database.DecodeObjectIDString(groupidstr)
+			groupid, err := types.DecodeOwnerIDString(groupidstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Corrupt Group id"))
 			}
-			group, err := r.Context().Value(database.OWNER).(database.Ownerbase).Get(groupid)
+			group, err := r.Context().Value(types.OWNER).(database.Ownerbase).Get(groupid)
 			if err != nil {
 				panic(err)
 			}
 			if checkmembership {
-				if !group.Match(r.Context().Value(USER).(database.Owner)) {
+				if !group.Match(r.Context().Value(USER).(types.Owner)) {
 					panic(srverror.Basic(403, "Not Group Member"))
 				}
 			}
@@ -89,18 +89,18 @@ func AttachGroup(r *mux.Router) {
 
 func createGroup(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	var owner database.Owner
+	var owner types.Owner
 	if group := r.Context().Value(GROUP); group != nil {
-		owner = group.(database.Owner)
+		owner = group.(types.Owner)
 	} else {
-		owner = r.Context().Value(USER).(database.Owner)
+		owner = r.Context().Value(USER).(types.Owner)
 	}
-	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	newname := r.FormValue("newname")
 	if !validGroupName(newname) {
 		panic(srverror.Basic(400, "Bad Request", "invalid group name", newname))
 	}
-	ng := database.NewGroup(newname, owner)
+	ng := types.NewGroup(newname, owner)
 	var err error
 	if ng.ID, err = ownerbase.Reserve(ng.GetID(), ng.GetName()); err != nil {
 		panic(err)
@@ -115,8 +115,8 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 
 func getGroups(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	user := r.Context().Value(USER).(database.UserI)
-	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+	user := r.Context().Value(USER).(types.UserI)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	ogroups, mgroups, err := ownerbase.GetGroups(user.GetID())
 	if err != nil {
@@ -138,8 +138,8 @@ func getGroups(out http.ResponseWriter, r *http.Request) {
 func getGroupsGroups(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
-	owner := r.Context().Value(GROUP).(database.GroupI)
-	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+	owner := r.Context().Value(GROUP).(types.GroupI)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 
 	ogroups, mgroups, err := ownerbase.GetGroups(owner.GetID())
 	if err != nil {
@@ -160,11 +160,11 @@ func getGroupsGroups(out http.ResponseWriter, r *http.Request) {
 
 func groupinfo(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	group, ok := r.Context().Value(GROUP).(database.GroupI)
+	group, ok := r.Context().Value(GROUP).(types.GroupI)
 	if !ok {
 		panic(srverror.Basic(404, "Not Found", "id was an owner but not a group"))
 	}
-	user := r.Context().Value(USER).(database.UserI)
+	user := r.Context().Value(USER).(types.UserI)
 	var result GroupInformation
 	if group.Match(user) {
 		result = BuildGroupInfo(group)
@@ -194,8 +194,8 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(400, "No Search Term"))
 	}
-	group := r.Context().Value(GROUP).(database.Owner)
-	filebase := r.Context().Value(database.FILE).(database.Filebase)
+	group := r.Context().Value(GROUP).(types.Owner)
+	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	owned, err := filebase.GetOwned(group.GetID())
 	if err != nil {
 		panic(err)
@@ -204,7 +204,7 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fids := make([]filehash.FileID, 0, len(owned)+len(accessible))
+	fids := make([]types.FileID, 0, len(owned)+len(accessible))
 	for _, o := range owned {
 		fids = append(fids, o.GetID())
 	}
@@ -212,19 +212,27 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 		fids = append(fids, a.GetID())
 	}
 
-	filters := make([]tag.Tag, 0, len(r.Form["find"]))
+	filters := make([]tag.FileTag, 0, len(r.Form["find"]))
 	for _, f := range util.SplitSearch(r.Form["find"]...) {
 		if len(f) > 0 {
-			filters = append(filters, tag.Tag{
-				Word: f,
-				Type: tag.CONTENT,
+			filters = append(filters, tag.FileTag{
+				Tag: tag.Tag{
+					Word: f,
+					Type: tag.CONTENT | tag.SEARCH,
+					Data: tag.Data{
+						tag.SEARCH: map[string]interface{}{
+							"regex":        true,
+							"regexoptions": "i",
+						},
+					},
+				},
 			})
 		}
 	}
 	if len(filters) == 0 {
 		panic(srverror.Basic(400, "No Search Condition"))
 	}
-	result, _, err := r.Context().Value(database.TAG).(database.Tagbase).GetFiles(filters, fids...)
+	result, err := r.Context().Value(types.TAG).(database.Tagbase).SearchFiles(fids, filters...)
 	if err != nil {
 		panic(err)
 	}
@@ -234,8 +242,8 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 	return func(out http.ResponseWriter, r *http.Request) {
 		w := out.(*srvjson.ResponseWriter)
-		group := r.Context().Value(GROUP).(database.GroupI)
-		actor := r.Context().Value(USER).(database.Owner)
+		group := r.Context().Value(GROUP).(types.GroupI)
+		actor := r.Context().Value(USER).(types.Owner)
 
 		if !group.GetOwner().Match(actor) {
 			panic(srverror.Basic(403, "Not Owner", actor.GetName(), actor.GetID().String(), group.GetName(), group.GetID().String()))
@@ -244,9 +252,9 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 		if len(r.Form["id"]) == 0 {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
-		ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+		ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		for _, idstr := range r.Form["id"] {
-			id, err := database.DecodeObjectIDString(idstr)
+			id, err := types.DecodeOwnerIDString(idstr)
 			if err != nil {
 				panic(srverror.New(err, 400, "Bad Member ID"))
 			}
@@ -271,14 +279,14 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 
 func lookupGroup(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
-	ownerbase := r.Context().Value(database.OWNER).(database.Ownerbase)
+	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	vals := mux.Vars(r)
 	match, err := ownerbase.FindGroupName(vals["name"])
 	if err != nil {
 		panic(err)
 	}
 	response := BuildGroupInfo(match)
-	if !match.Match(r.Context().Value(USER).(database.Owner)) {
+	if !match.Match(r.Context().Value(USER).(types.Owner)) {
 		response.Members = nil
 	}
 

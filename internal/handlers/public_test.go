@@ -48,7 +48,7 @@ var publicSearchTests = []publicSearchTest{
 		statusCode: 200,
 	},
 	publicSearchTest{
-		find:       "public brown",
+		find:       "noresults brown",
 		expected:   []int{},
 		statusCode: 200,
 	},

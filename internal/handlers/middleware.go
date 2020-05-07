@@ -13,6 +13,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -83,8 +84,8 @@ func Recovery(next http.Handler) http.Handler {
 // UserCookie Token verification MiddleWare
 func UserCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userbase := r.Context().Value(database.OWNER).(database.Ownerbase)
-		uid, err := database.GetCookieUID(r)
+		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
+		uid, err := types.GetCookieUID(r)
 		if err != nil {
 			panic(srverror.New(err, 401, "login", "invalid cookie, error getting userid from cookie"))
 		}
@@ -92,7 +93,7 @@ func UserCookie(next http.Handler) http.Handler {
 		if err != nil {
 			panic(srverror.New(err, 401, "login", "unable to get user record to validate token", uid.String()))
 		}
-		if u, ok := user.(database.UserI); !ok {
+		if u, ok := user.(types.UserI); !ok {
 			panic(srverror.New(errors.New("id is not a user"), 401, "login", uid.String()))
 		} else if u.GetRole("Guest") && r.Method != "GET" {
 			panic(srverror.New(errors.New("Guest User cannot perform action"), 401, "login", "Invalid Guest Action", r.Method, r.URL.Path))
@@ -116,33 +117,33 @@ func ConnectDatabase(next http.Handler) http.Handler {
 		defer cancel()
 		r = r.WithContext(ctx)
 
-		filebase := config.DB.File(r.Context())
-		defer filebase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.FILE, filebase))
+		dbConnection, err := config.DB.Connect(r.Context())
+		if err != nil {
+			panic(srverror.New(err, 500, "Server Error", "Failed to Connect to Database"))
+		}
+		defer dbConnection.Close(r.Context())
+		r = r.WithContext(context.WithValue(r.Context(), types.DATABASE, dbConnection))
 
-		ownerbase := filebase.Owner(nil)
-		defer ownerbase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.OWNER, ownerbase))
+		filebase := dbConnection.File()
+		r = r.WithContext(context.WithValue(r.Context(), types.FILE, filebase))
 
-		storebase := filebase.Store(nil)
-		defer storebase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.STORE, storebase))
+		ownerbase := dbConnection.Owner()
+		r = r.WithContext(context.WithValue(r.Context(), types.OWNER, ownerbase))
 
-		contentbase := filebase.Content(nil)
-		defer contentbase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.CONTENT, contentbase))
+		storebase := dbConnection.Store()
+		r = r.WithContext(context.WithValue(r.Context(), types.STORE, storebase))
 
-		tagbase := filebase.Tag(nil)
-		defer tagbase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.TAG, tagbase))
+		contentbase := dbConnection.Content()
+		r = r.WithContext(context.WithValue(r.Context(), types.CONTENT, contentbase))
 
-		viewbase := filebase.View(nil)
-		defer viewbase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.VIEW, viewbase))
+		tagbase := dbConnection.Tag()
+		r = r.WithContext(context.WithValue(r.Context(), types.TAG, tagbase))
 
-		acronymbase := filebase.Acronym(nil)
-		defer acronymbase.Close(r.Context())
-		r = r.WithContext(context.WithValue(r.Context(), database.ACRONYM, acronymbase))
+		viewbase := dbConnection.View()
+		r = r.WithContext(context.WithValue(r.Context(), types.VIEW, viewbase))
+
+		acronymbase := dbConnection.Acronym()
+		r = r.WithContext(context.WithValue(r.Context(), types.ACRONYM, acronymbase))
 
 		next.ServeHTTP(w, r)
 	})

@@ -4,7 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 
-	"git.maxset.io/web/knaxim/internal/database"
+	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/database/types/errors"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
 
@@ -15,16 +16,16 @@ type Ownerbase struct {
 
 // Reserve is the first step to adding a new Owner, returns OwnerID
 // that was reserved, it might be a mutated value of the input
-func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID, error) {
+func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (types.OwnerID, error) {
 	lock.Lock()
 	defer lock.Unlock()
 	if id.Type == 'u' {
 		if _, ok := ob.Owners.UserName[name]; ok {
-			return id, database.ErrNameTaken
+			return id, errors.ErrNameTaken
 		}
 	} else if id.Type == 'g' {
 		if _, ok := ob.Owners.GroupName[name]; ok {
-			return id, database.ErrNameTaken
+			return id, errors.ErrNameTaken
 		}
 	} else {
 		return id, srverror.Basic(500, "Server Error", "unrecognized id type")
@@ -47,32 +48,32 @@ func (ob *Ownerbase) Reserve(id database.OwnerID, name string) (database.OwnerID
 }
 
 // Insert adds owner to database
-func (ob *Ownerbase) Insert(u database.Owner) error {
+func (ob *Ownerbase) Insert(u types.Owner) error {
 	lock.Lock()
 	defer lock.Unlock()
 	idstr := u.GetID().String()
 	if expectnil, ok := ob.Owners.ID[idstr]; !ok {
-		return database.ErrIDNotReserved
+		return errors.ErrIDNotReserved
 	} else if expectnil != nil {
-		return database.ErrNameTaken
+		return errors.ErrNameTaken
 	}
 	switch v := u.(type) {
-	case database.UserI:
+	case types.UserI:
 		expectnil, ok := ob.Owners.UserName[v.GetName()]
 		if !ok {
-			return database.ErrIDNotReserved
+			return errors.ErrIDNotReserved
 		}
 		if expectnil != nil {
-			return database.ErrNameTaken
+			return errors.ErrNameTaken
 		}
 		ob.Owners.UserName[v.GetName()] = v
-	case database.GroupI:
+	case types.GroupI:
 		expectnil, ok := ob.Owners.GroupName[v.GetName()]
 		if !ok {
-			return database.ErrIDNotReserved
+			return errors.ErrIDNotReserved
 		}
 		if expectnil != nil {
-			return database.ErrNameTaken
+			return errors.ErrNameTaken
 		}
 		ob.Owners.GroupName[v.GetName()] = v
 	default:
@@ -83,53 +84,53 @@ func (ob *Ownerbase) Insert(u database.Owner) error {
 }
 
 // Get pulls owner out of database
-func (ob *Ownerbase) Get(id database.OwnerID) (database.Owner, error) {
+func (ob *Ownerbase) Get(id types.OwnerID) (types.Owner, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	return ob.get(id)
 }
 
-func (ob *Ownerbase) get(id database.OwnerID) (database.Owner, error) {
+func (ob *Ownerbase) get(id types.OwnerID) (types.Owner, error) {
 	if ob.Owners.ID[id.String()] == nil {
-		return nil, database.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
 	return ob.Owners.ID[id.String()].Copy(), nil
 }
 
 // FindUserName returns user that has a particular username
-func (ob *Ownerbase) FindUserName(name string) (database.UserI, error) {
+func (ob *Ownerbase) FindUserName(name string) (types.UserI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	if ob.Owners.UserName[name] == nil {
-		return nil, database.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
-	return ob.Owners.UserName[name].Copy().(database.UserI), nil
+	return ob.Owners.UserName[name].Copy().(types.UserI), nil
 }
 
 // FindGroupName returns group that has a particular name
-func (ob *Ownerbase) FindGroupName(name string) (database.GroupI, error) {
+func (ob *Ownerbase) FindGroupName(name string) (types.GroupI, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	if ob.Owners.GroupName[name] == nil {
-		return nil, database.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
-	return ob.Owners.GroupName[name].Copy().(database.GroupI), nil
+	return ob.Owners.GroupName[name].Copy().(types.GroupI), nil
 }
 
 // GetGroups returns groups that are owned by owner and groups the
 // owner is a member of
-func (ob *Ownerbase) GetGroups(id database.OwnerID) (owned []database.GroupI, member []database.GroupI, err error) {
+func (ob *Ownerbase) GetGroups(id types.OwnerID) (owned []types.GroupI, member []types.GroupI, err error) {
 	lock.RLock()
 	defer lock.RUnlock()
 LOOP:
 	for _, grp := range ob.Owners.GroupName {
 		if grp.GetOwner().GetID().Equal(id) {
-			owned = append(owned, grp.Copy().(database.GroupI))
+			owned = append(owned, grp.Copy().(types.GroupI))
 			continue
 		}
 		for _, mem := range grp.GetMembers() {
 			if mem.GetID().Equal(id) {
-				member = append(member, grp.Copy().(database.GroupI))
+				member = append(member, grp.Copy().(types.GroupI))
 				continue LOOP
 			}
 		}
@@ -138,16 +139,16 @@ LOOP:
 }
 
 // Update owner
-func (ob *Ownerbase) Update(o database.Owner) error {
+func (ob *Ownerbase) Update(o types.Owner) error {
 	lock.Lock()
 	defer lock.Unlock()
 	if ob.Owners.ID[o.GetID().String()] == nil {
-		return database.ErrNotFound
+		return errors.ErrNotFound
 	}
 	switch v := o.(type) {
-	case database.UserI:
+	case types.UserI:
 		ob.Owners.UserName[v.GetName()] = v
-	case database.GroupI:
+	case types.GroupI:
 		ob.Owners.GroupName[v.GetName()] = v
 	default:
 		return srverror.Basic(500, "Server Error", "Unrecognized owner type")
@@ -157,15 +158,15 @@ func (ob *Ownerbase) Update(o database.Owner) error {
 }
 
 // GetSpace returns the total amount of filesize owned by owner
-func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
+func (ob *Ownerbase) GetSpace(o types.OwnerID) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	if ob.Owners.ID[o.String()] == nil {
-		return 0, database.ErrNotFound
+		return 0, errors.ErrNotFound
 	}
 	var total int64
 	for _, file := range ob.Files {
-		if file.GetOwner().GetID().Equal(o) {
+		if file != nil && file.GetOwner().GetID().Equal(o) {
 			total += ob.Stores[file.GetID().StoreID.String()].FileSize
 		}
 	}
@@ -173,11 +174,11 @@ func (ob *Ownerbase) GetSpace(o database.OwnerID) (int64, error) {
 }
 
 // GetTotalSpace returns the total file space available to owner
-func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
+func (ob *Ownerbase) GetTotalSpace(o types.OwnerID) (int64, error) {
 	lock.RLock()
 	defer lock.RUnlock()
 	if ob.Owners.ID[o.String()] == nil {
-		return 0, database.ErrNotFound
+		return 0, errors.ErrNotFound
 	}
 	if o.Type == 'u' {
 		return 50 << 20, nil
@@ -186,7 +187,7 @@ func (ob *Ownerbase) GetTotalSpace(o database.OwnerID) (int64, error) {
 }
 
 // GetResetKey generates new password reset key
-func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
+func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
 	if err != nil {
@@ -198,16 +199,16 @@ func (ob *Ownerbase) GetResetKey(id database.OwnerID) (key string, err error) {
 }
 
 // CheckResetKey returns associated ownerid of reset key
-func (ob *Ownerbase) CheckResetKey(keystr string) (id database.OwnerID, err error) {
+func (ob *Ownerbase) CheckResetKey(keystr string) (id types.OwnerID, err error) {
 	id, assigned := ob.Owners.Reset[keystr]
 	if !assigned {
-		return id, database.ErrNotFound
+		return id, errors.ErrNotFound
 	}
 	return
 }
 
 // DeleteResetKey removes resetkey
-func (ob *Ownerbase) DeleteResetKey(id database.OwnerID) error {
+func (ob *Ownerbase) DeleteResetKey(id types.OwnerID) error {
 	for k, v := range ob.Owners.Reset {
 		if v.Equal(id) {
 			delete(ob.Owners.Reset, k)

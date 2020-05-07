@@ -12,6 +12,7 @@ import owner from './owner.module'
 import group from './group.module'
 import preview from './preview.module'
 import error from './error.module'
+import nlp from './nlp.module'
 
 import UserService from '@/service/user'
 import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
@@ -33,7 +34,8 @@ export default new Vuex.Store({
     owner,
     group,
     preview,
-    error
+    error,
+    nlp
   },
   // TODO: Extract all the search functionality into a module!
   state: {
@@ -46,13 +48,15 @@ export default new Vuex.Store({
       return state.appSideType
     },
     loading (s, g) {
-      return g.fileLoading ||
-      g.folderLoading ||
-      g.authLoading ||
-      g.groupLoading ||
-      g.ownerLoading ||
-      g.searchLoading ||
-      s.serverLoading > 0
+      return (
+        g.fileLoading ||
+        g.folderLoading ||
+        g.authLoading ||
+        g.groupLoading ||
+        g.ownerLoading ||
+        g.searchLoading ||
+        s.serverLoading > 0
+      )
     }
   },
 

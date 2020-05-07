@@ -25,7 +25,7 @@ func setupAcronym(t *testing.T) {
 	t.Helper()
 	AttachAcronym(testRouter.PathPrefix("/acronym").Subrouter())
 	cookies = testlogin(t, 0, false)
-	ab := config.DB.Acronym(nil)
+	ab := config.DB.Acronym()
 	for _, acr := range acronymEntries {
 		if err := ab.Put(acr.key, acr.val); err != nil {
 			t.Errorf("Acronym database put error: %s", err)
