@@ -18,6 +18,7 @@ services:
       - KNAXIMINIT
   mongo:
     image: mongo:latest
+    restart: "unless-stopped"
     # Warning !!! port is mapped to host for Testing only!
     ports:
       - "27017:27017"
@@ -28,6 +29,7 @@ services:
       - mongo-cfg:/data/configdb
   tika:
     image: lexpredict/tika-server:latest
+    restart: "unless-stopped"
     # Warning !!! port is mapped to host for Testing only!
     ports:
       - "9998:9998"
@@ -36,6 +38,7 @@ services:
   gotenberg:
     # May need to scale: https://thecodingmachine.github.io/gotenberg/#scalability.strategies.scaling
     image: thecodingmachine/gotenberg:latest # Should version be latest or 6?
+    restart: "unless-stopped"
     # Is port entry needed?
     ports:
       - "3000:3000"
