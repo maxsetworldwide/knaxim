@@ -12,7 +12,7 @@ type ContextKey byte
 const (
 	// PROCESSING is a key for a context value that should either be a buffered channel of struct{} or sync.Locker. These objects are used to limit the number of active processing threads. If unset processing run as soon as called.
 	PROCESSING ContextKey = 'p'
-	// TIMEOOUT is a key for a context value that is expected to be a time.Duration. It is the time allotted to the processing of a file, if nil no time limit
+	// TIMEOUT is a key for a context value that is expected to be a time.Duration. It is the time allotted to the processing of a file, if nil no time limit
 	TIMEOUT       ContextKey = 't'
 	timeoutCancel ContextKey = 'c'
 )
