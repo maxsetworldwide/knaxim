@@ -84,6 +84,7 @@ type Configuration struct {
 	GotenPath       string          `json:"gotenpath"`
 	FileLimit       int64           `json:"filelimit"`
 	FreeSpace       int             `json:"total_free_space"`
+	MaxFileCount    int
 	AdminKey        string
 	GuestUser       *Guest
 	SetupTimeout    Duration
