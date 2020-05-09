@@ -67,28 +67,29 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 
 // Configuration struct that is populated by the Configuration file
 type Configuration struct {
-	Address         string
-	StaticPath      string          `json:"static"`
-	IndexPath       string          `json:"index"`
-	Server          *http.Server    `json:"server"`
-	Cert            *Ssl            `json:"cert"`
-	GracefulTimeout Duration        `json:"close_time"`
-	BasicTimeout    Duration        `json:"basic_timeout"`
-	FileTimeoutRate int64           `json:"file_timeout_rate"` //nanoseconds per 1 KB
-	MaxFileTimeout  Duration        `json:"max_file_timeout"`
-	MinFileTimeout  Duration        `json:"min_file_timeout"`
-	DatabaseType    string          `json:"db_type"`
-	Database        json.RawMessage `json:"db"`
-	DatabaseReset   bool            `json:"db_clear"`
-	Tika            Tika            `json:"tika"`
-	GotenPath       string          `json:"gotenpath"`
-	FileLimit       int64           `json:"filelimit"`
-	FreeSpace       int             `json:"total_free_space"`
-	MaxFileCount    int
-	AdminKey        string
-	GuestUser       *Guest
-	SetupTimeout    Duration
-	UserTimeouts    struct {
+	Address              string
+	StaticPath           string       `json:"static"`
+	IndexPath            string       `json:"index"`
+	Server               *http.Server `json:"server"`
+	Cert                 *Ssl         `json:"cert"`
+	GracefulTimeout      Duration     `json:"close_time"`
+	BasicTimeout         Duration     `json:"basic_timeout"`
+	FileTimeoutRate      int64        `json:"file_timeout_rate"` //nanoseconds per 1 KB
+	MaxFileTimeout       Duration     `json:"max_file_timeout"`
+	MinFileTimeout       Duration     `json:"min_file_timeout"`
+	ActiveFileProcessing int
+	DatabaseType         string          `json:"db_type"`
+	Database             json.RawMessage `json:"db"`
+	DatabaseReset        bool            `json:"db_clear"`
+	Tika                 Tika            `json:"tika"`
+	GotenPath            string          `json:"gotenpath"`
+	FileLimit            int64           `json:"filelimit"`
+	FreeSpace            int             `json:"total_free_space"`
+	MaxFileCount         int
+	AdminKey             string
+	GuestUser            *Guest
+	SetupTimeout         Duration
+	UserTimeouts         struct {
 		Inactivity Duration
 		Total      Duration
 	}

@@ -26,6 +26,7 @@ func startProcessing(ctx context.Context) context.Context {
 			pl.Lock()
 		}
 	}
+	// add timeout to context after processing can begin
 	if timeout := ctx.Value(TIMEOUT); timeout != nil {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, timeout.(time.Duration))

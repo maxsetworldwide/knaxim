@@ -82,5 +82,8 @@ func ParseConfig(path string) error {
 	} else {
 		return errors.New("unrecognized tika config type")
 	}
+	if V.ActiveFileProcessing > 0 {
+		resources = make(chan struct{}, V.ActiveFileProcessing)
+	}
 	return nil
 }

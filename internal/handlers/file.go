@@ -38,11 +38,9 @@ func AttachFile(r *mux.Router) {
 		r.Use(srvjson.JSONResponse)
 		r.HandleFunc("/webpage", webPageUpload).Methods("PUT")
 		r.HandleFunc("", createFile).Methods("PUT")
-		//r.HandleFunc("/copy", copyFile).Methods("PUT")
 		r.HandleFunc("/{id}", fileInfo).Methods("GET")
 		r.HandleFunc("/{id}/slice/{start}/{end}", fileContent).Methods("GET")
 		r.HandleFunc("/{id}/search/{start}/{end}", searchFile).Methods("GET")
-		//r.HandleFunc("/{id}/refresh", refreshWebPage).Methods("POST")
 		r.HandleFunc("/{id}", deleteRecord).Methods("DELETE")
 	}
 
@@ -107,8 +105,9 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	if fs.Perr != nil {
-		pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+		pctx := context.WithValue(context.Background(), decode.TIMEOUT, timescale*5)
+		pctx = context.WithValue(pctx, decode.PROCESSING, config.GetResourceTracker())
+		go decode.Read(pctx, nil, fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
 		db, err := config.DB.Connect(fctx)
@@ -250,8 +249,9 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	if fs.Perr != nil {
-		pctx, cncl := context.WithTimeout(context.Background(), timescale*5)
-		go decode.Read(pctx, cncl, fs, config.DB, config.T.Path, config.V.GotenPath)
+		pctx := context.WithValue(context.Background(), decode.TIMEOUT, timescale*5)
+		pctx = context.WithValue(pctx, decode.PROCESSING, config.GetResourceTracker())
+		go decode.Read(pctx, nil, fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
 		db, err := config.DB.Connect(fctx)
