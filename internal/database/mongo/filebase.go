@@ -193,6 +193,29 @@ func (fb *Filebase) GetPermKey(uid types.OwnerID, pkey string) ([]types.FileI, e
 	return fb.decodefiles(cursor)
 }
 
+// Count returns the total number of files accessible by the ownerid, the optional pkeys are permission values to check in addition to ownership
+func (fb *Filebase) Count(uid types.OwnerID, pkeys ...string) (int64, error) {
+	var or bson.A
+	or = append(or, bson.M{
+		"own": uid,
+	})
+	for _, k := range pkeys {
+		or = append(or, bson.M{
+			"perm." + k: uid,
+		})
+	}
+	count, err := fb.client.Database(fb.DBName).Collection(fb.CollNames["file"]).CountDocuments(fb.ctx, bson.M{
+		"$or": or,
+	})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return 0, nil
+		}
+		return -1, srverror.New(err, 500, "Database Error F10", "unable to count documents")
+	}
+	return count, nil
+}
+
 // MatchStore returns all files where an owner either owns the file or has a particular permission,
 // and the file matches one of the provided StoreIDs
 func (fb *Filebase) MatchStore(oid types.OwnerID, sid []types.StoreID, pkeys ...string) ([]types.FileI, error) {
