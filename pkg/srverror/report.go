@@ -11,7 +11,7 @@ import (
 // report.go contains behavior for logging server errors by sending an email to
 // the devs and by saving them to a file.
 
-// Returns a tab-indented human readable message containing information about
+// LogString Returns a tab-indented human readable message containing information about
 // the given error, request, and response
 func LogString(err error, req *http.Request, res http.ResponseWriter) string {
 	var status string

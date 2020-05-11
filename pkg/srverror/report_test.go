@@ -13,7 +13,7 @@ import (
 //TODO vanilla error test
 func TestReport(t *testing.T) {
 	t.Run("LogString", func(t *testing.T) {
-		testUrl := "/test/path"
+		testURL := "/test/path"
 		testCookies := []http.Cookie{
 			http.Cookie{
 				Name:  "testCookieName",
@@ -28,7 +28,7 @@ func TestReport(t *testing.T) {
 		testMethod := "POST"
 		testBody := "test body for purposes of giving content length to request"
 		testContentLength := len(testBody)
-		testReq, _ := http.NewRequest(testMethod, testUrl, strings.NewReader(testBody))
+		testReq, _ := http.NewRequest(testMethod, testURL, strings.NewReader(testBody))
 		var expectedCookieContent []string
 		for _, c := range testCookies {
 			testReq.AddCookie(&c)
@@ -46,7 +46,7 @@ func TestReport(t *testing.T) {
 
 		expectedContent := []string{
 			timestamp,
-			testUrl,
+			testURL,
 			testMethod,
 			strconv.Itoa(testError.Status()),
 			strconv.Itoa(testContentLength),
