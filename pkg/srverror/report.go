@@ -121,6 +121,8 @@ func writeIndent(builder *strings.Builder, num int) {
 	}
 }
 
+// WriteToFile writes the given message to the log directory specified by logPath.
+// The directory will have the structure of logPath/YYYY/MM/DD.log
 func WriteToFile(msg string) (err error) {
 	err = nil
 	currTime := time.Now()
