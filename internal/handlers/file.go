@@ -3,12 +3,14 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
@@ -50,14 +52,21 @@ func AttachFile(r *mux.Router) {
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
 
+var filecreationlock = new(sync.Mutex)
+
 func createFile(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	var owner types.Owner
+	var maxfiles int64
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(types.Owner)
+		maxfiles = owner.MaxFiles()
 	} else {
 		owner = r.Context().Value(USER).(types.Owner)
+		if maxfiles = owner.MaxFiles(); maxfiles == 0 {
+			maxfiles = config.V.MaxFileCount
+		}
 	}
 	freader, fheader, err := r.FormFile("file")
 	if err != nil {
@@ -87,10 +96,21 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Unable to parse filename"))
 	}
-	fs, err := process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
-	if err != nil {
-		panic(err)
-	}
+	var fs *types.FileStore
+	// Closure used to ensure lock is garunteed to unlock
+	func() {
+		filecreationlock.Lock()
+		defer filecreationlock.Unlock()
+		if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
+			panic(err)
+		} else if maxfiles > -1 && count >= maxfiles {
+			panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
+		}
+		fs, err = process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
+		if err != nil {
+			panic(err)
+		}
+	}()
 	nameErrCh := make(chan error, 1)
 	go func() {
 		var filetags []tag.FileTag

@@ -49,5 +49,6 @@
   "UserTimeouts": {
     "Inactivity": "24h",
     "Total": "24h"
-  }
+  },
+	"maxfilecount": 30
 }

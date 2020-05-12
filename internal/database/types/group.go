@@ -21,6 +21,7 @@ type Group struct {
 	Permission
 	ID   OwnerID `json:"id" bson:"id"`
 	Name string  `json:"name" bson:"name"`
+	Max  int64   `json:"max,omitempty" bson:"max,omitempty"`
 }
 
 // NewGroup build Group with a particular name and owner
@@ -37,6 +38,11 @@ func NewGroup(name string, o Owner) *Group {
 	ng.ID = nid
 
 	return ng
+}
+
+// MaxFiles returns the maximum number of files that an owner can own
+func (g *Group) MaxFiles() int64 {
+	return g.Max
 }
 
 // GetID implements GroupI
