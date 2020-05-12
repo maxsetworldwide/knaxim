@@ -52,7 +52,13 @@ func AttachFile(r *mux.Router) {
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
 
-var filecreationlock = new(sync.Mutex)
+var creationlocks = sync.Map{}
+
+type threadTracker struct {
+	L     chan bool
+	Count uint
+	CL    *sync.Mutex
+}
 
 func createFile(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
@@ -98,19 +104,47 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	}
 	var fs *types.FileStore
 	// Closure used to ensure lock is garunteed to unlock
-	func() {
-		filecreationlock.Lock()
-		defer filecreationlock.Unlock()
-		if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
-			panic(err)
-		} else if maxfiles > -1 && count >= maxfiles {
-			panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
-		}
-		fs, err = process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
-		if err != nil {
-			panic(err)
-		}
-	}()
+	for restart := true; restart; {
+		restart = func() bool {
+			iTracker, oldTracker := creationlocks.LoadOrStore(owner.GetID().String(), &threadTracker{
+				L:     make(chan bool, 1),
+				Count: 0,
+				CL:    new(sync.Mutex),
+			})
+			tracker := iTracker.(*threadTracker)
+			if !oldTracker {
+				tracker.L <- false
+			}
+			tracker.CL.Lock()
+			tracker.Count++
+			tracker.CL.Unlock()
+			if <-tracker.L {
+				tracker.L <- true
+				return true
+			}
+			defer func() {
+				tracker.CL.Lock()
+				tracker.Count--
+				if tracker.Count < 1 {
+					creationlocks.Delete(owner.GetID().String())
+					tracker.L <- true
+				} else {
+					tracker.L <- false
+				}
+				tracker.CL.Unlock()
+			}()
+			if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
+				panic(err)
+			} else if maxfiles > -1 && count >= maxfiles {
+				panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
+			}
+			fs, err = process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
+			if err != nil {
+				panic(err)
+			}
+			return false
+		}()
+	}
 	nameErrCh := make(chan error, 1)
 	go func() {
 		var filetags []tag.FileTag
