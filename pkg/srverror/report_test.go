@@ -1,9 +1,13 @@
 package srverror
 
 import (
+	"bytes"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -64,5 +68,43 @@ func TestReport(t *testing.T) {
 				t.Errorf("Expected log string to contain '%s'", expect)
 			}
 		}
+	})
+	t.Run("File Write", func(t *testing.T) {
+		testLogDir := "./testLogDir"
+		logPath = testLogDir
+		currTime := time.Now()
+		testLogPath := filepath.Join(testLogDir, currTime.Format("2006"), currTime.Format("01"), currTime.Format("02")+".log")
+		testLogContent := "testLogMessage\n"
+		defer func() {
+			if err := os.RemoveAll(testLogDir); err != nil {
+				t.Errorf(err.Error())
+			}
+		}()
+		err := WriteToFile(testLogContent)
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
+		buf, err := ioutil.ReadFile(testLogPath)
+		if err != nil {
+			t.Fatalf("Unable to open output file: %s", err.Error())
+		}
+		if bytes.Compare(buf, []byte(testLogContent)) != 0 {
+			t.Fatalf("Unexpected output. Expected:\n%s Received:\n%s", testLogContent, string(buf))
+		}
+		t.Run("File Write Append", func(t *testing.T) {
+			appendedString := "testLogMessagePartTwo\n"
+			expectedString := testLogContent + appendedString
+			err := WriteToFile(appendedString)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+			buf, err = ioutil.ReadFile(testLogPath)
+			if err != nil {
+				t.Fatalf("Unable to open output file: %s", err.Error())
+			}
+			if bytes.Compare(buf, []byte(expectedString)) != 0 {
+				t.Fatalf("Unexpected output. Expected:\n%s Received:\n%s", expectedString, string(buf))
+			}
+		})
 	})
 }
