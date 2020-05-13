@@ -92,6 +92,9 @@ export default {
         .catch((res) => {
           this.fail = true
         })
+        .finally(() => {
+          this.password = ''
+        })
     },
     register () {
       this.$emit('register')
