@@ -9,7 +9,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/config"
 )
 
-var to = flag.String("to", "devon@maxset.org", "address to send test email")
+var to = flag.String("to", "", "address to send test email")
 
 func init() {
 	config.V.Email.From = "noreply@maxset.org"
@@ -30,9 +30,22 @@ func buildTo(t *string) []string {
 }
 
 func TestSend(t *testing.T) {
-	t.Log("sending to: ", to)
-	err := SendResetEmail(buildTo(to), "id:2020-02-13-23:56:51:262t", "knaxim.com", "")
-	if err != nil {
-		t.Fatal("unable to send email: ", err)
+	if len(*to) == 0 {
+		t.Fatalf("Test error: please specify an email address for which to send a test email.")
 	}
+	t.Log("sending to: ", to)
+	t.Run("Reset", func(t *testing.T) {
+		err := SendResetEmail(buildTo(to), "id:2020-02-13-23:56:51:262t", "knaxim.com", "")
+		if err != nil {
+			t.Fatal("unable to send email: ", err)
+		}
+	})
+	t.Run("Error", func(t *testing.T) {
+		emailMsg := "this is a test email error message"
+		config.V.ErrorEmail = *to
+		err := SendErrorEmail(emailMsg)
+		if err != nil {
+			t.Fatal("unable to send email: ", err)
+		}
+	})
 }

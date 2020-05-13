@@ -91,5 +91,6 @@ type Configuration struct {
 		Inactivity Duration
 		Total      Duration
 	}
-	Email SMTP
+	Email      SMTP
+	ErrorEmail string `json:"error_email"`
 }
