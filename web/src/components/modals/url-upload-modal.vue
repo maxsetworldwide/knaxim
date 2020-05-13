@@ -72,6 +72,7 @@ export default {
     },
     onClose () {
       this.$emit('close')
+      this.input = ''
     },
     show () {
       this.$refs['modal'].show()
