@@ -191,14 +191,14 @@ func completeUserInfo(out http.ResponseWriter, r *http.Request) {
 	if owned, members, err := ownerbase.GetGroups(user.GetID()); err == nil {
 		for _, o := range owned {
 			if err = info.addGroup(o, user, ownerbase, filebase, r.Context().Value(types.TAG).(database.Tagbase)); err != nil {
-				util.VerboseRequest(r, "error adding group")
+				util.VerboseRequest(r, "error adding owend group: %s(%s)", o.GetName(), o.GetID())
 				panic(err)
 			}
 			info.User.Groups.Own = append(info.User.Groups.Own, o.GetID().String())
 		}
 		for _, m := range members {
 			if err = info.addGroup(m, user, ownerbase, filebase, r.Context().Value(types.TAG).(database.Tagbase)); err != nil {
-				util.VerboseRequest(r, "error adding member group")
+				util.VerboseRequest(r, "error adding member group: %s(%s)", m.GetName(), m.GetID())
 				panic(err)
 			}
 			info.User.Groups.Member = append(info.User.Groups.Member, m.GetID().String())
