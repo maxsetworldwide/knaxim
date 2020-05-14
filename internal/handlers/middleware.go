@@ -77,7 +77,7 @@ func Recovery(next http.Handler) http.Handler {
 						logMsg = srverror.LogString(v, r, w)
 					default:
 						util.VerboseRequest(r, "Panic: %v", v)
-						logMsg = srverror.LogString(errors.New(fmt.Sprintf("%v", v)), r, w)
+						logMsg = srverror.LogString(fmt.Errorf("%v", v), r, w)
 					}
 					if *debugflag {
 						dbug.PrintStack()
