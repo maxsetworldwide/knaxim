@@ -50,6 +50,7 @@ type Filebase interface {
 	Remove(r types.FileID) error
 	GetOwned(uid types.OwnerID) ([]types.FileI, error)
 	GetPermKey(uid types.OwnerID, pkey string) ([]types.FileI, error) // does not include owned records
+	Count(uid types.OwnerID, pkeys ...string) (int64, error)
 	MatchStore(types.OwnerID, []types.StoreID, ...string) ([]types.FileI, error)
 }
 

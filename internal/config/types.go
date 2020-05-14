@@ -83,6 +83,7 @@ type Configuration struct {
 	Tika            Tika            `json:"tika"`
 	GotenPath       string          `json:"gotenpath"`
 	FileLimit       int64           `json:"filelimit"`
+	MaxFileCount    int64           `json:"maxfilecount"`
 	FreeSpace       int             `json:"total_free_space"`
 	AdminKey        string
 	GuestUser       *Guest
