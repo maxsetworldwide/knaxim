@@ -72,6 +72,7 @@ export default {
     },
     onClose () {
       this.$emit('close')
+      this.input = ''
     },
     show () {
       this.$refs['modal'].show()
@@ -85,7 +86,9 @@ export default {
   },
   computed: {
     validInput () {
-      return this.input.indexOf('http') === 0 && this.input.indexOf('.') > 0
+      return this.input.length === 0
+        ? null
+        : this.input.indexOf('http') === 0 && this.input.indexOf('.') > 0
     },
     ...mapGetters({
       loading: 'fileLoading'
