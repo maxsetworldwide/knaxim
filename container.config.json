@@ -51,5 +51,6 @@
 		}
 	},
 	"error_email": "",
+	"log_path": "./log",
 	"maxfilecount": 30
 }

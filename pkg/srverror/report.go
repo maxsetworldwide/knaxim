@@ -1,6 +1,7 @@
 package srverror
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -21,7 +22,8 @@ const (
 	indentString   = "\t"
 )
 
-var logPath = "./log"
+// LogPath is the directory to store all logs. This should be set externally
+var LogPath = ""
 
 // LogString Returns a tab-indented human readable message containing information about
 // the given error, request, and response
@@ -121,18 +123,20 @@ func writeIndent(builder *strings.Builder, num int) {
 	}
 }
 
-// WriteToFile writes the given message to the log directory specified by logPath.
-// The directory will have the structure of logPath/YYYY/MM/DD.log
+// WriteToFile writes the given message to the log directory specified by LogPath.
+// The directory will have the structure of LogPath/YYYY/MM/DD.log
 func WriteToFile(msg string) (err error) {
-	err = nil
+	if len(LogPath) == 0 {
+		return errors.New("no log path specified")
+	}
 	currTime := time.Now()
 
 	year := currTime.Format(yearFormat)
 	month := currTime.Format(monthFormat)
 	day := currTime.Format(dayFormat)
 
-	logDirPath := filepath.Join(logPath, year, month)
-	completeLogPath := filepath.Join(logPath, year, month, day+".log")
+	logDirPath := filepath.Join(LogPath, year, month)
+	completeLogPath := filepath.Join(LogPath, year, month, day+".log")
 	err = os.MkdirAll(logDirPath, os.ModePerm)
 	if err != nil {
 		return

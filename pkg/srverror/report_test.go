@@ -71,7 +71,7 @@ func TestReport(t *testing.T) {
 	})
 	t.Run("File Write", func(t *testing.T) {
 		testLogDir := "./testLogDir"
-		logPath = testLogDir
+		LogPath = testLogDir
 		currTime := time.Now()
 		testLogPath := filepath.Join(testLogDir, currTime.Format("2006"), currTime.Format("01"), currTime.Format("02")+".log")
 		testLogContent := "testLogMessage\n"
