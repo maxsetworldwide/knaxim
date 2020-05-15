@@ -1,4 +1,5 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { flushPromises } from './utils'
 import PdfTextLayer from '@/components/pdf/pdf-text-layer'
 import Vuex from 'vuex'
 
@@ -84,15 +85,6 @@ const shallowMountFa = (options = { props: {}, methods: {}, computed: {} }) => {
   })
 }
 
-/*
- * was using wrapper.vm.$nextTick to await DOM changes, but required two+ to
- * work, so using flushQueue() to make this work despite number of ticks
- * required
- */
-function flushQueue () {
-  return new Promise(resolve => setTimeout(resolve, 0))
-}
-
 describe('PdfTextLayer', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
@@ -100,33 +92,33 @@ describe('PdfTextLayer', () => {
   })
   it('emits rendered', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     expect(wrapper.emitted().rendered).toBeTruthy()
   })
   it('renders only once on load', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     expect(wrapper.emitted().rendered.length).toBe(1)
   })
   it('renders provided text', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     expect(wrapper.html()).toContain(testWord)
   })
   it('highlights the correct word', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     const expectedString = `<span class="${highlightClassName}">${highlightString}</span>`
     expect(wrapper.html()).toContain(expectedString)
   })
   it('emits matches', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     expect(wrapper.emitted().matches).toBeTruthy()
   })
   it('returns correct matches', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     const matches = wrapper.emitted().matches[0][0].matches
     const sentence = matches[0].sentence.text
     expect(matches.length).toEqual(1)
@@ -134,10 +126,10 @@ describe('PdfTextLayer', () => {
   })
   it('re-renders text when requested, and only once', async () => {
     const wrapper = shallowMountFa()
-    await flushQueue()
+    await flushPromises()
     const numRenders = wrapper.emitted().rendered.length
     wrapper.vm.refresh()
-    await flushQueue()
+    await flushPromises()
     expect(wrapper.emitted().rendered.length).toEqual(numRenders + 1)
   })
 })
