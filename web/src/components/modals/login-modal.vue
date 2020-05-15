@@ -10,25 +10,36 @@ The methods show() and hide() are intended to be public methods for the parent.
 -->
 <template>
   <b-modal
-  :id="id"
-  ref="modal"
-  :no-close-on-backdrop="loading"
-  :no-close-on-esc="loading"
-  @hidden="onClose"
-  centered
-  hide-footer
-  hide-header
-  content-class="modal-style">
-    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison"/>
+    :id="id"
+    ref="modal"
+    :no-close-on-backdrop="loading"
+    :no-close-on-esc="loading"
+    @hidden="onClose"
+    centered
+    hide-footer
+    hide-header
+    content-class="modal-style"
+  >
+    <b-img src="@/assets/CloudEdison.png" alt="Cloud Edison" />
     <b-form @submit.prevent="login">
       <b-form-group :state="!fail" :invalid-feedback="feedback">
-        <b-form-input v-model="username" placeholder="Username" autofocus ref="userField"/>
-        <b-form-input v-model="password" placeholder="Password" type="password" ref="passField"/>
-        <br>
+        <b-form-input
+          v-model="username"
+          placeholder="Username"
+          autofocus
+          ref="userField"
+        />
+        <b-form-input
+          v-model="password"
+          placeholder="Password"
+          type="password"
+          ref="passField"
+        />
+        <br />
         <b-link class="forgot" @click.prevent="request">Forgot Password</b-link>
       </b-form-group>
       <div v-if="loading">
-        <b-spinner class="m-3"/>
+        <b-spinner class="m-3" />
       </div>
       <b-form-group v-else>
         <b-button type="submit" class="shadow-sm">Login</b-button>
@@ -72,13 +83,18 @@ export default {
   },
   methods: {
     login () {
-      this.$store.dispatch(LOGIN, { login: this.username, password: this.password }
-      ).then((res) => {
-        this.$emit('login')
-        this.$refs['modal'].hide()
-      }).catch((res) => {
-        this.fail = true
-      })
+      this.$store
+        .dispatch(LOGIN, { login: this.username, password: this.password })
+        .then((res) => {
+          this.$emit('login')
+          this.$refs['modal'].hide()
+        })
+        .catch((res) => {
+          this.fail = true
+        })
+        .finally(() => {
+          this.password = ''
+        })
     },
     register () {
       this.$emit('register')
@@ -115,7 +131,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-
 img {
   width: 50%;
 }
@@ -146,5 +161,4 @@ button {
   margin-top: 0;
   margin-bottom: 10px;
 }
-
 </style>

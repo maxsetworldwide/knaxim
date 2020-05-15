@@ -50,5 +50,6 @@
     "Inactivity": "24h",
     "Total": "24h"
   },
-  "error_email": "error@maxset.org"
+	"error_email": "error@maxset.org",
+	"maxfilecount": 30
 }

@@ -3,12 +3,14 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/config"
@@ -50,14 +52,27 @@ func AttachFile(r *mux.Router) {
 
 var csvextension = regexp.MustCompile("[.](([ct]sv)|(xlsx?))$")
 
+var creationlocks = sync.Map{}
+
+type threadTracker struct {
+	L     chan bool
+	Count uint
+	CL    *sync.Mutex
+}
+
 func createFile(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	var owner types.Owner
+	var maxfiles int64
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(types.Owner)
+		maxfiles = owner.MaxFiles()
 	} else {
 		owner = r.Context().Value(USER).(types.Owner)
+		if maxfiles = owner.MaxFiles(); maxfiles == 0 {
+			maxfiles = config.V.MaxFileCount
+		}
 	}
 	freader, fheader, err := r.FormFile("file")
 	if err != nil {
@@ -87,9 +102,48 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(srverror.New(err, 400, "Unable to parse filename"))
 	}
-	fs, err := process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
-	if err != nil {
-		panic(err)
+	var fs *types.FileStore
+	// Closure used to ensure lock is garunteed to unlock
+	for restart := true; restart; {
+		restart = func() bool {
+			iTracker, oldTracker := creationlocks.LoadOrStore(owner.GetID().String(), &threadTracker{
+				L:     make(chan bool, 1),
+				Count: 0,
+				CL:    new(sync.Mutex),
+			})
+			tracker := iTracker.(*threadTracker)
+			if !oldTracker {
+				tracker.L <- false
+			}
+			tracker.CL.Lock()
+			tracker.Count++
+			tracker.CL.Unlock()
+			if <-tracker.L {
+				tracker.L <- true
+				return true
+			}
+			defer func() {
+				tracker.CL.Lock()
+				tracker.Count--
+				if tracker.Count < 1 {
+					creationlocks.Delete(owner.GetID().String())
+					tracker.L <- true
+				} else {
+					tracker.L <- false
+				}
+				tracker.CL.Unlock()
+			}()
+			if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
+				panic(err)
+			} else if maxfiles > -1 && count >= maxfiles {
+				panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
+			}
+			fs, err = process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
+			if err != nil {
+				panic(err)
+			}
+			return false
+		}()
 	}
 	nameErrCh := make(chan error, 1)
 	go func() {
@@ -144,10 +198,15 @@ var getter http.Client
 func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 	var owner types.Owner
+	var maxFiles int64
 	if group := r.Context().Value(GROUP); group != nil {
 		owner = group.(types.Owner)
+		maxFiles = owner.MaxFiles()
 	} else {
 		owner = r.Context().Value(USER).(types.Owner)
+		if maxFiles = owner.MaxFiles(); maxFiles == 0 {
+			maxFiles = config.V.MaxFileCount
+		}
 	}
 	URL, err := url.Parse(r.FormValue("url"))
 	if err != nil {
@@ -167,72 +226,109 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	var file types.FileI
 	var timescale time.Duration
 	var fctx context.Context
-	if process.MapContentType(resp.Header.Get("Content-Type")) == process.URL {
+	for restart := true; restart; {
+		restart = func() bool {
+			iTracker, oldTracker := creationlocks.LoadOrStore(owner.GetID().String(), &threadTracker{
+				L:     make(chan bool, 1),
+				Count: 0,
+				CL:    new(sync.Mutex),
+			})
+			tracker := iTracker.(*threadTracker)
+			if !oldTracker {
+				tracker.L <- false
+			}
+			tracker.CL.Lock()
+			tracker.Count++
+			tracker.CL.Unlock()
+			if <-tracker.L {
+				tracker.L <- true
+				return true
+			}
+			defer func() {
+				tracker.CL.Lock()
+				tracker.Count--
+				if tracker.Count < 1 {
+					creationlocks.Delete(owner.GetID().String())
+					tracker.L <- true
+				} else {
+					tracker.L <- false
+				}
+				tracker.CL.Unlock()
+			}()
+			if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
+				panic(err)
+			} else if maxFiles > -1 && count >= maxFiles {
+				panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxFiles)))
+			}
+			if process.MapContentType(resp.Header.Get("Content-Type")) == process.URL {
 
-		res, err := process.NewFileConverter(config.V.GotenPath).ConvertURL(URL.String())
-		if err != nil {
-			panic(srverror.New(err, 400, "Unable to Get Address", "gotenburg", r.FormValue("url"), URL.String()))
-		}
+				res, err := process.NewFileConverter(config.V.GotenPath).ConvertURL(URL.String())
+				if err != nil {
+					panic(srverror.New(err, 400, "Unable to Get Address", "gotenburg", r.FormValue("url"), URL.String()))
+				}
 
-		if int64(len(res)) > config.V.FileLimit {
-			panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
-		}
+				if int64(len(res)) > config.V.FileLimit {
+					panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
+				}
 
-		timescale = time.Duration(int64(len(res)/1024) * config.V.FileTimeoutRate)
-		if timescale > config.V.MaxFileTimeout.Duration {
-			timescale = config.V.MaxFileTimeout.Duration
-		}
-		if timescale < config.V.MinFileTimeout.Duration {
-			timescale = config.V.MinFileTimeout.Duration
-		}
+				timescale = time.Duration(int64(len(res)/1024) * config.V.FileTimeoutRate)
+				if timescale > config.V.MaxFileTimeout.Duration {
+					timescale = config.V.MaxFileTimeout.Duration
+				}
+				if timescale < config.V.MinFileTimeout.Duration {
+					timescale = config.V.MinFileTimeout.Duration
+				}
 
-		var cancel context.CancelFunc
-		fctx, cancel = context.WithTimeout(context.Background(), timescale)
-		defer cancel()
-		file = &types.WebFile{
-			File: types.File{
-				Permission: types.Permission{
-					Own: owner,
-				},
-				Name: URL.String(),
-				Date: types.FileTime{Upload: time.Now()},
-			},
-			URL: URL.String(),
-		}
-		fs, err = process.InjestFile(fctx, file, "application/pdf", bytes.NewReader(res), config.DB)
-		if err != nil {
-			panic(err)
-		}
-	} else {
-		if resp.ContentLength > config.V.FileLimit {
-			panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
-		}
+				var cancel context.CancelFunc
+				fctx, cancel = context.WithTimeout(context.Background(), timescale)
+				defer cancel()
+				file = &types.WebFile{
+					File: types.File{
+						Permission: types.Permission{
+							Own: owner,
+						},
+						Name: URL.String(),
+						Date: types.FileTime{Upload: time.Now()},
+					},
+					URL: URL.String(),
+				}
+				fs, err = process.InjestFile(fctx, file, "application/pdf", bytes.NewReader(res), config.DB)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				if resp.ContentLength > config.V.FileLimit {
+					panic(srverror.Basic(460, "File at URL Exceeds File Limit", r.FormValue("url"), URL.String()))
+				}
 
-		timescale = time.Duration((resp.ContentLength / 1024) * config.V.FileTimeoutRate)
-		if timescale > config.V.MaxFileTimeout.Duration {
-			timescale = config.V.MaxFileTimeout.Duration
-		}
-		if timescale < config.V.MinFileTimeout.Duration {
-			timescale = config.V.MinFileTimeout.Duration
-		}
+				timescale = time.Duration((resp.ContentLength / 1024) * config.V.FileTimeoutRate)
+				if timescale > config.V.MaxFileTimeout.Duration {
+					timescale = config.V.MaxFileTimeout.Duration
+				}
+				if timescale < config.V.MinFileTimeout.Duration {
+					timescale = config.V.MinFileTimeout.Duration
+				}
 
-		var cancel context.CancelFunc
-		fctx, cancel = context.WithTimeout(context.Background(), timescale)
-		defer cancel()
-		file = &types.WebFile{
-			File: types.File{
-				Permission: types.Permission{
-					Own: owner,
-				},
-				Name: URL.String(),
-				Date: types.FileTime{Upload: time.Now()},
-			},
-			URL: URL.String(),
-		}
-		fs, err = process.InjestFile(fctx, file, resp.Header.Get("Content-Type"), resp.Body, config.DB)
-		if err != nil {
-			panic(err)
-		}
+				var cancel context.CancelFunc
+				fctx, cancel = context.WithTimeout(context.Background(), timescale)
+				defer cancel()
+				file = &types.WebFile{
+					File: types.File{
+						Permission: types.Permission{
+							Own: owner,
+						},
+						Name: URL.String(),
+						Date: types.FileTime{Upload: time.Now()},
+					},
+					URL: URL.String(),
+				}
+				fs, err = process.InjestFile(fctx, file, resp.Header.Get("Content-Type"), resp.Body, config.DB)
+				if err != nil {
+					panic(err)
+				}
+			}
+			return false
+		}()
 	}
 	nameErrCh := make(chan error, 1)
 	go func() {

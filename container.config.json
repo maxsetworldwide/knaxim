@@ -50,5 +50,6 @@
 			"Host": "sub5.mail.dreamhost.com"
 		}
 	},
-  "error_email": ""
+	"error_email": "",
+	"maxfilecount": 30
 }

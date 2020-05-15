@@ -207,6 +207,7 @@ func TestMain(m *testing.M) {
 	config.V.UserTimeouts.Total = configTimeout
 	config.V.MinFileTimeout = configTimeout
 	config.V.MaxFileTimeout = configTimeout
+	config.V.MaxFileCount = 30
 
 	status := m.Run()
 	if status == 0 {
