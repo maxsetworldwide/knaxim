@@ -14,6 +14,14 @@ import (
 	"time"
 )
 
+/*
+ *  This test will write to the file system in the current directory. It will
+ *  create a log folder specified below, then remove it. A partial UUID has been
+ *  added to the directory name to help ensure that no unnecessary deletions are
+ *  done.
+ */
+var testLogDir = "./testLogDir13d8bb899d9a"
+
 func TestReport(t *testing.T) {
 	t.Run("LogString", func(t *testing.T) {
 		testURL := "/test/path"
@@ -69,7 +77,6 @@ func TestReport(t *testing.T) {
 		}
 	})
 	t.Run("File Write", func(t *testing.T) {
-		testLogDir := "./testLogDir"
 		LogPath = testLogDir
 		currTime := time.Now()
 		testLogPath := filepath.Join(testLogDir, currTime.Format("2006"), currTime.Format("01"), currTime.Format("02")+".log")
