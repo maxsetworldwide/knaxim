@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-//TODO vanilla error test
 func TestReport(t *testing.T) {
 	t.Run("LogString", func(t *testing.T) {
 		testURL := "/test/path"
