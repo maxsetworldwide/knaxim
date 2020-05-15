@@ -52,7 +52,7 @@ This is an automated email from the CloudEdison server regarding the occurrence 
 // If no email address has been set, an error will be returned.
 func SendErrorEmail(msg string) error {
 	if len(config.V.ErrorEmail) == 0 {
-		return errors.New("no error email address has been set")
+		return errors.New("no error email address specified")
 	}
 	msgstr := fmt.Sprintf(errorEmail, config.V.ErrorEmail, config.V.Email.From, msg)
 	return sendEmail(strings.Split(config.V.ErrorEmail, ","), []byte(msgstr))
