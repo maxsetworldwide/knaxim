@@ -116,20 +116,22 @@ func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (oid types.OwnerID, 
 		}
 	}()
 	var out *types.OwnerID
-	cname := mapIDtoCollection(id, ob.Database)
-	result := ob.client.Database(ob.DBName).Collection(cname).FindOne(
-		ob.ctx,
-		bson.M{
-			"name": name,
-		},
-	)
-	if err := result.Err(); err != nil {
-		if err != mongo.ErrNoDocuments {
-			return types.OwnerID{}, srverror.New(err, 500, "Database Error U1.2", "unable to confirm name not taken")
+	for _, cname := range []string{ob.CollNames["user"], ob.CollNames["group"]} {
+		result := ob.client.Database(ob.DBName).Collection(cname).FindOne(
+			ob.ctx,
+			bson.M{
+				"name": name,
+			},
+		)
+		if err := result.Err(); err != nil {
+			if err != mongo.ErrNoDocuments {
+				return types.OwnerID{}, srverror.New(err, 500, "Database Error U1.2", "unable to confirm name not taken")
+			}
+		} else {
+			return types.OwnerID{}, errors.ErrNameTaken
 		}
-	} else {
-		return types.OwnerID{}, errors.ErrNameTaken
 	}
+	cname := mapIDtoCollection(id, ob.Database)
 	for out == nil {
 		timeout := time.Now().Add(time.Hour * 24)
 		result, err := ob.client.Database(ob.DBName).Collection(cname).UpdateOne(ob.ctx,
