@@ -10,6 +10,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/database/memory"
 	"git.maxset.io/web/knaxim/internal/database/mongo"
 	"git.maxset.io/web/knaxim/internal/handlers/spa"
+	"git.maxset.io/web/knaxim/pkg/srverror"
 	"github.com/google/go-tika/tika"
 )
 
@@ -82,5 +83,6 @@ func ParseConfig(path string) error {
 	} else {
 		return errors.New("unrecognized tika config type")
 	}
+	srverror.LogPath = V.LogPath
 	return nil
 }
