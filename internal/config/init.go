@@ -84,6 +84,9 @@ func ParseConfig(path string) error {
 	}
 	if V.ActiveFileProcessing > 0 {
 		resources = make(chan struct{}, V.ActiveFileProcessing)
+		for i := 0; i < V.ActiveFileProcessing; i++ {
+			resources <- struct{}{}
+		}
 	}
 	return nil
 }
