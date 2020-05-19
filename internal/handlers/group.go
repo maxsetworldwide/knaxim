@@ -253,6 +253,7 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
 		ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
+		var targets []types.Owner
 		for _, idstr := range r.Form["id"] {
 			id, err := types.DecodeOwnerIDString(idstr)
 			if err != nil {
@@ -262,10 +263,16 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				panic(err)
 			}
+			if group.Equal(mem) {
+				panic(srverror.Basic(400, "Attempted to add group to itself"))
+			}
+			targets = append(targets, mem)
+		}
+		for _, t := range targets {
 			if add {
-				group.AddMember(mem)
+				group.AddMember(t)
 			} else {
-				group.RemoveMember(mem)
+				group.RemoveMember(t)
 			}
 		}
 		err := ownerbase.Update(group)
