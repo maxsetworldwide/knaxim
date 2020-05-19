@@ -3,11 +3,11 @@
   <b-container v-else fluid class="header-search-list">
     <b-row>
       <b-col>
-        <file-actions :checkedFiles="found" />
+        <file-actions :checkedFiles="fileObjects" />
       </b-col>
     </b-row>
     <header-search-row
-      v-for="(row, indx) in rows"
+      v-for="(row, indx) in rowInfo"
       :key="indx"
       :webpage="row.webpage"
       :name="row.name"
@@ -40,8 +40,6 @@ export default {
     tag: String
   },
   name: 'header-search-list',
-  // TODO: Merge the watch and before Mount logic or create a method to handle
-  //  both use cases.  One is for first render the other is for prop change.
   watch: {
     find (val) {
       this.search()
@@ -72,7 +70,7 @@ export default {
     }
   },
   computed: {
-    rows () {
+    rowInfo () {
       return this.searchMatches
         .map((file) => {
           let splits = file.name.split('.')
@@ -90,7 +88,7 @@ export default {
           return bLen - aLen
         })
     },
-    found () {
+    fileObjects () {
       return this.populateFiles(this.searchMatches.map((f) => f.id))
     },
     ...mapGetters([
