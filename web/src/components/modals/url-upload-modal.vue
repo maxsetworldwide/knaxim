@@ -15,7 +15,7 @@ global events:
     ref="modal"
     centered
     hide-footer
-    hide-header
+    title="Upload URL"
     :no-close-on-backdrop="loading"
     :no-close-on-esc="loading"
     content-class="modal-style"
