@@ -27,7 +27,7 @@ func init() {
 }
 
 func TestRead(t *testing.T) {
-	testctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	testctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var db database.Database
 	db = &memory.Database{}
@@ -45,10 +45,20 @@ func TestRead(t *testing.T) {
 		t.Fatalf("unable to insert filestore: %s", err.Error())
 	}
 	sb.Close(testctx)
+	lock := make(chan struct{}, 1)
+	lock <- struct{}{}
+	testctx = context.WithValue(testctx, PROCESSING, lock)
+	testctx = context.WithValue(testctx, TIMEOUT, time.Minute)
 	Read(testctx, cancel, fs, db, tikapath, gotenburgpath)
 	databasejson, err := json.MarshalIndent(db, "", "\t")
 	if err != nil {
 		t.Fatalf("unable to produce database output: %s", err.Error())
 	}
 	t.Logf("state of db: %s\n", string(databasejson))
+	select {
+	case <-lock:
+		t.Logf("lock released")
+	default:
+		t.Errorf("lock held")
+	}
 }
