@@ -84,7 +84,7 @@ const shallowMountFa = (
   })
 }
 
-fdescribe('HeaderSearchList', () => {
+describe('HeaderSearchList', () => {
   it('imports correctly', () => {
     const wrapper = shallowMountFa()
     expect(wrapper.is(HeaderSearchList)).toBe(true)
