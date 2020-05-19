@@ -85,6 +85,7 @@ type Configuration struct {
 	GotenPath            string          `json:"gotenpath"`
 	FileLimit            int64           `json:"filelimit"`
 	FreeSpace            int             `json:"total_free_space"`
+	MaxFileCount         int64           `json:"maxfilecount"`
 	AdminKey             string
 	GuestUser            *Guest
 	SetupTimeout         Duration
@@ -92,5 +93,7 @@ type Configuration struct {
 		Inactivity Duration
 		Total      Duration
 	}
-	Email SMTP
+	Email      SMTP
+	ErrorEmail string `json:"error_email"`
+	LogPath    string `json:"log_path"`
 }

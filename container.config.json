@@ -50,5 +50,8 @@
 			"Password": "ebrv8tk3",
 			"Host": "sub5.mail.dreamhost.com"
 		}
-	}
+	},
+	"error_email": "",
+	"log_path": "./log",
+	"maxfilecount": 30
 }

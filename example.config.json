@@ -50,5 +50,8 @@
   "UserTimeouts": {
     "Inactivity": "24h",
     "Total": "24h"
-  }
+  },
+	"error_email": "error@maxset.org",
+	"log_path": "./log",
+	"maxfilecount": 30
 }

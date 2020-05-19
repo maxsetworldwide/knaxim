@@ -92,6 +92,15 @@ func TestFiles(t *testing.T) {
 		t.Fatalf("incorrect returned matched: %v", matched)
 	}
 
+	t.Log("Count")
+	count, err := fb.Count(test1.GetID())
+	if err != nil {
+		t.Fatalf("unable to count files: %s", err.Error())
+	}
+	if count != 1 {
+		t.Fatalf("incorrect file count: %d", count)
+	}
+
 	t.Log("Remove")
 	err = fb.Remove(fid)
 	if err != nil {

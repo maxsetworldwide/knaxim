@@ -136,6 +136,7 @@ type Owner interface {
 	Match(o Owner) bool
 	Equal(o Owner) bool
 	Copy() Owner
+	MaxFiles() int64 // Maximum file count for owner, -1 indicates infinite
 }
 
 type publicowner struct {
@@ -175,6 +176,10 @@ func (p publicowner) Equal(o Owner) bool {
 // Copy implements Owner, Public is an empty value so doesn't actually allocate a new object
 func (p publicowner) Copy() Owner {
 	return Public
+}
+
+func (p publicowner) MaxFiles() int64 {
+	return 0
 }
 
 func publicfromjson(_ OwnerID, _ map[string]interface{}) (Owner, error) {

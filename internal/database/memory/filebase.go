@@ -124,6 +124,29 @@ LOOP:
 	return out, nil
 }
 
+// Count returns the number of files accessible to the owner, optionally including permission values to match against when counting
+func (fb *Filebase) Count(uid types.OwnerID, pkeys ...string) (int64, error) {
+	lock.RLock()
+	defer lock.RUnlock()
+	var count int64
+	for _, file := range fb.Files {
+		if file.GetOwner().GetID().Equal(uid) {
+			count++
+		} else {
+		LOOP:
+			for _, k := range pkeys {
+				for _, o := range file.GetPerm(k) {
+					if o.GetID().Equal(uid) {
+						count++
+						break LOOP
+					}
+				}
+			}
+		}
+	}
+	return count, nil
+}
+
 // MatchStore returns all files that match one of the storeids,
 // and is either owned by oid or oid has one of the form of permission
 func (fb *Filebase) MatchStore(oid types.OwnerID, sids []types.StoreID, pkeys ...string) ([]types.FileI, error) {

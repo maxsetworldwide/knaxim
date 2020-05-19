@@ -1,6 +1,7 @@
 package email
 
 import (
+	"errors"
 	"fmt"
 	"net/smtp"
 	"strings"
@@ -33,4 +34,26 @@ CloudEdison Team
 func SendResetEmail(to []string, name, address, resetkey string) error {
 	msgstr := fmt.Sprintf(resetEmail, strings.Join(to, ", "), config.V.Email.From, name, address, resetkey)
 	return sendEmail(to, []byte(msgstr))
+}
+
+var errorEmail = strings.ReplaceAll(`To: %s
+From: %s
+Subject: Automated Error Report
+MIME-version: 1.0
+Content-Type: text/plain; charset=\"UTF-8\"
+
+This is an automated email from the CloudEdison server regarding the occurrence of a server error.
+
+%s
+`, "\n", "\r\n")
+
+// SendErrorEmail sends an email containing the given message to the address
+// specified as ErrorEmail in the config.
+// If no email address has been set, an error will be returned.
+func SendErrorEmail(msg string) error {
+	if len(config.V.ErrorEmail) == 0 {
+		return errors.New("no error email address specified")
+	}
+	msgstr := fmt.Sprintf(errorEmail, config.V.ErrorEmail, config.V.Email.From, msg)
+	return sendEmail(strings.Split(config.V.ErrorEmail, ","), []byte(msgstr))
 }

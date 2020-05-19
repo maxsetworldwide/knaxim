@@ -14,6 +14,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/email"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -55,9 +56,13 @@ func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				var logMsg string
 				if se, ok := err.(srverror.Error); ok {
 					se.ServeHTTP(w, r)
 					util.VerboseRequest(r, se.Error())
+					if se.Status() == 500 {
+						logMsg = srverror.LogString(se, r, w)
+					}
 				} else {
 					util.Verbose("Non-standard panic")
 					w.WriteHeader(500)
@@ -66,13 +71,28 @@ func Recovery(next http.Handler) http.Handler {
 					switch v := err.(type) {
 					case string:
 						util.VerboseRequest(r, "Panic: %s", v)
+						logMsg = srverror.LogString(errors.New(v), r, w)
 					case error:
 						util.VerboseRequest(r, "Panic: %s", v.Error())
+						logMsg = srverror.LogString(v, r, w)
 					default:
 						util.VerboseRequest(r, "Panic: %v", v)
+						logMsg = srverror.LogString(fmt.Errorf("%v", v), r, w)
 					}
 					if *debugflag {
 						dbug.PrintStack()
+					}
+				}
+				if len(logMsg) > 0 {
+					logErr := srverror.WriteToFile(logMsg)
+					if logErr != nil {
+						util.Verbose("Failed to write log to file: %s", logErr.Error())
+					}
+					logErr = email.SendErrorEmail(logMsg)
+					if logErr != nil {
+						util.Verbose("Failed to send log email: %s", logErr.Error())
+					} else {
+						util.Verbose("An email has been sent to %s describing this issue", config.V.ErrorEmail)
 					}
 				}
 			}

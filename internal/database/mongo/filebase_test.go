@@ -227,6 +227,15 @@ func TestFilebase(t *testing.T) {
 			t.Fatal("failed to update file", state)
 		}
 	})
+	t.Run("Count", func(t *testing.T) {
+		count, err := fb.Count(ownerids[0])
+		if err != nil {
+			t.Fatal("unable to count files: ", err.Error())
+		}
+		if count != 1 {
+			t.Fatalf("incorrect count: %d", count)
+		}
+	})
 	t.Run("Remove", func(t *testing.T) {
 		err := fb.Remove(files[0].GetID())
 		if err != nil {
