@@ -25,7 +25,7 @@ const actions = {
         return context.dispatch(LOAD_FOLDER, { name, group, overwrite })
       }))
     } catch (err) {
-      context.commit(PUSH_ERROR, new Error(`LOAD_FOLDERS: ${err}`))
+      context.commit(PUSH_ERROR, err.addDebug('action LOAD_FOLDERS'))
     }
     context.commit(FOLDER_LOADING, -1)
   },
@@ -42,7 +42,7 @@ const actions = {
           files
         })
       } catch (err) {
-        context.commit(PUSH_ERROR, new Error(`LOAD_FOLDER: ${err}`))
+        context.commit(PUSH_ERROR, err.addDebug('action LOAD_FOLDER'))
       }
       context.commit(FOLDER_LOADING, -1)
     }
@@ -53,7 +53,7 @@ const actions = {
       .then(async () => {
         await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
       })
-      .catch(err => context.commit(PUSH_ERROR, new Error(`PUT_FILE_FOLDER: ${err}`)))
+      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action PUT_FILE_FOLDER'))
       .finally(() => {
         if (!preventReload) {
           context.dispatch(LOAD_SERVER)
@@ -67,7 +67,7 @@ const actions = {
       .then(async () => {
         await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
       })
-      .catch(err => context.commit(PUSH_ERROR, new Error(`REMOVE_FILE_FOLDER: ${err}`)))
+      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action REMOVE_FILE_FOLDER'))
       .finally(() => {
         if (!preventReload) {
           context.dispatch(LOAD_SERVER)
@@ -84,7 +84,7 @@ const actions = {
     try {
       await Promise.all(proms)
     } catch (err) {
-      commit(PUSH_ERROR, new Error(`HANDLE_SERVER_STATE: ${err}`))
+      commit(PUSH_ERROR, err.addDebug('action folder:HANDLE_SERVER_STATE'))
     }
     commit(FOLDER_LOADING, -1)
   }
