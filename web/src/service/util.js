@@ -11,7 +11,6 @@ export const buildError = function (prefix, error, suffix = '') {
   try {
     return new ResponseError(`${prefix}${error.response.data.message}${suffix}`, error.response)
   } catch {
-    console.log('no status', error)
     return new ResponseError(`${prefix}${error.message}${suffix}`)
   }
 }
