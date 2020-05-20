@@ -37,7 +37,7 @@ func (db *Storebase) Reserve(id types.StoreID) (types.StoreID, error) {
 			},
 		)
 		if err != nil {
-			return id, srverror.New(err, 500, "Database Error S1", "unable to update reserve")
+			return id, srverror.New(err, 500, "Error S1", "unable to update reserve")
 		}
 		if result.ModifiedCount > 0 {
 			out = &id
@@ -53,7 +53,7 @@ func (db *Storebase) Reserve(id types.StoreID) (types.StoreID, error) {
 				options.Update().SetUpsert(true),
 			)
 			if err != nil {
-				return id, srverror.New(err, 500, "Database Error S1.1", "unable to insert new id")
+				return id, srverror.New(err, 500, "Error S1.1", "unable to insert new id")
 			}
 			if result.UpsertedCount > 0 {
 				out = &id
@@ -77,7 +77,7 @@ func (db *Storebase) Insert(fs *types.FileStore) error {
 			},
 		)
 		if e != nil {
-			return srverror.New(e, 500, "Database Error S2", "unable to insert store")
+			return srverror.New(e, 500, "Error S2", "unable to insert store")
 		}
 		if result.ModifiedCount == 0 {
 			return errors.ErrIDNotReserved
@@ -91,7 +91,7 @@ func (db *Storebase) Insert(fs *types.FileStore) error {
 			options.InsertMany().SetOrdered(false),
 		)
 		if e != nil {
-			return srverror.New(e, 500, "Database Error S3", "failed to insert data chunks")
+			return srverror.New(e, 500, "Error S3", "failed to insert data chunks")
 		}
 	}
 	return nil
@@ -108,7 +108,7 @@ func (db *Storebase) Get(id types.StoreID) (out *types.FileStore, err error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNotFound.Extend("FileStore", id.String())
 		}
-		return nil, srverror.New(err, 500, "Database Error S4", "failed to find file store")
+		return nil, srverror.New(err, 500, "Error S4", "failed to find file store")
 	}
 	var chunks []*contentchunk
 	cursor, err := db.client.Database(db.DBName).Collection(db.CollNames["chunk"]).Find(
@@ -116,19 +116,19 @@ func (db *Storebase) Get(id types.StoreID) (out *types.FileStore, err error) {
 		bson.M{"id": id},
 	)
 	if err != nil {
-		return nil, srverror.New(err, 500, "Database Error S5", "failed to get file data chunks")
+		return nil, srverror.New(err, 500, "Error S5", "failed to get file data chunks")
 	}
 	if err = cursor.All(db.ctx, &chunks); err != nil {
-		return nil, srverror.New(err, 500, "Database Error S6", "failed to decode file data chunks")
+		return nil, srverror.New(err, 500, "Error S6", "failed to decode file data chunks")
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			switch v := r.(type) {
 			case error:
-				err = srverror.New(v, 500, "Database Error S7", "unable to build chunks")
+				err = srverror.New(v, 500, "Error S7", "unable to build chunks")
 				out = nil
 			default:
-				err = srverror.New(fmt.Errorf("GetStore: %+#v", v), 500, "Database Error S8")
+				err = srverror.New(fmt.Errorf("GetStore: %+#v", v), 500, "Error S8")
 				out = nil
 			}
 		}
@@ -150,11 +150,11 @@ func (db *Storebase) MatchHash(h uint32) (out []*types.FileStore, err error) {
 			"id.hash": h,
 		})
 		if err != nil {
-			cherr <- srverror.New(err, 500, "Database Error S8", "Match Hash Find error")
+			cherr <- srverror.New(err, 500, "Error S8", "Match Hash Find error")
 			return
 		}
 		if err = cursor.All(ctx, &out); err != nil {
-			cherr <- srverror.New(err, 500, "Database Error S9", "MatchHash unable to decode FileStore's")
+			cherr <- srverror.New(err, 500, "Error S9", "MatchHash unable to decode FileStore's")
 			return
 		}
 	}()
@@ -164,11 +164,11 @@ func (db *Storebase) MatchHash(h uint32) (out []*types.FileStore, err error) {
 		})
 		var chunks []*contentchunk
 		if err != nil {
-			cherr <- srverror.New(err, 500, "Database Error S10", "Unable to get filestore chunks")
+			cherr <- srverror.New(err, 500, "Error S10", "Unable to get filestore chunks")
 			return
 		}
 		if err = cursor.All(ctx, &chunks); err != nil {
-			cherr <- srverror.New(err, 500, "Database Error S11", "Unable to decode chunks")
+			cherr <- srverror.New(err, 500, "Error S11", "Unable to decode chunks")
 			return
 		}
 		data := make(map[int64][]byte)
@@ -191,7 +191,7 @@ func (db *Storebase) UpdateMeta(fs *types.FileStore) error {
 		"id": fs.ID,
 	}, fs)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error S12", "error updating file store metadata")
+		return srverror.New(err, 500, "Error S12", "error updating file store metadata")
 	}
 	if result.ModifiedCount == 0 {
 		return errors.ErrNotFound.Extend("no FileStore to update", fs.ID.String())

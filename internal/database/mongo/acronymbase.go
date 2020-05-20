@@ -44,7 +44,7 @@ func (ab *Acronymbase) Put(a, c string) error {
 		"$setOnInsert": val,
 	}, options.Update().SetUpsert(true))
 	if err != nil {
-		return srverror.New(err, 500, "Database Error A1", "Failed to insert acronym")
+		return srverror.New(err, 500, "Error A1", "Failed to insert acronym")
 	}
 	return nil
 }
@@ -58,14 +58,14 @@ func (ab *Acronymbase) Get(a string) ([]string, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
-		return nil, srverror.New(err, 500, "Database Error A2", "Failed to find acronym")
+		return nil, srverror.New(err, 500, "Error A2", "Failed to find acronym")
 	}
 	var result []acronym
 	if err := cursor.All(ab.ctx, &result); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no acronyms")
 		}
-		return nil, srverror.New(err, 500, "Database Error A2.1", "Failed to decode acronym")
+		return nil, srverror.New(err, 500, "Error A2.1", "Failed to decode acronym")
 	}
 	var out []string
 	for _, r := range result {
