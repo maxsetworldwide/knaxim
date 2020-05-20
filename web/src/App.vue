@@ -174,8 +174,17 @@ export default {
     availableErrors (newErrors) {
       if (newErrors) {
         this.handleErrors(e => {
-          console.log(e)
-          this.makeToast(e.message, e.name || 'Error')
+          if (e.response) {
+            switch (e.response.status) {
+              case 401:
+                if () {}
+                this.showAuth()
+                break
+              case 403:
+            }
+          } else {
+            this.makeToast(e.message, e.name || 'Error')
+          }
         })
       }
     }
