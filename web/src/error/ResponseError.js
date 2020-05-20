@@ -1,12 +1,12 @@
 
 export default class extends Error {
-  constructor (msg, status = 0) {
+  constructor (msg, response = {}) {
     if (process.env.VUE_APP_DEBUG) {
-      msg = `${status || 'No Status Code'} ${msg}`
+      msg = `${response.status || 'No Status Code'} ${msg}`
     }
     super(msg)
-    this.name = process.env.VUE_APP_DEBUG ? 'RequestError' : 'Error'
-    this.status = status
+    this.name = process.env.VUE_APP_DEBUG ? 'ResponseError' : 'Error'
+    this.response = response
   }
 
   addDebug (msg) {

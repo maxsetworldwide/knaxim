@@ -1,13 +1,17 @@
-import RequestError from '@/error/RequestError'
+import ResponseError from '@/error/ResponseError'
 
 export const buildError = function (prefix, error, suffix = '') {
+  if (!process.env.VUE_APP_DEBUG) {
+    prefix = ''
+    suffix = ''
+  } else {
+    prefix = prefix + ' '
+    suffix = ' ' + suffix
+  }
   try {
-    console.log('building error')
-    console.log(error)
-    console.log(error.response)
-    return new RequestError(`${prefix} ${error.response.data.message} ${suffix}`, error.response.status)
+    return new ResponseError(`${prefix}${error.response.data.message}${suffix}`, error.response)
   } catch {
     console.log('no status', error)
-    return new RequestError(`${prefix} ${error.message} ${suffix}`)
+    return new ResponseError(`${prefix}${error.message}${suffix}`)
   }
 }
