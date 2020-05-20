@@ -106,21 +106,21 @@ const actions = {
     commit(AUTH_LOADING, 1)
     return UserService.changePassword({ oldpass, newpass })
       .then(() => dispatch(LOGOUT))
-      .catch(err => commit(PUSH_ERROR, err.addDebug('action CHANGE_PASSWORD'))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action CHANGE_PASSWORD')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [SEND_RESET_REQUEST] ({ commit }, { name }) {
     commit(AUTH_LOADING, 1)
     return UserService.requestReset({ name })
-      .catch(err => commit(PUSH_ERROR, err.addDebug('action SEND_RESET_REQUEST'))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action SEND_RESET_REQUEST')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
     commit(AUTH_LOADING, 1)
     return UserService.resetPass({ passkey, newpass })
-      .catch(err => commit(PUSH_ERROR, err.addDebug('action RESET_PASSWORD'))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action RESET_PASSWORD')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 

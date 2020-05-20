@@ -53,7 +53,7 @@ const actions = {
       .then(async () => {
         await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
       })
-      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action PUT_FILE_FOLDER'))
+      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action PUT_FILE_FOLDER')))
       .finally(() => {
         if (!preventReload) {
           context.dispatch(LOAD_SERVER)
@@ -67,7 +67,7 @@ const actions = {
       .then(async () => {
         await context.dispatch(LOAD_FOLDER, { group, name, overwrite: true })
       })
-      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action REMOVE_FILE_FOLDER'))
+      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action REMOVE_FILE_FOLDER')))
       .finally(() => {
         if (!preventReload) {
           context.dispatch(LOAD_SERVER)

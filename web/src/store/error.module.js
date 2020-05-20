@@ -23,9 +23,9 @@ const getters = {
 
 const mutations = {
   [PUSH_ERROR] ({ errors }, err) {
-    if (!(err instanceof Error)) {
-      err = new Error(`${err}`)
-    }
+    // if (!(err instanceof Error)) {
+    //   err = new Error(`${err}`)
+    // }
     errors.push(err)
   },
   [POP_ERROR] ({ errors }, match) {

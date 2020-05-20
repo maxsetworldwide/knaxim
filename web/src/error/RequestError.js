@@ -1,21 +1,18 @@
 
 export default class extends Error {
-  constructor(msg, status=0) {
-    super(msg)
-    this.status = status
-    this.debug = []
-  }
-
-  addDebug(msg) {
-    this.debug.push(msg)
-    return this
-  }
-
-  get message() {
+  constructor (msg, status = 0) {
     if (process.env.VUE_APP_DEBUG) {
-      return [status||'', super.message, this.debug...].join('\n')
-    } else {
-      return super.message
+      msg = `${status || 'No Status Code'} ${msg}`
     }
+    super(msg)
+    this.name = process.env.VUE_APP_DEBUG ? 'RequestError' : 'Error'
+    this.status = status
+  }
+
+  addDebug (msg) {
+    if (process.env.VUE_APP_DEBUG) {
+      this.message = `${this.message} ${msg}`
+    }
+    return this
   }
 }

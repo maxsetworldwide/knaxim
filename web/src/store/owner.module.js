@@ -31,7 +31,7 @@ const actions = {
       } else if (results[1].status === 'fulfilled') {
         name = results[1].value
       } else {
-        context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${results[0].reason} + ${results[1].reason}`)) //TODO: resolved by creating new handler for looking up owner based on id alone
+        context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${results[0].reason} + ${results[1].reason}`)) // TODO: resolved by creating new handler for looking up owner based on id alone
       }
       context.commit(SET_OWNER_NAME, { id, name })
       context.commit(OWNER_LOADING, -1)

@@ -65,7 +65,7 @@ const actions = {
       })
       dispatch(LOAD_SERVER)
     } catch (err) {
-      commit(PUSH_ERROR, err.addDebug('action ADD_MEMBER')
+      commit(PUSH_ERROR, err.addDebug('action ADD_MEMBER'))
     } finally {
       commit(GROUP_LOADING, -1)
     }

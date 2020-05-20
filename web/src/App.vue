@@ -173,11 +173,10 @@ export default {
   watch: {
     availableErrors (newErrors) {
       if (newErrors) {
-        if (process.env.VUE_APP_DEBUG) {
-          this.handleErrors(e => this.makeToast(e.message, e.name || 'Error'))
-        } else {
-          this.handleErrors(() => {}) // Production drop errors
-        }
+        this.handleErrors(e => {
+          console.log(e)
+          this.makeToast(e.message, e.name || 'Error')
+        })
       }
     }
   },
