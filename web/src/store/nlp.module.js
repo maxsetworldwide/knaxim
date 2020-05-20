@@ -92,7 +92,7 @@ const actions = {
         })
         result = data.info
       } catch (e) {
-        commit(PUSH_ERROR, new Error(`NLP_DATA: ${e}`))
+        commit(PUSH_ERROR, e.addDebug('action NLP_DATA'))
       } finally {
         commit(LOADING_NLP, -1)
       }

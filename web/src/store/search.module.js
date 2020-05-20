@@ -61,7 +61,7 @@ const actions = {
       commit(SET_MATCHES, fileList)
       await dispatch(LOAD_MATCHED_LINES, { find, files: fileList })
     } catch (err) {
-      commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
+      commit(PUSH_ERROR, err.addDebug('action SEARCH'))
     } finally {
       commit(SEARCH_LOADING, -1)
     }
@@ -88,7 +88,7 @@ const actions = {
       commit(SET_MATCHES, fileList)
       await dispatch(LOAD_MATCHED_LINES, { find: match.word, files: fileList })
     } catch (err) {
-      commit(PUSH_ERROR, new Error(`SEARCH: ${err}`))
+      commit(PUSH_ERROR, err.addDebug('action SEARCH'))
     } finally {
       commit(SEARCH_LOADING, -1)
     }
