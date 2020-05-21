@@ -10,14 +10,6 @@ import merge from 'lodash/merge'
 const localVue = createLocalVue()
 localVue.use(Vuex)
 
-let actions = {
-  [SEARCH] () {
-    return []
-  },
-  [SEARCH_TAG] () {
-    return []
-  }
-}
 const testUser = {
   id: 'testID',
   name: 'testName'
@@ -29,7 +21,14 @@ const testGroup = {
 const testFind = 'testFindPhrase'
 const createStore = function (overwrites = {}) {
   const defaultStoreObj = {
-    actions,
+    actions: {
+      [SEARCH] () {
+        return []
+      },
+      [SEARCH_TAG] () {
+        return []
+      }
+    },
     state: {
       testActiveGroup: null,
       testUser
