@@ -65,12 +65,8 @@ describe('Owner Module', function () {
       mock.restore()
     })
     it('Loads Owner', async function () {
-      mock.onGet('user', {
-        params: {
-          id: 'uid'
-        }
-      }).reply(200, { name: 'user' })
-        .onGet('group/gid').reply(200, { name: 'group' })
+      mock.onGet('owner/id/uid', {}).reply(200, { name: 'user' })
+        .onGet('owner/id/gid').reply(200, { name: 'group' })
       await testAction(
         a[LOAD_OWNER],
         {
@@ -133,11 +129,11 @@ describe('Owner Module', function () {
       )
     })
     it('Lookup Owner', async function () {
-      mock.onGet('user/name/user').reply(200, {
+      mock.onGet('owner/name/user').reply(200, {
         id: 'uid',
         name: 'user'
       })
-        .onGet('group/name/group').reply(200, {
+        .onGet('owner/name/group').reply(200, {
           id: 'gid',
           name: 'group'
         })
