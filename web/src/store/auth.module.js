@@ -53,13 +53,10 @@ const actions = {
         name: login,
         pass: password
       })
-      if (res.data.message === 'Not Found') {
-        throw new Error('Failed to login')
-      }
       dispatch(AFTER_LOGIN)
       out = res.data
     } catch (err) {
-      commit(PUSH_ERROR, new Error(`LOGIN: ${err}`))
+      commit(PUSH_ERROR, err.addDebug('action LOGIN'))
       throw err
     } finally {
       commit(AUTH_LOADING, -1)
@@ -78,7 +75,7 @@ const actions = {
     context.commit(AUTH_LOADING, 1)
     await UserService.logout()
       .catch((err) => {
-        context.commit(PUSH_ERROR, new Error(`LOGOUT: ${err}`))
+        context.commit(PUSH_ERROR, err.addDebug('action LOGOUT'))
       })
       .finally(() => {
         context.commit(AUTH_LOADING, -1)
@@ -109,21 +106,21 @@ const actions = {
     commit(AUTH_LOADING, 1)
     return UserService.changePassword({ oldpass, newpass })
       .then(() => dispatch(LOGOUT))
-      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action CHANGE_PASSWORD')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [SEND_RESET_REQUEST] ({ commit }, { name }) {
     commit(AUTH_LOADING, 1)
     return UserService.requestReset({ name })
-      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action SEND_RESET_REQUEST')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 
   [RESET_PASSWORD] ({ commit }, { passkey, newpass }) {
     commit(AUTH_LOADING, 1)
     return UserService.resetPass({ passkey, newpass })
-      .catch(err => commit(PUSH_ERROR, new Error(`CHANGE_PASSWORD: ${err}`)))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action RESET_PASSWORD')))
       .finally(() => commit(AUTH_LOADING, -1))
   },
 

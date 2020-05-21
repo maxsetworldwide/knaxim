@@ -38,7 +38,7 @@ const actions = {
         })
         commit(SET_FILE, file)
       } catch (err) {
-        commit(PUSH_ERROR, new Error(`GET_FILE: ${err}`))
+        commit(PUSH_ERROR, err.addDebug('action GET_FILE'))
       } finally {
         commit(FILE_LOADING, -1)
       }
@@ -49,7 +49,7 @@ const actions = {
     context.commit(FILE_LOADING, 1)
     return FileService.create(params)
       .then(res => res.data)
-      .catch(err => context.commit(PUSH_ERROR, new Error(`CREATE_FILE: ${err}`)))
+      .catch(err => context.commit(PUSH_ERROR, err.addDebug('action CREATE_FILE')))
       .finally(() => context.dispatch(LOAD_SERVER))
       .finally(() => {
         context.commit(FILE_LOADING, -1)
@@ -59,7 +59,7 @@ const actions = {
     commit(FILE_LOADING, 1)
     return FileService.webpage({ url, group, folder })
       .then(res => res.data)
-      .catch(err => commit(PUSH_ERROR, new Error(`CREATE_WEB_FILE: ${err}`)))
+      .catch(err => commit(PUSH_ERROR, err.addDebug('action CREATE_WEB_FILE')))
       .finally(() => dispatch(LOAD_SERVER))
       .finally(() => commit(FILE_LOADING, -1))
   },
@@ -67,7 +67,7 @@ const actions = {
     commit(FILE_LOADING, 1)
     return Promise.allSettled(
       (ids || []).map(
-        id => FileService.erase({ fid: id }).catch(err => { commit(PUSH_ERROR, new Error(`DELETE_FILES{${id}}: ${err}`)); return err })
+        id => FileService.erase({ fid: id }).catch(err => { commit(PUSH_ERROR, err.addDebug('action DELETE_FILES')); return err })
       )
     )
       .finally(() => {
