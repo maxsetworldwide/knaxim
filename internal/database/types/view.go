@@ -30,7 +30,7 @@ func NewViewStore(id StoreID, r io.Reader) (*ViewStore, error) {
 	}
 
 	if err = gzWrite.Close(); err != nil {
-		return nil, srverror.New(err, 500, "Error V2")
+		return nil, srverror.New(err, 500, "Error V1")
 	}
 
 	store.Content = contentBuf.Bytes()
@@ -43,7 +43,7 @@ func (vs *ViewStore) Reader() (io.Reader, error) {
 	buf := bytes.NewReader(vs.Content)
 	out, err := gzip.NewReader(buf)
 	if err != nil {
-		srverror.New(err, 500, "Error V3", "file reading error")
+		srverror.New(err, 500, "Error V2", "file reading error")
 	}
 	return out, err
 }

@@ -150,11 +150,11 @@ func (db *Storebase) MatchHash(h uint32) (out []*types.FileStore, err error) {
 			"id.hash": h,
 		})
 		if err != nil {
-			cherr <- srverror.New(err, 500, "Error S8", "Match Hash Find error")
+			cherr <- srverror.New(err, 500, "Error S9", "Match Hash Find error")
 			return
 		}
 		if err = cursor.All(ctx, &out); err != nil {
-			cherr <- srverror.New(err, 500, "Error S9", "MatchHash unable to decode FileStore's")
+			cherr <- srverror.New(err, 500, "Error S10", "MatchHash unable to decode FileStore's")
 			return
 		}
 	}()
@@ -164,11 +164,11 @@ func (db *Storebase) MatchHash(h uint32) (out []*types.FileStore, err error) {
 		})
 		var chunks []*contentchunk
 		if err != nil {
-			cherr <- srverror.New(err, 500, "Error S10", "Unable to get filestore chunks")
+			cherr <- srverror.New(err, 500, "Error S11", "Unable to get filestore chunks")
 			return
 		}
 		if err = cursor.All(ctx, &chunks); err != nil {
-			cherr <- srverror.New(err, 500, "Error S11", "Unable to decode chunks")
+			cherr <- srverror.New(err, 500, "Error S12", "Unable to decode chunks")
 			return
 		}
 		data := make(map[int64][]byte)
@@ -191,7 +191,7 @@ func (db *Storebase) UpdateMeta(fs *types.FileStore) error {
 		"id": fs.ID,
 	}, fs)
 	if err != nil {
-		return srverror.New(err, 500, "Error S12", "error updating file store metadata")
+		return srverror.New(err, 500, "Error S13", "error updating file store metadata")
 	}
 	if result.ModifiedCount == 0 {
 		return errors.ErrNotFound.Extend("no FileStore to update", fs.ID.String())
