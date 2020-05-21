@@ -34,6 +34,6 @@ func Verbose(a string, b ...interface{}) {
 // from the http.Request, but only if the verboseflag is true
 func VerboseRequest(r *http.Request, a string, b ...interface{}) {
 	if *verboseflag {
-		Verbose(fmt.Sprintf("%s:\n\t%s(%s)\n\t\t%s", r.RemoteAddr, r.Method, r.URL.Path, a), b...)
+		Verbose(fmt.Sprintf("%s:\n\t(%s)%s\n\t\t%s", r.RemoteAddr, r.Method, r.RequestURI, a), b...)
 	}
 }
