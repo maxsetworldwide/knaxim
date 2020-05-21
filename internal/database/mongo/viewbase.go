@@ -25,7 +25,7 @@ func (vb *Viewbase) Insert(vs *types.ViewStore) error {
 		options.InsertMany().SetOrdered(false),
 	)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error V3", "unable to insert viewstore chunks")
+		return srverror.New(err, 500, "Error V3", "unable to insert viewstore chunks")
 	}
 	return nil
 }
@@ -38,22 +38,22 @@ func (vb *Viewbase) Get(id types.StoreID) (out *types.ViewStore, err error) {
 		bson.M{"id": id},
 	)
 	if err != nil {
-		return nil, srverror.New(err, 500, "Database Error V4", "failed to get view data chunks")
+		return nil, srverror.New(err, 500, "Error V4", "failed to get view data chunks")
 	}
 	if err = cursor.All(vb.ctx, &chunks); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNotFound.Extend("no View", id.String())
 		}
-		return nil, srverror.New(err, 500, "Database Error V5", "failed to decode view chunks")
+		return nil, srverror.New(err, 500, "Error V5", "failed to decode view chunks")
 	}
 	defer func() {
 		if r := recover(); r != nil {
 			switch v := r.(type) {
 			case error:
-				err = srverror.New(v, 500, "Database Error V6", "unable to build chunks")
+				err = srverror.New(v, 500, "Error V6", "unable to build chunks")
 				out = nil
 			default:
-				err = srverror.New(fmt.Errorf("GetStore: %+#v", v), 500, "Database Error V7")
+				err = srverror.New(fmt.Errorf("GetStore: %+#v", v), 500, "Error V7")
 				out = nil
 			}
 		}

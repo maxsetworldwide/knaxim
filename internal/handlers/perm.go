@@ -54,7 +54,7 @@ func buildPermissionReport(perm types.PermissionI, actor types.Owner) permission
 	return out
 }
 
-var errInvalidPerm = srverror.New(errors.New("prem request is invalid"), 404, "Not Found")
+var errInvalidPerm = srverror.New(errors.New("perm request is invalid"), 404, "Not Found")
 
 func pullPerm(w http.ResponseWriter, r *http.Request) types.PermissionI {
 

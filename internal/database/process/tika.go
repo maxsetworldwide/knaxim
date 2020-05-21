@@ -33,7 +33,7 @@ func SentenceSplitter(data []byte, atEOF bool) (advance int, token []byte, err e
 		return offset, data[:offset], nil
 	}
 	if len(sentences) < 1 {
-		return 0, nil, srverror.New(fmt.Errorf("Empty return from tokenizer, data = %s", string(data)), 500, "Database Error 011")
+		return 0, nil, srverror.New(fmt.Errorf("Empty return from tokenizer, data = %s", string(data)), 500, "Error 011")
 	}
 	if len(data) > 512 {
 		breakpoint := bytes.LastIndexByte(data, '\n') //last new line
@@ -67,7 +67,7 @@ func (ce *ContentExtractor) ExtractText(ctx context.Context, filecontent io.Read
 
 	text, err := ((*tika.Client)(ce)).Parse(ctx, filecontent)
 	if err != nil {
-		return nil, srverror.New(err, 500, "Database Error 012", "content parse error")
+		return nil, srverror.New(err, 500, "Error 012", "content parse error")
 	}
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	scanner.Split(SentenceSplitter)

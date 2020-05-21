@@ -180,7 +180,7 @@ func (u *User) GetCookieTimeouts() (time.Time, time.Time) {
 func GetCookieUID(r *http.Request) (OwnerID, error) {
 	cookie, err := r.Cookie(cookiekeys[1])
 	if err != nil {
-		return OwnerID{}, srverror.New(err, 401, "Unable to identity user")
+		return OwnerID{}, srverror.New(err, 401, "Unable to identify user")
 	}
 	return DecodeOwnerIDString(cookie.Value)
 }

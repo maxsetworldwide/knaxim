@@ -33,7 +33,7 @@ const actions = {
       }
     } catch (err) {
       commit(SET_PREVIEW, { id, lines: ['Unable to load preview of file.', err] })
-      commit(PUSH_ERROR, new Error(`LOAD_PREVIEW: ${err}`))
+      commit(PUSH_ERROR, err.addDebug('action LOAD_PREVIEW'))
     } finally {
       commit(LOADING_PREVIEW, { id, delta: -1 })
     }

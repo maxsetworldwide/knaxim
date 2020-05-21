@@ -23,7 +23,7 @@ func (cb *Contentbase) Insert(lines ...types.ContentLine) error {
 	}
 	_, err := cb.client.Database(cb.DBName).Collection(cb.CollNames["lines"]).InsertMany(cb.ctx, docs)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error C1", "Unable to Insert")
+		return srverror.New(err, 500, "Error C1", "Unable to Insert")
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func (cb *Contentbase) Len(id types.StoreID) (count int64, err error) {
 		"id": id,
 	})
 	if err != nil {
-		err = srverror.New(err, 500, "Database Error C2")
+		err = srverror.New(err, 500, "Error C2")
 	}
 	return
 }
@@ -65,7 +65,7 @@ func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.Cont
 			}
 			return nil, errors.ErrNoResults.Extend("no slices in range")
 		}
-		return nil, srverror.New(err, 500, "Database Error C3", "Failed to find lines")
+		return nil, srverror.New(err, 500, "Error C3", "Failed to find lines")
 	}
 	var out []types.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
@@ -75,7 +75,7 @@ func (cb *Contentbase) Slice(id types.StoreID, start int, end int) ([]types.Cont
 			}
 			return nil, errors.ErrNoResults.Extend("no slices when decoded")
 		}
-		return nil, srverror.New(err, 500, "Database Error C3.1", "failed to decode lines")
+		return nil, srverror.New(err, 500, "Error C3.1", "failed to decode lines")
 	}
 	return out, perr
 }
@@ -105,7 +105,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, id types.StoreID, start int
 			}
 			return nil, errors.ErrNoResults.Extend("no matches in range")
 		}
-		return nil, srverror.New(err, 500, "Database Error C4", "Failed to find lines")
+		return nil, srverror.New(err, 500, "Error C4", "Failed to find lines")
 	}
 	var out []types.ContentLine
 	if err = cursor.All(cb.ctx, &out); err != nil {
@@ -115,7 +115,7 @@ func (cb *Contentbase) RegexSearchFile(regex string, id types.StoreID, start int
 			}
 			return nil, errors.ErrNoResults.Extend("no matches decoded")
 		}
-		return nil, srverror.New(err, 500, "Database Error C4.1", "failed to decode lines")
+		return nil, srverror.New(err, 500, "Error C4.1", "failed to decode lines")
 	}
 	return out, perr
 }

@@ -52,7 +52,7 @@ const actions = {
           name
         })
       } catch (e) {
-        commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`))
+        commit(PUSH_ERROR, e.addDebug('action LOOKUP_OWNER'))
         throw e
       } finally {
         commit(OWNER_LOADING, -1)

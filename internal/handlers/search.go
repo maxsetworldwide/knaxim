@@ -35,7 +35,7 @@ func searchFileTags(out http.ResponseWriter, r *http.Request) {
 				if ok {
 					panic(serr)
 				} else {
-					panic(srverror.New(err, 500, "Unable to check permisison"))
+					panic(srverror.New(err, 500, "Error H3", "Unable to check permisison"))
 				}
 			}
 			panic(srverror.Basic(403, "Access Denied"))

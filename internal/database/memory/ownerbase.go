@@ -28,7 +28,7 @@ func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (types.OwnerID, erro
 			return id, errors.ErrNameTaken
 		}
 	} else {
-		return id, srverror.Basic(500, "Server Error", "unrecognized id type")
+		return id, srverror.Basic(500, "Error MO1", "unrecognized id type")
 	}
 
 	for idstr := id.String(); true; idstr = id.String() {
@@ -77,7 +77,7 @@ func (ob *Ownerbase) Insert(u types.Owner) error {
 		}
 		ob.Owners.GroupName[v.GetName()] = v
 	default:
-		return srverror.Basic(500, "Server Error", "Unrecognized Owner Type")
+		return srverror.Basic(500, "Error MO2", "Unrecognized Owner Type")
 	}
 	ob.Owners.ID[idstr] = u
 	return nil
@@ -151,7 +151,7 @@ func (ob *Ownerbase) Update(o types.Owner) error {
 	case types.GroupI:
 		ob.Owners.GroupName[v.GetName()] = v
 	default:
-		return srverror.Basic(500, "Server Error", "Unrecognized owner type")
+		return srverror.Basic(500, "Error MO3", "Unrecognized owner type")
 	}
 	ob.Owners.ID[o.GetID().String()] = o.Copy()
 	return nil
@@ -191,7 +191,7 @@ func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
 	if err != nil {
-		return "", srverror.New(err, 500, "Server Error", "Unable to generate new password reset key")
+		return "", srverror.New(err, 500, "Error MO4", "Unable to generate new password reset key")
 	}
 	str := base64.RawURLEncoding.EncodeToString(newkey)
 	ob.Owners.Reset[str] = id

@@ -60,7 +60,7 @@ func ExtractContentTags(content io.Reader) ([]Tag, error) {
 		}
 	}
 	if err := sc.Err(); err != nil {
-		return nil, srverror.New(err, 500, "Database Error 501", "ExtractContentTags scanning")
+		return nil, srverror.New(err, 500, "Error 501", "ExtractContentTags scanning")
 	}
 
 	out := make([]Tag, 0, len(cache))
