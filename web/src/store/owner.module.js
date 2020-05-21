@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import OwnerService
+import OwnerService from '@/service/owner'
 import { LOAD_OWNER, LOOKUP_OWNER } from './actions.type'
 import { SET_OWNER_NAME, PROCESS_SERVER_STATE, OWNER_LOADING, PUSH_ERROR } from './mutations.type'
 
