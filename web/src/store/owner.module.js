@@ -20,14 +20,14 @@ const actions = {
       context.commit(SET_OWNER_NAME, { id, name: 'loading...' })
 
       try {
-        name = await OwnerService.id(id).then(r => r.data.name)
+        let name = await OwnerService.id(id).then(r => r.data.name)
         context.commit(SET_OWNER_NAME, { id, name })
         return name
       } catch (e) {
-        commit(PUSH_ERROR, e)
+        context.commit(PUSH_ERROR, e)
         return 'Unknown'
       } finally {
-        commit(OWNER_LOADING, -1)
+        context.commit(OWNER_LOADING, -1)
       }
     } else {
       return context.state.names[id]
