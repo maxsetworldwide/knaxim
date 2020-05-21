@@ -32,4 +32,16 @@ func getOwner(out http.ResponseWriter, r *http.Request) {
 	}
 	w.Set("id", o.GetID())
 	w.Set("name", o.GetName())
+	switch o.(type) {
+	case *types.User:
+		w.Set("type", "user")
+	case *types.Group:
+		w.Set("type", "group")
+	default:
+		if o.Equal(types.Public) {
+			w.Set("type", "public")
+		} else {
+			w.Set("type", "unknown")
+		}
+	}
 }
