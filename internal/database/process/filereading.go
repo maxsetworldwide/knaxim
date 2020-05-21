@@ -20,9 +20,9 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 			case srverror.Error:
 				err = v
 			case error:
-				err = srverror.New(v, 500, "Server Error", "unable to process input")
+				err = srverror.New(v, 500, "Error P1", "unable to process input")
 			default:
-				err = srverror.New(fmt.Errorf("Error Injecting File: %+#v", v), 500, "Server Error")
+				err = srverror.New(fmt.Errorf("Error Injecting File: %+#v", v), 500, "Error P2")
 			}
 		}
 	}()
@@ -33,7 +33,7 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 	fs.ContentType = contenttype
 	db, err := dbconfig.Connect(ctx)
 	if err != nil {
-		panic(srverror.New(err, 500, "Server Error", "Unable to connect to the database"))
+		panic(srverror.New(err, 500, "Error P3", "Unable to connect to the database"))
 	}
 	defer db.Close(ctx)
 

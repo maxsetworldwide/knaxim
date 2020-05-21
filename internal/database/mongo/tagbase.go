@@ -71,7 +71,7 @@ func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
 					options.Update().SetUpsert(true),
 				)
 				if err != nil {
-					err = srverror.New(err, 500, "Database Error T1.1", "Upserting store tag failed")
+					err = srverror.New(err, 500, "Error T1.1", "Upserting store tag failed")
 					select {
 					case errch <- err:
 					case <-upsertctx.Done():
@@ -113,7 +113,7 @@ func (tb *Tagbase) Upsert(tags ...tag.FileTag) error {
 					options.Update().SetUpsert(true),
 				)
 				if err != nil {
-					err = srverror.New(err, 500, "Database Error T1.2", "Upserting file tag failed")
+					err = srverror.New(err, 500, "Error T1.2", "Upserting file tag failed")
 					select {
 					case errch <- err:
 					case <-upsertctx.Done():
@@ -176,7 +176,7 @@ func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
 				}
 				if err != nil {
 					select {
-					case errch <- srverror.New(err, 500, "Database Error T2.1", "unable to remove storetag"):
+					case errch <- srverror.New(err, 500, "Error T2.1", "unable to remove storetag"):
 					case <-rmctx.Done():
 					}
 				}
@@ -224,7 +224,7 @@ func (tb *Tagbase) Remove(tags ...tag.FileTag) error {
 				}
 				if err != nil {
 					select {
-					case errch <- srverror.New(err, 500, "Database Error T2.2", "unable to remove filetag"):
+					case errch <- srverror.New(err, 500, "Error T2.2", "unable to remove filetag"):
 					case <-rmctx.Done():
 					}
 				}
@@ -291,7 +291,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 				return
 			}
 			select {
-			case errch <- srverror.New(err, 500, "Database Error T3.1", "unable to find on storetags"):
+			case errch <- srverror.New(err, 500, "Error T3.1", "unable to find on storetags"):
 			case <-getctx.Done():
 			}
 			return
@@ -307,7 +307,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 				return
 			}
 			select {
-			case errch <- srverror.New(err, 500, "Database Error T3.2", "unable to decode storetags"):
+			case errch <- srverror.New(err, 500, "Error T3.2", "unable to decode storetags"):
 			case <-getctx.Done():
 			}
 			return
@@ -344,7 +344,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 				return
 			}
 			select {
-			case errch <- srverror.New(err, 500, "Database Error T3.3", "unable to find on filetags"):
+			case errch <- srverror.New(err, 500, "Error T3.3", "unable to find on filetags"):
 			case <-getctx.Done():
 			}
 			return
@@ -360,7 +360,7 @@ func (tb *Tagbase) GetType(fid types.FileID, oid types.OwnerID, typ tag.Type) ([
 				return
 			}
 			select {
-			case errch <- srverror.New(err, 500, "Database Error T3.4", "unable to decode filetags"):
+			case errch <- srverror.New(err, 500, "Error T3.4", "unable to decode filetags"):
 			case <-getctx.Done():
 			}
 			return
@@ -430,7 +430,7 @@ func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) ([]tag.FileTag, error
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no file tags")
 		}
-		return nil, srverror.New(err, 500, "Database Error T4.1", "unable to get file tags")
+		return nil, srverror.New(err, 500, "Error T4.1", "unable to get file tags")
 	}
 	var results []tag.FileTag
 	err = cursor.All(tb.ctx, &results)
@@ -438,7 +438,7 @@ func (tb *Tagbase) GetAll(typ tag.Type, oid types.OwnerID) ([]tag.FileTag, error
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no file tags")
 		}
-		return nil, srverror.New(err, 500, "Database Error T4.2", "unable to decode file tags")
+		return nil, srverror.New(err, 500, "Error T4.2", "unable to decode file tags")
 	}
 	return results, nil
 }
@@ -615,7 +615,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 					return
 				}
 				select {
-				case errch <- srverror.New(err, 500, "Database Error T5.1", "unable to aggregate store tags"):
+				case errch <- srverror.New(err, 500, "Error T5.1", "unable to aggregate store tags"):
 				case <-searchctx.Done():
 				}
 				return
@@ -631,7 +631,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 					return
 				}
 				select {
-				case errch <- srverror.New(err, 500, "Database Error T5.2", "unable to decode store tags"):
+				case errch <- srverror.New(err, 500, "Error T5.2", "unable to decode store tags"):
 				case <-searchctx.Done():
 				}
 				return
@@ -744,7 +744,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 					return
 				}
 				select {
-				case errch <- srverror.New(err, 500, "Database Error T5.3", "unable to aggregate file tags"):
+				case errch <- srverror.New(err, 500, "Error T5.3", "unable to aggregate file tags"):
 				case <-searchctx.Done():
 				}
 				return
@@ -760,7 +760,7 @@ func (tb *Tagbase) SearchFiles(fids []types.FileID, tags ...tag.FileTag) ([]type
 					return
 				}
 				select {
-				case errch <- srverror.New(err, 500, "Database Error T5.4", "unable to decode file tags"):
+				case errch <- srverror.New(err, 500, "Error T5.4", "unable to decode file tags"):
 				case <-searchctx.Done():
 				}
 				return

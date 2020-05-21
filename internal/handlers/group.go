@@ -98,7 +98,7 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	newname := r.FormValue("newname")
 	if !validGroupName(newname) {
-		panic(srverror.Basic(400, "Bad Request", "invalid group name", newname))
+		panic(srverror.Basic(400, "invalid group name", newname))
 	}
 	ng := types.NewGroup(newname, owner)
 	var err error
@@ -189,7 +189,7 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	if err := r.ParseForm(); err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
+		panic(srverror.New(err, 400, "Unable to parse form data"))
 	}
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(400, "No Search Term"))

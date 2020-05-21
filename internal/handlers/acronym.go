@@ -23,7 +23,7 @@ func AttachAcronym(r *mux.Router) {
 func getAcronym(out http.ResponseWriter, r *http.Request) {
 	w, ok := out.(*srvjson.ResponseWriter)
 	if !ok {
-		panic(srverror.Basic(500, "Server Error", "expecting *srvjson.ResponseWriter"))
+		panic(srverror.Basic(500, "Error H5", "expecting *srvjson.ResponseWriter"))
 	}
 	vals := mux.Vars(r)
 	matches, err := r.Context().Value(types.ACRONYM).(database.Acronymbase).Get(vals["acronym"])

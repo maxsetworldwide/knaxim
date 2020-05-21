@@ -29,7 +29,7 @@ func (fb *Filebase) Reserve(id types.FileID) (types.FileID, error) {
 			"$set": bson.M{"reserve": timeout},
 		})
 		if err != nil {
-			return id, srverror.New(err, 500, "Database Error F1", "Unable to update id reserve")
+			return id, srverror.New(err, 500, "Error F4", "Unable to update id reserve")
 		}
 		if result.ModifiedCount > 0 {
 			out = &id
@@ -70,7 +70,7 @@ func (fb *Filebase) Insert(r types.FileI) error {
 		},
 	)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error F2", "Unable to insert")
+		return srverror.New(err, 500, "Error F5", "Unable to insert")
 	}
 	if result.ModifiedCount == 0 {
 		return errors.ErrIDNotReserved.Extend("missing fileid")
@@ -88,7 +88,7 @@ func (fb *Filebase) Get(fid types.FileID) (types.FileI, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNotFound.Extend(fid.String())
 		}
-		return nil, srverror.New(err, 500, "Database Error F3", "Unable to get file")
+		return nil, srverror.New(err, 500, "Error F6", "Unable to get file")
 	}
 	f := fd.File()
 	err := f.Populate(fb.Owner())
@@ -111,7 +111,7 @@ func (fb *Filebase) GetAll(fids ...types.FileID) ([]types.FileI, error) {
 			}
 			return nil, errors.ErrNoResults.Extend("GetAll files: ").Extend(ids...)
 		}
-		return nil, srverror.New(err, 500, "Database Error F3.1", "Unable to get files")
+		return nil, srverror.New(err, 500, "Error F3.1", "Unable to get files")
 	}
 	return fb.decodefiles(cursor)
 }
@@ -122,7 +122,7 @@ func (fb *Filebase) Update(r types.FileI) error {
 		"id": r.GetID(),
 	}, r)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error F4", "error updating file")
+		return srverror.New(err, 500, "Error F7", "error updating file")
 	}
 	if result.ModifiedCount == 0 {
 		return errors.ErrNotFound.Extend("unable to update:", r.GetID().String())
@@ -136,7 +136,7 @@ func (fb *Filebase) Remove(r types.FileID) error {
 		"id": r,
 	})
 	if err != nil {
-		return srverror.New(err, 500, "Database Error F5", "unable to remove file", r.String())
+		return srverror.New(err, 500, "Error F8", "unable to remove file", r.String())
 	}
 	if result.DeletedCount == 0 {
 		return errors.ErrNotFound.Extend("File id: ", r.String())
@@ -150,7 +150,7 @@ func (fb *Filebase) decodefiles(cursor *mongo.Cursor) ([]types.FileI, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("unable to decode files")
 		}
-		return nil, srverror.New(err, 500, "Database Error F6", "unable to decode file list")
+		return nil, srverror.New(err, 500, "Error F9", "unable to decode file list")
 	}
 	files := make([]types.FileI, 0, len(reference))
 	for _, ref := range reference {
@@ -174,7 +174,7 @@ func (fb *Filebase) GetOwned(uid types.OwnerID) ([]types.FileI, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no owned files")
 		}
-		return nil, srverror.New(err, 500, "Database Error F7", "unable to send request")
+		return nil, srverror.New(err, 500, "Error F10", "unable to send request")
 	}
 	return fb.decodefiles(cursor)
 }
@@ -188,7 +188,7 @@ func (fb *Filebase) GetPermKey(uid types.OwnerID, pkey string) ([]types.FileI, e
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no files with:", pkey)
 		}
-		return nil, srverror.New(err, 500, "Database Error F8", "unable to send request")
+		return nil, srverror.New(err, 500, "Error F11", "unable to send request")
 	}
 	return fb.decodefiles(cursor)
 }
@@ -211,7 +211,7 @@ func (fb *Filebase) Count(uid types.OwnerID, pkeys ...string) (int64, error) {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
 		}
-		return -1, srverror.New(err, 500, "Database Error F10", "unable to count documents")
+		return -1, srverror.New(err, 500, "Error F12", "unable to count documents")
 	}
 	return count, nil
 }
@@ -236,7 +236,7 @@ func (fb *Filebase) MatchStore(oid types.OwnerID, sid []types.StoreID, pkeys ...
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNoResults.Extend("no filestores match file")
 		}
-		return nil, srverror.New(err, 500, "Database Error F9", "unable to send request")
+		return nil, srverror.New(err, 500, "Error F13", "unable to send request")
 	}
 	return fb.decodefiles(cursor)
 }
