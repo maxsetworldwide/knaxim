@@ -425,18 +425,18 @@ func fileContent(out http.ResponseWriter, r *http.Request) {
 	vals := mux.Vars(r)
 	startindx, err := strconv.Atoi(vals["start"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "fileContent start value not a number"))
+		panic(srverror.New(err, 400, "Bad Request, fileContent start value not a number"))
 	}
 	endindx, err := strconv.Atoi(vals["end"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "fileContent end value not a number"))
+		panic(srverror.New(err, 400, "Bad Request, fileContent end value not a number"))
 	}
 	if startindx > endindx {
-		panic(srverror.Basic(400, "Bad Request", "end must be greater then start"))
+		panic(srverror.Basic(400, "Bad Request, end must be greater then start"))
 	}
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request"))
+		panic(srverror.New(err, 400, "Bad File ID"))
 	}
 	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
@@ -471,18 +471,18 @@ func searchFile(out http.ResponseWriter, r *http.Request) {
 	regex := util.BuildSearchRegex(r.FormValue("find"))
 	start, err := strconv.Atoi(vals["start"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "searchFile start not a number"))
+		panic(srverror.New(err, 400, "Bad Request, searchFile start not a number"))
 	}
 	end, err := strconv.Atoi(vals["end"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "searchFile end not a number"))
+		panic(srverror.New(err, 400, "Bad Request, searchFile end not a number"))
 	}
 	if start > end {
-		panic(srverror.Basic(400, "Bad Request", "end must be greater then start"))
+		panic(srverror.Basic(400, "Bad Request, end must be greater then start"))
 	}
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
+		panic(srverror.New(err, 400, "Bad Request, bad file id"))
 	}
 	file, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
@@ -515,7 +515,7 @@ func deleteRecord(out http.ResponseWriter, r *http.Request) {
 	vals := mux.Vars(r)
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "malformed file id"))
+		panic(srverror.New(err, 400, "Bad Request, malformed file id"))
 	}
 	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
@@ -545,7 +545,7 @@ func sendFile(w http.ResponseWriter, r *http.Request) {
 	vals := mux.Vars(r)
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
+		panic(srverror.New(err, 400, "Bad Request, bad file id"))
 	}
 	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {
@@ -578,7 +578,7 @@ func sendView(w http.ResponseWriter, r *http.Request) {
 	vals := mux.Vars(r)
 	fid, err := types.DecodeFileID(vals["id"])
 	if err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "bad file id"))
+		panic(srverror.New(err, 400, "Bad Request, bad file id"))
 	}
 	rec, err := r.Context().Value(types.FILE).(database.Filebase).Get(fid)
 	if err != nil {

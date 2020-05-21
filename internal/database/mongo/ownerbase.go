@@ -453,7 +453,7 @@ func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
 	if err != nil {
-		return "", srverror.New(err, 500, "Server Error", "Unable to generate new password reset key")
+		return "", srverror.New(err, 500, "Error O7", "Unable to generate new password reset key")
 	}
 	_, err = ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).UpdateOne(ob.ctx, bson.M{
 		"user": id,
@@ -467,7 +467,7 @@ func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 		},
 	}, options.Update().SetUpsert(true))
 	if err != nil {
-		return "", srverror.New(err, 500, "Server Error", "unable to insert key")
+		return "", srverror.New(err, 500, "Error O8", "unable to insert key")
 	}
 	return base64.RawURLEncoding.EncodeToString(newkey), nil
 }
@@ -505,7 +505,7 @@ func (ob *Ownerbase) DeleteResetKey(id types.OwnerID) error {
 		"user": id,
 	})
 	if err != nil {
-		return srverror.New(err, 500, "Server Error", "unable to remove reset key")
+		return srverror.New(err, 500, "Error O9", "unable to remove reset key")
 	}
 	return nil
 }

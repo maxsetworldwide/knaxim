@@ -139,7 +139,7 @@ func ConnectDatabase(next http.Handler) http.Handler {
 
 		dbConnection, err := config.DB.Connect(r.Context())
 		if err != nil {
-			panic(srverror.New(err, 500, "Server Error", "Failed to Connect to Database"))
+			panic(srverror.New(err, 500, "Error M1", "Failed to Connect to Database"))
 		}
 		defer dbConnection.Close(r.Context())
 		r = r.WithContext(context.WithValue(r.Context(), types.DATABASE, dbConnection))

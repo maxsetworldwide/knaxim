@@ -107,7 +107,7 @@ func createDir(out http.ResponseWriter, r *http.Request) {
 			},
 		})
 		if err != nil {
-			panic(srverror.New(err, 500, "Server Error", "Unable to add user tag"))
+			panic(srverror.New(err, 500, "Error H1", "Unable to add user tag"))
 		}
 	}
 
@@ -131,7 +131,7 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 		if se := err.(srverror.Error); se.Status() == errors.ErrNoResults.Status() {
 			w.WriteHeader(se.Status())
 		} else {
-			panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
+			panic(srverror.New(err, 500, "Error H2", "unable to get file tags"))
 		}
 	}
 	var filematches []types.FileID
