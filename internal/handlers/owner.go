@@ -15,7 +15,8 @@ func AttachOwner(r *mux.Router) {
 	r.Use(ConnectDatabase)
 	r.Use(srvjson.JSONResponse)
 
-	r.HandleFunc("/{id}", getOwner).Methods("GET")
+	r.HandleFunc("/id/{id}", getOwner).Methods("GET")
+	r.HandleFunc("/name/{name}", lookupName).Methods("GET")
 }
 
 func getOwner(out http.ResponseWriter, r *http.Request) {
@@ -43,5 +44,30 @@ func getOwner(out http.ResponseWriter, r *http.Request) {
 		} else {
 			w.Set("type", "unknown")
 		}
+	}
+}
+
+func lookupName(out http.ResponseWriter, r *http.Request) {
+	w := out.(*srvjson.ResponseWriter)
+	vals := mux.Vars(r)
+
+	var o types.Owner
+	var err error
+	if o, err = r.Context().Value(types.OWNER).(database.Ownerbase).FindUserName(vals["name"]); err != nil {
+		if serr, ok := err.(srverror.Error); ok && serr.Status() == 404 {
+			if o, err = r.Context().Value(types.OWNER).(database.Ownerbase).FindGroupName(vals["name"]); err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	}
+	w.Set("id", o.GetID())
+	w.Set("name", o.GetName())
+	switch o.(type) {
+	case types.UserI:
+		w.Set("type", "user")
+	case types.GroupI:
+		w.Set("type", "group")
 	}
 }
