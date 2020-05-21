@@ -24,7 +24,7 @@ const actions = {
         context.commit(SET_OWNER_NAME, { id, name })
         return name
       } catch (e) {
-        context.commit(PUSH_ERROR, e)
+        context.commit(PUSH_ERROR, e.addDebug('action LOAD_OWNER'))
         return 'Unknown'
       } finally {
         context.commit(OWNER_LOADING, -1)
