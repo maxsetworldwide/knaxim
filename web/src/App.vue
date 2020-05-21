@@ -177,10 +177,21 @@ export default {
           if (e.response) {
             switch (e.response.status) {
               case 401:
-                if () {}
+                if (this.isAuthenticated) {
+                  this.makeToast('Please relogin', 'Login Required')
+                }
                 this.showAuth()
                 break
               case 403:
+                this.makeToast('You do not have permission to perform that action', 'Permission Denied')
+                break
+              case 409:
+                break
+              case 460:
+                this.makeToast('You do not have enough space to save a file', 'Out of Space')
+                break
+              default:
+                this.makeToast(e.message, e.name || 'Error')
             }
           } else {
             this.makeToast(e.message, e.name || 'Error')
