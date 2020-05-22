@@ -93,7 +93,8 @@ type Configuration struct {
 		Inactivity Duration
 		Total      Duration
 	}
-	Email      SMTP
-	ErrorEmail string `json:"error_email"`
-	LogPath    string `json:"log_path"`
+	Email       SMTP
+	ErrorEmail  string `json:"error_email"`
+	LogPath     string `json:"log_path"`
+	PrivateMode bool
 }

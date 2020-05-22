@@ -26,7 +26,9 @@ func AttachUser(r *mux.Router) {
 	r.Use(srvjson.JSONResponse)
 	r.Use(ConnectDatabase)
 	r.Use(ParseBody)
-	r.HandleFunc("", createUser).Methods("PUT")
+	if !config.V.PrivateMode {
+		r.HandleFunc("", createUser).Methods("PUT")
+	}
 	r.HandleFunc("/admin", createAdmin).Methods("PUT")
 	r.HandleFunc("/login", loginUser).Methods("POST")
 	r.HandleFunc("/reset", sendReset).Methods("PUT")
@@ -34,6 +36,9 @@ func AttachUser(r *mux.Router) {
 	{
 		r = r.NewRoute().Subrouter()
 		r.Use(UserCookie)
+		if config.V.PrivateMode {
+			r.HandleFunc("", createUser).Methods("PUT")
+		}
 		r.HandleFunc("", userInfo).Methods("GET")
 		r.HandleFunc("/name/{name}", lookupUser).Methods("GET")
 		r.HandleFunc("", signoutUser).Methods("DELETE")
@@ -145,6 +150,12 @@ func getUserData(out http.ResponseWriter, r *http.Request) {
 
 func createUser(w http.ResponseWriter, r *http.Request) {
 	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
+	if config.V.PrivateMode {
+		user := r.Context().Value(USER).(types.UserI)
+		if !user.GetRole("admin") {
+			panic(srverror.Basic(400, "Private Mode, contact site administrator to create account."))
+		}
+	}
 	errorLog := fmt.Sprintf("invalid values: user: %s, email: %s, pass: %s", r.FormValue("name"), r.FormValue("email"), r.FormValue("pass"))
 	if !validUserName(r.FormValue("name")) {
 		panic(srverror.Basic(400, "Invalid Username", errorLog))
