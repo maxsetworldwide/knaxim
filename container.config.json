@@ -16,6 +16,7 @@
 	"file_timeout_rate": 1000000000,
 	"max_file_timeout":  "30m",
 	"min_file_timeout":  "10s",
+	"ActiveFileProcessing": 50,
 	"db_type": "mongo",
 	"db":{
 		"uri": "mongodb://mongo:27017",
@@ -50,5 +51,7 @@
 			"Host": "sub5.mail.dreamhost.com"
 		}
 	},
+	"error_email": "",
+	"log_path": "./log",
 	"maxfilecount": 30
 }

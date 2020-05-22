@@ -14,7 +14,7 @@ describe('Error Store', function () {
     })
     it('queues errors', function () {
       m[PUSH_ERROR](this.state, 'hello')
-      expect(this.state.errors).toEqual([new Error('hello')])
+      expect(this.state.errors).toEqual(['hello'])
     })
     it('dequeues errors', function () {
       this.state.errors.push('world')

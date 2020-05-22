@@ -14,6 +14,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/config"
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/types"
+	"git.maxset.io/web/knaxim/internal/email"
 	"git.maxset.io/web/knaxim/internal/util"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 )
@@ -55,9 +56,13 @@ func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				var logMsg string
 				if se, ok := err.(srverror.Error); ok {
 					se.ServeHTTP(w, r)
 					util.VerboseRequest(r, se.Error())
+					if se.Status() == 500 {
+						logMsg = srverror.LogString(se, r, w)
+					}
 				} else {
 					util.Verbose("Non-standard panic")
 					w.WriteHeader(500)
@@ -66,13 +71,28 @@ func Recovery(next http.Handler) http.Handler {
 					switch v := err.(type) {
 					case string:
 						util.VerboseRequest(r, "Panic: %s", v)
+						logMsg = srverror.LogString(errors.New(v), r, w)
 					case error:
 						util.VerboseRequest(r, "Panic: %s", v.Error())
+						logMsg = srverror.LogString(v, r, w)
 					default:
 						util.VerboseRequest(r, "Panic: %v", v)
+						logMsg = srverror.LogString(fmt.Errorf("%v", v), r, w)
 					}
 					if *debugflag {
 						dbug.PrintStack()
+					}
+				}
+				if len(logMsg) > 0 {
+					logErr := srverror.WriteToFile(logMsg)
+					if logErr != nil {
+						util.Verbose("Failed to write log to file: %s", logErr.Error())
+					}
+					logErr = email.SendErrorEmail(logMsg)
+					if logErr != nil {
+						util.Verbose("Failed to send log email: %s", logErr.Error())
+					} else {
+						util.Verbose("An email has been sent to %s describing this issue", config.V.ErrorEmail)
 					}
 				}
 			}
@@ -87,18 +107,18 @@ func UserCookie(next http.Handler) http.Handler {
 		userbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 		uid, err := types.GetCookieUID(r)
 		if err != nil {
-			panic(srverror.New(err, 401, "login", "invalid cookie, error getting userid from cookie"))
+			panic(srverror.New(err, 401, "Please log in", "invalid cookie, error getting userid from cookie"))
 		}
 		user, err := userbase.Get(uid)
 		if err != nil {
-			panic(srverror.New(err, 401, "login", "unable to get user record to validate token", uid.String()))
+			panic(srverror.New(err, 401, "Please log in", "unable to get user record to validate token", uid.String()))
 		}
 		if u, ok := user.(types.UserI); !ok {
-			panic(srverror.New(errors.New("id is not a user"), 401, "login", uid.String()))
+			panic(srverror.New(errors.New("id is not a user"), 401, "Please log in", uid.String()))
 		} else if u.GetRole("Guest") && r.Method != "GET" {
-			panic(srverror.New(errors.New("Guest User cannot perform action"), 401, "login", "Invalid Guest Action", r.Method, r.URL.Path))
+			panic(srverror.New(errors.New("Guest User cannot perform action"), 401, "Please log in", "Invalid Guest Action", r.Method, r.URL.Path))
 		} else if !u.GetRole("Guest") && !u.CheckCookie(r) {
-			panic(srverror.New(errors.New("Cookie not valid"), 401, "login", "Cookie Invalid", uid.String()))
+			panic(srverror.New(errors.New("Cookie not valid"), 401, "Please log in", "Cookie Invalid", uid.String()))
 		} else {
 			u.RefreshCookie(time.Now().Add(config.V.UserTimeouts.Inactivity.Duration))
 			if err := userbase.Update(u); err != nil {
@@ -119,7 +139,7 @@ func ConnectDatabase(next http.Handler) http.Handler {
 
 		dbConnection, err := config.DB.Connect(r.Context())
 		if err != nil {
-			panic(srverror.New(err, 500, "Server Error", "Failed to Connect to Database"))
+			panic(srverror.New(err, 500, "Error M1", "Failed to Connect to Database"))
 		}
 		defer dbConnection.Close(r.Context())
 		r = r.WithContext(context.WithValue(r.Context(), types.DATABASE, dbConnection))

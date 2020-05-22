@@ -63,7 +63,7 @@ func (to trackOwners) put(o types.Owner) {
 			}
 		}
 	default:
-		panic(srverror.Basic(500, "Database Error O0", "unrecognized Owner type"))
+		panic(srverror.Basic(500, "Error O0", "unrecognized Owner type"))
 	}
 	to.gotten[o.GetID().String()] = o
 }
@@ -109,27 +109,29 @@ func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (oid types.OwnerID, 
 			case srverror.Error:
 				err = v
 			case error:
-				err = srverror.New(v, 500, "Database Error U1.0")
+				err = srverror.New(v, 500, "Error U1.0")
 			default:
 				err = fmt.Errorf("Reserve Panic: %v", v)
 			}
 		}
 	}()
 	var out *types.OwnerID
-	cname := mapIDtoCollection(id, ob.Database)
-	result := ob.client.Database(ob.DBName).Collection(cname).FindOne(
-		ob.ctx,
-		bson.M{
-			"name": name,
-		},
-	)
-	if err := result.Err(); err != nil {
-		if err != mongo.ErrNoDocuments {
-			return types.OwnerID{}, srverror.New(err, 500, "Database Error U1.2", "unable to confirm name not taken")
+	for _, cname := range []string{ob.CollNames["user"], ob.CollNames["group"]} {
+		result := ob.client.Database(ob.DBName).Collection(cname).FindOne(
+			ob.ctx,
+			bson.M{
+				"name": name,
+			},
+		)
+		if err := result.Err(); err != nil {
+			if err != mongo.ErrNoDocuments {
+				return types.OwnerID{}, srverror.New(err, 500, "Error U1.2", "unable to confirm name not taken")
+			}
+		} else {
+			return types.OwnerID{}, errors.ErrNameTaken
 		}
-	} else {
-		return types.OwnerID{}, errors.ErrNameTaken
 	}
+	cname := mapIDtoCollection(id, ob.Database)
 	for out == nil {
 		timeout := time.Now().Add(time.Hour * 24)
 		result, err := ob.client.Database(ob.DBName).Collection(cname).UpdateOne(ob.ctx,
@@ -142,7 +144,7 @@ func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (oid types.OwnerID, 
 			},
 		)
 		if err != nil {
-			return id, srverror.New(err, 500, "Database Error U1", "Unable to update id reserve")
+			return id, srverror.New(err, 500, "Error U1", "Unable to update id reserve")
 		}
 		if result.ModifiedCount > 0 {
 			out = &id
@@ -158,7 +160,7 @@ func (ob *Ownerbase) Reserve(id types.OwnerID, name string) (oid types.OwnerID, 
 				options.Update().SetUpsert(true),
 			)
 			if err != nil {
-				return id, srverror.New(err, 500, "Database Error U1.1", "unable to upsert id")
+				return id, srverror.New(err, 500, "Error U1.1", "unable to upsert id")
 			}
 			if result.UpsertedCount > 0 {
 				out = &id
@@ -178,7 +180,7 @@ func (ob *Ownerbase) Insert(u types.Owner) (err error) {
 			case srverror.Error:
 				err = v
 			case error:
-				err = srverror.New(v, 500, "Database Error U2.0")
+				err = srverror.New(v, 500, "Error U2.0")
 			default:
 				err = fmt.Errorf("Insert Panic: %v", v)
 			}
@@ -197,7 +199,7 @@ func (ob *Ownerbase) Insert(u types.Owner) (err error) {
 		},
 	)
 	if e != nil {
-		return srverror.New(e, 500, "Database Error U2", "unable to insert")
+		return srverror.New(e, 500, "Error U2", "unable to insert")
 	}
 	if result.ModifiedCount == 0 {
 		return errors.ErrIDNotReserved
@@ -222,7 +224,7 @@ func (ob *Ownerbase) Get(id types.OwnerID) (types.Owner, error) {
 			if err == mongo.ErrNoDocuments {
 				return nil, errors.ErrNotFound.Extend("unable to find user", id.String())
 			}
-			return nil, srverror.New(err, 500, "Database Error U3", "unable to get user")
+			return nil, srverror.New(err, 500, "Error U3", "unable to get user")
 		}
 		ob.put(u)
 		return u, nil
@@ -262,7 +264,7 @@ func (ob *Ownerbase) FindUserName(name string) (types.UserI, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNotFound.Extend("User name", name)
 		}
-		return nil, srverror.New(err, 500, "Database Error O1", "error finding user name")
+		return nil, srverror.New(err, 500, "Error O1", "error finding user name")
 	}
 	ob.put(user)
 	return user, nil
@@ -281,7 +283,7 @@ func (ob *Ownerbase) FindGroupName(name string) (types.GroupI, error) {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.ErrNotFound.Extend("Group name", name)
 		}
-		return nil, srverror.New(err, 500, "Database Error O2", "error finding group name")
+		return nil, srverror.New(err, 500, "Error O2", "error finding group name")
 	}
 	ob.put(group)
 	err := group.Populate(ob)
@@ -316,14 +318,14 @@ func (ob *Ownerbase) GetGroups(id types.OwnerID) (owned []types.GroupI, member [
 		if err == mongo.ErrNoDocuments {
 			return nil, nil, errors.ErrNoResults.Extend("No associated groups", id.String())
 		}
-		return nil, nil, srverror.New(err, 500, "Database Error O3", "unable to find groups")
+		return nil, nil, srverror.New(err, 500, "Error O3", "unable to find groups")
 	}
 	var groups []*types.Group
 	if err = cursor.All(ob.ctx, &groups); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil, errors.ErrNoResults.Extend("No associated groups decoded", id.String())
 		}
-		return nil, nil, srverror.New(err, 500, "Database Error O4", "unable to decode groups")
+		return nil, nil, srverror.New(err, 500, "Error O4", "unable to decode groups")
 	}
 	for _, group := range groups {
 		ob.put(group)
@@ -353,7 +355,7 @@ func (ob *Ownerbase) Update(u types.Owner) (err error) {
 			case srverror.Error:
 				err = v
 			case error:
-				err = srverror.New(v, 500, "Database Error O5.0")
+				err = srverror.New(v, 500, "Error O5.0")
 			default:
 				err = fmt.Errorf("Update Panic: %v", v)
 			}
@@ -370,7 +372,7 @@ func (ob *Ownerbase) Update(u types.Owner) (err error) {
 		},
 	)
 	if err != nil {
-		return srverror.New(err, 500, "Database Error O5", "error updating owner")
+		return srverror.New(err, 500, "Error O5", "error updating owner")
 	}
 	if result.MatchedCount == 0 {
 		return errors.ErrNotFound.Extend("no owner to update", u.GetID().String())
@@ -403,7 +405,7 @@ func (ob *Ownerbase) GetSpace(id types.OwnerID) (int64, error) {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
 		}
-		return 0, srverror.New(err, 500, "Database Error O6", "unable to send aggregation")
+		return 0, srverror.New(err, 500, "Error O6", "unable to send aggregation")
 	}
 	var result []struct {
 		Size int64 `bson:"size"`
@@ -412,7 +414,7 @@ func (ob *Ownerbase) GetSpace(id types.OwnerID) (int64, error) {
 		if err == mongo.ErrNoDocuments {
 			return 0, nil
 		}
-		return 0, srverror.New(err, 500, "Database Error O6.1", "unable to Decode aggregation")
+		return 0, srverror.New(err, 500, "Error O6.1", "unable to Decode aggregation")
 	}
 	if len(result) == 0 {
 		return 0, nil
@@ -451,7 +453,7 @@ func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 	newkey := make([]byte, 32)
 	_, err = rand.Read(newkey)
 	if err != nil {
-		return "", srverror.New(err, 500, "Server Error", "Unable to generate new password reset key")
+		return "", srverror.New(err, 500, "Error O7", "Unable to generate new password reset key")
 	}
 	_, err = ob.client.Database(ob.DBName).Collection(ob.CollNames["reset"]).UpdateOne(ob.ctx, bson.M{
 		"user": id,
@@ -465,7 +467,7 @@ func (ob *Ownerbase) GetResetKey(id types.OwnerID) (key string, err error) {
 		},
 	}, options.Update().SetUpsert(true))
 	if err != nil {
-		return "", srverror.New(err, 500, "Server Error", "unable to insert key")
+		return "", srverror.New(err, 500, "Error O8", "unable to insert key")
 	}
 	return base64.RawURLEncoding.EncodeToString(newkey), nil
 }
@@ -503,7 +505,7 @@ func (ob *Ownerbase) DeleteResetKey(id types.OwnerID) error {
 		"user": id,
 	})
 	if err != nil {
-		return srverror.New(err, 500, "Server Error", "unable to remove reset key")
+		return srverror.New(err, 500, "Error O9", "unable to remove reset key")
 	}
 	return nil
 }

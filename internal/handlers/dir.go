@@ -33,8 +33,6 @@ func AttachDir(r *mux.Router) {
 	r.HandleFunc("/{id}", deleteDir).Methods("DELETE")
 }
 
-var missingContextErr = srverror.Basic(500, "Unable to access search context")
-
 var dirflag = "d"
 
 func getDirs(out http.ResponseWriter, r *http.Request) {
@@ -109,7 +107,7 @@ func createDir(out http.ResponseWriter, r *http.Request) {
 			},
 		})
 		if err != nil {
-			panic(srverror.New(err, 500, "Server Error", "Unable to add user tag"))
+			panic(srverror.New(err, 500, "Error H1", "Unable to add user tag"))
 		}
 	}
 
@@ -133,7 +131,7 @@ func dirInfo(out http.ResponseWriter, r *http.Request) {
 		if se := err.(srverror.Error); se.Status() == errors.ErrNoResults.Status() {
 			w.WriteHeader(se.Status())
 		} else {
-			panic(srverror.New(err, 500, "Server Error", "unable to get file tags"))
+			panic(srverror.New(err, 500, "Error H2", "unable to get file tags"))
 		}
 	}
 	var filematches []types.FileID
@@ -161,11 +159,11 @@ func adjustDir(add bool) func(http.ResponseWriter, *http.Request) {
 		vals := mux.Vars(r)
 		dirtagname := vals["id"]
 		if len(dirtagname) == 0 {
-			panic(srverror.Basic(400, "dir name missing"))
+			panic(srverror.Basic(400, "Please include a directory name"))
 		}
 		fidstrs := r.PostForm["id"]
 		if len(fidstrs) == 0 {
-			panic(srverror.Basic(400, "missing file ids"))
+			panic(srverror.Basic(400, "Please include file IDs for the directory"))
 		}
 		var fids []types.FileID
 		for _, fidstr := range fidstrs {

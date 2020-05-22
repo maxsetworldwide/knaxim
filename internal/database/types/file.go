@@ -43,10 +43,10 @@ func NewFileStore(r io.Reader) (*FileStore, error) {
 	var err error
 	n.ID, err = NewStoreID(pout)
 	if err != nil {
-		return nil, srverror.New(err, 500, "Database Error F1")
+		return nil, srverror.New(err, 500, "Error F1")
 	}
 	if err = g.Close(); err != nil {
-		return nil, srverror.New(err, 500, "Database Error F2")
+		return nil, srverror.New(err, 500, "Error F2")
 	}
 
 	n.Content = ContentBuf.Bytes()
@@ -58,7 +58,7 @@ func (fs *FileStore) Reader() (io.Reader, error) {
 	contentbuffer := bytes.NewReader(fs.Content)
 	out, err := gzip.NewReader(contentbuffer)
 	if err != nil {
-		err = srverror.New(err, 500, "Database Error F3", "file reading error")
+		err = srverror.New(err, 500, "Error F3", "file reading error")
 	}
 	return out, err
 }

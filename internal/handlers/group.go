@@ -98,7 +98,7 @@ func createGroup(out http.ResponseWriter, r *http.Request) {
 	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
 	newname := r.FormValue("newname")
 	if !validGroupName(newname) {
-		panic(srverror.Basic(400, "Bad Request", "invalid group name", newname))
+		panic(srverror.Basic(400, "invalid group name", newname))
 	}
 	ng := types.NewGroup(newname, owner)
 	var err error
@@ -189,7 +189,7 @@ func searchGroupFiles(out http.ResponseWriter, r *http.Request) {
 	w := out.(*srvjson.ResponseWriter)
 
 	if err := r.ParseForm(); err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
+		panic(srverror.New(err, 400, "Unable to parse form data"))
 	}
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(400, "No Search Term"))
@@ -253,6 +253,7 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 			panic(srverror.Basic(400, "Missing Member ID"))
 		}
 		ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
+		var targets []types.Owner
 		for _, idstr := range r.Form["id"] {
 			id, err := types.DecodeOwnerIDString(idstr)
 			if err != nil {
@@ -262,10 +263,16 @@ func updateGroupMember(add bool) func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				panic(err)
 			}
+			if group.Equal(mem) {
+				panic(srverror.Basic(400, "Attempted to add group to itself"))
+			}
+			targets = append(targets, mem)
+		}
+		for _, t := range targets {
 			if add {
-				group.AddMember(mem)
+				group.AddMember(t)
 			} else {
-				group.RemoveMember(mem)
+				group.RemoveMember(t)
 			}
 		}
 		err := ownerbase.Update(group)

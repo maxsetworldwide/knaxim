@@ -1,6 +1,5 @@
 import Vue from 'vue'
-import UserService from '@/service/user'
-import GroupService from '@/service/group'
+import OwnerService from '@/service/owner'
 import { LOAD_OWNER, LOOKUP_OWNER } from './actions.type'
 import { SET_OWNER_NAME, PROCESS_SERVER_STATE, OWNER_LOADING, PUSH_ERROR } from './mutations.type'
 
@@ -20,22 +19,16 @@ const actions = {
       context.commit(OWNER_LOADING, 1)
       context.commit(SET_OWNER_NAME, { id, name: 'loading...' })
 
-      let results = await Promise.allSettled([
-        UserService.info({ id }).then(r => r.data.name),
-        GroupService.info({ gid: id }).then(r => r.data.name)
-      ])
-
-      let name = 'Unknown'
-      if (results[0].status === 'fulfilled') {
-        name = results[0].value
-      } else if (results[1].status === 'fulfilled') {
-        name = results[1].value
-      } else {
-        context.commit(PUSH_ERROR, new Error(`LOAD_OWNER: ${results[0].reason} + ${results[1].reason}`))
+      try {
+        let name = await OwnerService.id(id).then(r => r.data.name)
+        context.commit(SET_OWNER_NAME, { id, name })
+        return name
+      } catch (e) {
+        context.commit(PUSH_ERROR, e.addDebug('action LOAD_OWNER'))
+        return 'Unknown'
+      } finally {
+        context.commit(OWNER_LOADING, -1)
       }
-      context.commit(SET_OWNER_NAME, { id, name })
-      context.commit(OWNER_LOADING, -1)
-      return name
     } else {
       return context.state.names[id]
     }
@@ -53,26 +46,13 @@ const actions = {
     if (overwrite || !foundid) {
       commit(OWNER_LOADING, 1)
       try {
-        let lookedup = await Promise.allSettled([
-          UserService.lookup({ name }).then(res => res.data.id),
-          GroupService.lookup({ name }).then(res => res.data.id)
-        ])
-        for (let result of lookedup) {
-          if (result.status === 'fulfilled') {
-            foundid = result.value
-            break
-          }
-        }
-        if (!foundid) {
-          throw new Error(`unable to find owner ${name}: ${lookedup[0].reason} ${lookedup[1].reason}`)
-        } else {
-          commit(SET_OWNER_NAME, {
-            id: foundid,
-            name
-          })
-        }
+        foundid = await OwnerService.name(name).then(r => r.data.id)
+        commit(SET_OWNER_NAME, {
+          id: foundid,
+          name
+        })
       } catch (e) {
-        commit(PUSH_ERROR, new Error(`LOOKUP_OWNER: ${e}`))
+        commit(PUSH_ERROR, e.addDebug('action LOOKUP_OWNER'))
         throw e
       } finally {
         commit(OWNER_LOADING, -1)

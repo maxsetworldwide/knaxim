@@ -107,6 +107,9 @@ func (g *Group) AddMember(o Owner) {
 	if o == nil {
 		return
 	}
+	if g.Equal(o) {
+		return
+	}
 	g.SetPerm(o, "%member%", true)
 }
 

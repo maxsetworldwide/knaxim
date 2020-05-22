@@ -60,7 +60,7 @@ func sendReset(w http.ResponseWriter, r *http.Request) {
 	}
 	err = email.SendResetEmail([]string{user.GetEmail()}, user.GetName(), config.V.Address, key)
 	if err != nil {
-		panic(srverror.New(err, 500, "Server Error", "unable to send reset email"))
+		panic(srverror.New(err, 500, "Error H4", "unable to send reset email"))
 	}
 	w.Write([]byte("success"))
 }
@@ -145,8 +145,15 @@ func getUserData(out http.ResponseWriter, r *http.Request) {
 
 func createUser(w http.ResponseWriter, r *http.Request) {
 	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
-	if !validUserName(r.FormValue("name")) || passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 || !validEmail(r.FormValue("email")) {
-		panic(srverror.Basic(400, "Bad Request", fmt.Sprintf("invalid values: user: %s, email: %s, pass: %s", r.FormValue("name"), r.FormValue("email"), r.FormValue("pass"))))
+	errorLog := fmt.Sprintf("invalid values: user: %s, email: %s, pass: %s", r.FormValue("name"), r.FormValue("email"), r.FormValue("pass"))
+	if !validUserName(r.FormValue("name")) {
+		panic(srverror.Basic(400, "Invalid Username", errorLog))
+	}
+	if passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 {
+		panic(srverror.Basic(400, "Password not strong enough", errorLog))
+	}
+	if !validEmail(r.FormValue("email")) {
+		panic(srverror.Basic(400, "Invalid Email", errorLog))
 	}
 	nuser := types.NewUser(r.FormValue("name"), r.FormValue("pass"), r.FormValue("email"))
 	var err error
@@ -164,8 +171,15 @@ func createAdmin(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(400, "Bad Request", "incorrect admin key", r.FormValue("adminkey"), config.V.AdminKey))
 	}
 	ownerbase := r.Context().Value(types.OWNER).(database.Ownerbase)
-	if !validUserName(r.FormValue("name")) || passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 || !validEmail(r.FormValue("email")) {
-		panic(srverror.Basic(400, "Bad Request", "invalid values"))
+	errorLog := fmt.Sprintf("invalid values: user: %s, email: %s, pass: %s", r.FormValue("name"), r.FormValue("email"), r.FormValue("pass"))
+	if !validUserName(r.FormValue("name")) {
+		panic(srverror.Basic(400, "Invalid Username", errorLog))
+	}
+	if passentropy.Score(r.FormValue("pass")) < passentropy.Char6Cap1num1 {
+		panic(srverror.Basic(400, "Password not strong enough", errorLog))
+	}
+	if !validEmail(r.FormValue("email")) {
+		panic(srverror.Basic(400, "Invalid Email", errorLog))
 	}
 	nuser := types.NewUser(r.FormValue("name"), r.FormValue("pass"), r.FormValue("email"))
 	nuser.SetRole("admin", true)
@@ -211,7 +225,7 @@ func searchAllUserFiles(out http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(USER).(types.Owner)
 	filebase := r.Context().Value(types.FILE).(database.Filebase)
 	if err := r.ParseForm(); err != nil {
-		panic(srverror.New(err, 400, "Bad Request", "Unable to parse form data"))
+		panic(srverror.New(err, 400, "Unable to parse form data"))
 	}
 	if len(r.Form["find"]) == 0 {
 		panic(srverror.Basic(404, "Not Found", "no search term"))
@@ -296,7 +310,7 @@ func updateCredentials(w http.ResponseWriter, r *http.Request) {
 		panic(srverror.Basic(404, "Not Found"))
 	}
 	if passentropy.Score(r.FormValue("newpass")) < passentropy.Char6Cap1num1 {
-		panic(srverror.Basic(400, "Bad Request"))
+		panic(srverror.Basic(400, "Password not strong enough"))
 	}
 	user.SetLock(types.NewUserCredential(r.FormValue("newpass")))
 	if err := userbase.Update(user); err != nil {

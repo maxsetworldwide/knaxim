@@ -11,9 +11,9 @@ var (
 	ErrNotFound       = srverror.New(errors.New("Not Found in Database"), 404, "Not Found")
 	ErrNoResults      = srverror.Basic(204, "Empty", "No results found")
 	ErrNameTaken      = srverror.New(errors.New("Id is already in use"), 409, "Name Already Taken")
-	ErrCorruptData    = srverror.New(errors.New("unable to decode data from the database"), 500, "Database Error 010")
+	ErrCorruptData    = srverror.New(errors.New("unable to decode data from the database"), 500, "Error 010")
 	ErrPermission     = srverror.New(errors.New("User does not have appropriate permission"), 403, "Permission Denied")
-	ErrIDNotReserved  = srverror.Basic(500, "Database Error 011", "ID has not been reserved for Insert")
+	ErrIDNotReserved  = srverror.Basic(500, "Error 011", "ID has not been reserved for Insert")
 	ErrIDUnrecognized = srverror.Basic(400, "Unrecognized ID")
 
 	FileLoadInProgress = &Processing{Status: 202, Message: "Processing File"}

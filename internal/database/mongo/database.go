@@ -412,7 +412,7 @@ func (d *Database) Close(ctx context.Context) error {
 	}
 	if d.client != nil {
 		if err := d.client.Disconnect(ctx); err != nil {
-			return srverror.New(err, 500, "Database Error 101", "unable to close connection to Database")
+			return srverror.New(err, 500, "Error 101", "unable to close connection to Database")
 		}
 	}
 	if d.cancel != nil {

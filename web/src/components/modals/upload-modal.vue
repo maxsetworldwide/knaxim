@@ -15,7 +15,7 @@ global events:
     @hidden="onClose"
     centered
     hide-footer
-    hide-header
+    title="Upload File"
     :no-close-on-backdrop="loading"
     :no-close-on-esc="loading"
     content-class="modal-style"
