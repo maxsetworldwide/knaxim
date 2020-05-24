@@ -2,8 +2,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import { ACRONYMS } from '@/store/actions.type'
 import AcronymSearch from '@/components/acronym-search'
 import Vuex from 'vuex'
-import merge from 'lodash/merge'
-import { flushPromises } from './utils'
+import { flushPromises, TestStore } from './utils'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
@@ -12,29 +11,26 @@ const testPhrase = 'MANPADS'
 const testResult = 'Man-Portable Air-Defense System'
 const testSlot = '<span>{{ props.result }}</span>'
 const expectedHTML = `<span>${testResult}</span>`
-const createStore = function (overwrites = {}) {
-  const defaultStoreObj = {
-    actions: {
-      [ACRONYMS] (ctx) {
-        ctx.commit('testSetAcronym', testResult)
-      }
-    },
-    state: {
-      testResult: ''
-    },
-    getters: {
-      acronymResults: (state) => {
-        return state.testResult
-      }
-    },
-    mutations: {
-      testSetAcronym (state, payload) {
-        state.testResult = payload
-      }
+const testStore = new TestStore({
+  actions: {
+    [ACRONYMS] (ctx) {
+      ctx.commit('testSetAcronym', testResult)
+    }
+  },
+  state: {
+    testResult: ''
+  },
+  getters: {
+    acronymResults: (state) => {
+      return state.testResult
+    }
+  },
+  mutations: {
+    testSetAcronym (state, payload) {
+      state.testResult = payload
     }
   }
-  return new Vuex.Store(merge(defaultStoreObj, overwrites))
-}
+})
 
 // API options for test-utils - mount, shallowMount, etc.:
 //   https://vue-test-utils.vuejs.org/api
@@ -48,7 +44,7 @@ const createStore = function (overwrites = {}) {
 const shallowMountFa = (
   options = { props: {}, methods: {}, computed: {}, store: null }
 ) => {
-  let store = options.store || createStore()
+  let store = options.store || testStore.createStore()
   return shallowMount(AcronymSearch, {
     store,
     localVue,
@@ -81,7 +77,7 @@ describe('AcronymSearch', () => {
     expect(wrapper.html()).toContain(expectedHTML)
   })
   it('dispatches acronym search while typing', async () => {
-    const store = createStore()
+    const store = testStore.createStore()
     spyOn(store, 'dispatch')
     const wrapper = shallowMountFa({ store })
     const reducer = (acc, args) => (args[0] === ACRONYMS ? acc + 1 : acc)

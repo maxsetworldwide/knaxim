@@ -1,5 +1,6 @@
-/*
- */
+import Vuex from 'vuex'
+import merge from 'lodash/merge'
+
 /*
  * Useful for awaiting components to change upon data change.
  *
@@ -8,4 +9,17 @@
  */
 export function flushPromises () {
   return new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+/*
+ *
+ */
+export class TestStore {
+  constructor (template = {}) {
+    this.default = template
+  }
+
+  createStore (overwrites = {}) {
+    return new Vuex.Store(merge(this.default, overwrites))
+  }
 }

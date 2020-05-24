@@ -2,7 +2,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import Vuex from 'vuex'
 import HeaderSearchRow from '@/components/header-search-row'
 import FileIcon from '@/components/file-icon'
-import merge from 'lodash/merge'
+import { TestStore } from './utils'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
@@ -27,22 +27,19 @@ const testLines = {
     ]
   }
 }
-const createStore = function (overwrites = {}) {
-  const defaultStoreObj = {
-    actions: {},
-    state: {},
-    getters: {
-      searchLines: () => testLines
-    },
-    mutations: {}
-  }
-  return new Vuex.Store(merge(defaultStoreObj, overwrites))
-}
+const testStore = new TestStore({
+  actions: {},
+  state: {},
+  getters: {
+    searchLines: () => testLines
+  },
+  mutations: {}
+})
 
 const shallowMountFa = (
   options = { props: {}, methods: {}, computed: {}, store: null }
 ) => {
-  let store = options.store || createStore()
+  let store = options.store || testStore.createStore()
   return shallowMount(HeaderSearchRow, {
     // stubs: ['b-row', 'b-col'],
     store,
@@ -92,13 +89,14 @@ describe('HeaderSearchRow', () => {
         ]
       }
     }
-    const store = createStore({
+    const store = testStore.createStore({
       getters: {
         searchLines: () => lineOverwrite
       }
     })
     const wrapper = shallowMountFa({ store })
     expect(wrapper.html()).not.toContain(contentHTML)
+    expect(wrapper.text()).toContain(contentHTML)
   })
   it('uses file icon correctly', () => {
     const wrapper = shallowMountFa()
