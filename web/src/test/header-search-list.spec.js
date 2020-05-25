@@ -71,9 +71,6 @@ const shallowMountFa = (
       ...options.methods
     },
     computed: {
-      rows () {
-        return []
-      },
       ...options.computed
     }
   })
