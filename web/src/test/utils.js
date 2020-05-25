@@ -12,7 +12,11 @@ export function flushPromises () {
 }
 
 /*
- *
+ * Simple vuex mocking utility. Per spec file, you can create a new TestStore
+ * with a default vuex template (eg { getters: ..., actions: ... }), then each
+ * individual test can use TestStore.createStore to make a new Vuex Store for
+ * that test, including any specific overwrites the test may want to make, which
+ * is also in the form of the template.
  */
 export class TestStore {
   constructor (template = {}) {
