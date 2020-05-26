@@ -72,7 +72,7 @@ describe('FileViewer', () => {
         if (expected[view]) {
           expect(views[view].exists()).toBeTrue()
         } else {
-          expect(views[view].exists()).toBeFalsy()
+          expect(views[view].exists()).toBeFalse()
         }
       }
     }
