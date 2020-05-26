@@ -134,7 +134,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 			if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
 				panic(err)
 			} else if maxfiles > -1 && count >= maxfiles {
-				panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
+				panic(srverror.Basic(461, fmt.Sprintf("Too many files, you can only have %d files. Delete files and empty the trash to make space", maxfiles), fmt.Sprintf("count: %d, maxfiles: %d", count, maxfiles)))
 			}
 			fs, err = process.InjestFile(fctx, file, fheader.Header.Get("Content-Type"), freader, config.DB)
 			if err != nil {
@@ -257,7 +257,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			if count, err := r.Context().Value(types.DATABASE).(database.Database).File().Count(owner.GetID()); err != nil {
 				panic(err)
 			} else if maxFiles > -1 && count >= maxFiles {
-				panic(srverror.Basic(460, "Maximum number of Files Reached", fmt.Sprintf("count: %d, maxfiles: %d", count, maxFiles)))
+				panic(srverror.Basic(461, fmt.Sprintf("Too many files, you can only have %d files. Delete files and empty the trash to make space", maxFiles), fmt.Sprintf("count: %d, maxfiles: %d", count, maxFiles)))
 			}
 			if process.MapContentType(resp.Header.Get("Content-Type")) == process.URL {
 

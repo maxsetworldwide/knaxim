@@ -48,7 +48,7 @@ func InjestFile(ctx context.Context, file types.FileI, contenttype string, strea
 			panic(err)
 		}
 		if currentspace+fs.FileSize > totalspace {
-			panic(srverror.Basic(460, "No Space"))
+			panic(srverror.Basic(462, "No Space, Delete Files and empty trash to free space"))
 		}
 	}
 	{

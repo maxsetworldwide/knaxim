@@ -43,7 +43,7 @@ type User struct {
 	CookieTimeout    time.Time       `json:"ct" bson:"ct"`
 	Roles            map[string]bool `json:"roles,omitempty" bson:"roles,omitempty"`
 	Space            int64           `json:"space,omitempty" bson:"space,omitempty"`
-	Maxfiles         int64           `json:"maxfiles,omitempty" bson:"maxfiles,omitempty"`
+	Max              int64           `json:"max,omitempty" bson:"max,omitempty"`
 }
 
 // NewUser with username, email and password
@@ -64,7 +64,7 @@ func NewUser(name, password, email string) *User {
 
 // MaxFiles returns the maximum number of files that an owner can own
 func (u *User) MaxFiles() int64 {
-	return u.Maxfiles
+	return u.Max
 }
 
 // GetName implements UserI
