@@ -56,6 +56,7 @@ const actions = {
               }
             })
           }
+          return []
         }).then(r => resolve(r)).catch(e => reject(e))
       })
       commit(SET_MATCHES, fileList)
