@@ -51,7 +51,9 @@ combination of server/knaxim and maxsetdev/knaxim-client
 
 409 Conflict - Name Taken
 
-460 Out of Space
+460 File Too Large
+461 Exceeds Max File Count Limit
+462 No available space to store file
 
 ### 5xx
 > ...the server is aware that it has erred or is incapable of performing the request.

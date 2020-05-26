@@ -136,7 +136,7 @@ type Owner interface {
 	Match(o Owner) bool
 	Equal(o Owner) bool
 	Copy() Owner
-	MaxFiles() int64 // Maximum file count for owner, -1 indicates infinite
+	MaxFiles() int64 // Maximum file count for owner, 0 indicates to use the default configuration, -1 indicates infinite
 }
 
 type publicowner struct {

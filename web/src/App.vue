@@ -188,7 +188,13 @@ export default {
               case 409:
                 break
               case 460:
-                this.makeToast('You do not have enough space to save a file', 'Out of Space')
+                this.makeToast('File is too large', 'Large File')
+                break
+              case 461:
+                this.makeToast('Maximum file count reached, Delete files and empty trash to reclaim space', 'File Limit')
+                break
+              case 462:
+                this.makeToast('File exceeded available space, Delete files and empty trash to reclaim space', 'File Limit')
                 break
               default:
                 this.makeToast(e.message, e.name || 'Error')
