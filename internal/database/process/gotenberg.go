@@ -2,9 +2,10 @@ package process
 
 import (
 	"io"
+	"regexp"
 	"strings"
 
-	"github.com/thecodingmachine/gotenberg-go-client/v7"
+	gotenberg "github.com/thecodingmachine/gotenberg-go-client/v7"
 )
 
 // ExtConst is an enum type indicating how a particular file
@@ -43,6 +44,48 @@ var ExtMap = map[string]ExtConst{
 // MapContentType converts the content type header value to associated ExtConst
 func MapContentType(ct string) ExtConst {
 	return ExtMap[strings.TrimSpace(strings.Split(ct, ";")[0])]
+}
+
+var extRegex = regexp.MustCompile(`\.[^.]*$`)
+
+// IdentifyFileAction generates the ExtConst based on the file header
+func IdentifyFileAction(name string, ctype string) ExtConst {
+	//check file name
+	ext := strings.ToLower(extRegex.FindString(strings.TrimSpace(name)))
+	if len(ext) > 0 {
+		ext = ext[1:]
+		switch ext {
+		case "pdf":
+			return PDF
+		case "txt":
+			fallthrough
+		case "odt":
+			fallthrough
+		case "ods":
+			fallthrough
+		case "odp":
+			fallthrough
+		case "ppt":
+			fallthrough
+		case "pptx":
+			fallthrough
+		case "xls":
+			fallthrough
+		case "xlsx":
+			fallthrough
+		case "doc":
+			fallthrough
+		case "docx":
+			fallthrough
+		case "rtf":
+			return OFFICE
+		case "html":
+			fallthrough
+		case "htm":
+			return URL
+		}
+	}
+	return MapContentType(ctype)
 }
 
 // FileConverter is n connector to gotenberg to convert a wide
