@@ -121,7 +121,7 @@ func insertNLPTags(ctx context.Context, client *mongo.Client, destDB *CEMongo.Da
 			if err != nil {
 				return err
 			}
-			decode.Read(ctx, nil, fs, destDB, *tikaPath, *gotenPath)
+			decode.Read(ctx, nil, file.GetName(), fs, destDB, *tikaPath, *gotenPath)
 			foundStoreIDs[storeID.String()] = true
 		}
 	}
