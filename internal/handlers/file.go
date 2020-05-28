@@ -161,7 +161,7 @@ func createFile(out http.ResponseWriter, r *http.Request) {
 	if fs.Perr != nil {
 		pctx := context.WithValue(context.Background(), decode.TIMEOUT, timescale*5)
 		pctx = context.WithValue(pctx, decode.PROCESSING, config.GetResourceTracker())
-		go decode.Read(pctx, nil, fs, config.DB, config.T.Path, config.V.GotenPath)
+		go decode.Read(pctx, nil, file.GetName(), fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
 		db, err := config.DB.Connect(fctx)
@@ -259,7 +259,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 			} else if maxFiles > -1 && count >= maxFiles {
 				panic(srverror.Basic(461, fmt.Sprintf("Too many files, you can only have %d files. Delete files and empty the trash to make space", maxFiles), fmt.Sprintf("count: %d, maxfiles: %d", count, maxFiles)))
 			}
-			if process.MapContentType(resp.Header.Get("Content-Type")) == process.URL {
+			if process.IdentifyFileAction(URL.String(), resp.Header.Get("Content-Type")) == process.URL {
 
 				res, err := process.NewFileConverter(config.V.GotenPath).ConvertURL(URL.String())
 				if err != nil {
@@ -347,7 +347,7 @@ func webPageUpload(out http.ResponseWriter, r *http.Request) {
 	if fs.Perr != nil {
 		pctx := context.WithValue(context.Background(), decode.TIMEOUT, timescale*5)
 		pctx = context.WithValue(pctx, decode.PROCESSING, config.GetResourceTracker())
-		go decode.Read(pctx, nil, fs, config.DB, config.T.Path, config.V.GotenPath)
+		go decode.Read(pctx, nil, URL.String(), fs, config.DB, config.T.Path, config.V.GotenPath)
 	}
 	if len(r.FormValue("dir")) > 0 {
 		db, err := config.DB.Connect(fctx)

@@ -282,7 +282,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		decode.Read(setupctx, nil, adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, file.file.GetName(), adminFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -310,7 +310,7 @@ func populateDB() (err error) {
 			fmt.Printf("injest file failed")
 			return
 		}
-		decode.Read(setupctx, nil, publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, file.file.GetName(), publicFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}
@@ -320,7 +320,7 @@ func populateDB() (err error) {
 		if err != nil {
 			return
 		}
-		decode.Read(setupctx, nil, testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
+		decode.Read(setupctx, nil, file.file.GetName(), testFiles[i].store, config.DB, config.T.Path, config.V.GotenPath)
 		if err != nil {
 			return
 		}

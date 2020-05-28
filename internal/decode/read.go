@@ -19,7 +19,7 @@ import (
 )
 
 //Read generates meta data from the content of a filestore
-func Read(ctx context.Context, cncl context.CancelFunc, fs *types.FileStore, dbconfig database.Database, tika string, gotenburg string) {
+func Read(ctx context.Context, cncl context.CancelFunc, name string, fs *types.FileStore, dbconfig database.Database, tika string, gotenburg string) {
 	ctx = startProcessing(ctx)
 	defer stopProcessing(ctx)
 	errlock := new(sync.Mutex)
@@ -155,8 +155,8 @@ func Read(ctx context.Context, cncl context.CancelFunc, fs *types.FileStore, dbc
 		go func() {
 			defer wg.Done()
 			var result []byte
-			extConst, ok := process.ExtMap[fs.ContentType]
-			if !ok || extConst == process.PDF {
+			extConst := process.IdentifyFileAction(name, fs.ContentType)
+			if extConst == 0 || extConst == process.PDF {
 				// no conversions available. do not put a view in the db. retrieval of this
 				// view should return 404 or 302 or 303 to indicate that sentences should be used
 				// OR is PDF

@@ -49,7 +49,7 @@ func TestRead(t *testing.T) {
 	lock <- struct{}{}
 	testctx = context.WithValue(testctx, PROCESSING, lock)
 	testctx = context.WithValue(testctx, TIMEOUT, time.Minute)
-	Read(testctx, cancel, fs, db, tikapath, gotenburgpath)
+	Read(testctx, cancel, "test.txt", fs, db, tikapath, gotenburgpath)
 	databasejson, err := json.MarshalIndent(db, "", "\t")
 	if err != nil {
 		t.Fatalf("unable to produce database output: %s", err.Error())
