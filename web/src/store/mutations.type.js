@@ -66,3 +66,7 @@ export const SET_MATCHES = 'setMatches'
 
 export const LOADING_NLP = 'loadingNLP'
 export const SET_NLP = 'setNLP'
+
+export const ON = 'on'
+export const OFF = 'off'
+export const EMIT = 'emit'

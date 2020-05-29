@@ -9,6 +9,8 @@
     :busy="busy"
     :sort-compare="sortCompare"
     @row-selected="onCheck"
+    :sort-by.sync="sortBy"
+    :sort-desc.sync="sortDesc"
   >
   <template v-slot:table-colgroup="scope">
     <col
@@ -65,8 +67,9 @@
 <script>
 import fileIcon from '@/components/file-icon'
 import filePreview from '@/components/file-preview'
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 import { LOAD_OWNER, LOAD_PREVIEW, NLP_DATA } from '@/store/actions.type'
+import { ON, OFF } from '@/store/mutations.type'
 import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
 export default {
@@ -92,6 +95,8 @@ export default {
   data () {
     return {
       selected: false,
+      sortBy: '',
+      sortDesc: false,
       columnHeaders: [
         {
           key: 'select'
@@ -124,6 +129,18 @@ export default {
         }
       ]
     }
+  },
+  mounted: function () {
+    this.on({
+      evnt: 'Knaxim:FileAdded',
+      handler: this.sortDate
+    })
+  },
+  beforeDestory: function () {
+    this.off({
+      evnt: 'Knaxim:FileAdded',
+      handler: this.sortDate
+    })
   },
   computed: {
     selectAllMode: {
@@ -181,6 +198,10 @@ export default {
     ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview', 'nlpLoading'])
   },
   methods: {
+    sortDate () {
+      this.sortBy = 'date'
+      this.sortDesc = true
+    },
     openPreview (row) {
       row.toggleDetails()
       this[LOAD_PREVIEW](row.item)
@@ -230,7 +251,11 @@ export default {
       this.$emit('open', id)
     },
     // ...mapGetters(['populateFiles']),
-    ...mapActions([LOAD_OWNER, LOAD_PREVIEW, NLP_DATA])
+    ...mapActions([LOAD_OWNER, LOAD_PREVIEW, NLP_DATA]),
+    ...mapMutations({
+      on: ON,
+      off: OFF
+    })
   }
 }
 </script>

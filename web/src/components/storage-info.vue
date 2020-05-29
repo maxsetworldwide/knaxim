@@ -18,20 +18,34 @@
 
 <script>
 import { GET_USER } from '@/store/actions.type'
-import { mapGetters } from 'vuex'
-import { EventBus, humanReadableSize } from '@/plugins/utils'
+import { ON, OFF } from '@/store/mutations.type'
+import { mapGetters, mapMutations } from 'vuex'
+import { humanReadableSize } from '@/plugins/utils'
 
 export default {
   name: 'storage-info',
   props: {
   },
   created () {
-    EventBus.$on(['file-upload', 'url-upload'], this.refresh)
+    this.on({
+      evnt: 'Knaxim:FileAdded',
+      handler: this.refresh
+    })
+  },
+  beforeDestroy () {
+    this.off({
+      evnt: 'Knaxim:FileAdded',
+      handler: this.refresh
+    })
   },
   methods: {
     refresh () {
       this.$store.dispatch(GET_USER)
-    }
+    },
+    ...mapMutations({
+      on: ON,
+      off: OFF
+    })
   },
   computed: {
     total () {

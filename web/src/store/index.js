@@ -13,6 +13,7 @@ import group from './group.module'
 import preview from './preview.module'
 import error from './error.module'
 import nlp from './nlp.module'
+import evnt from './event.module'
 
 import UserService from '@/service/user'
 import { LOAD_SERVER, HANDLE_SERVER_STATE, AFTER_LOGIN } from './actions.type'
@@ -35,7 +36,8 @@ export default new Vuex.Store({
     group,
     preview,
     error,
-    nlp
+    nlp,
+    evnt
   },
   // TODO: Extract all the search functionality into a module!
   state: {
