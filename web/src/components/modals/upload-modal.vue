@@ -52,7 +52,7 @@ global events:
 
 <script>
 import { CREATE_FILE } from '@/store/actions.type'
-import { EventBus } from '@/plugins/utils'
+import { EMIT } from '@/store/mutations.type'
 
 export default {
   name: 'upload-modal',
@@ -79,7 +79,7 @@ export default {
         .then(() => {
           this.loading = false
           this.$emit('upload')
-          EventBus.$emit('file-upload')
+          this.$store.commit(EMIT, { evnt: 'Knaxim:FileAdded' })
           this.$bvModal.hide(this.id)
         })
         .catch(() => {

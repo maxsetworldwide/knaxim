@@ -42,9 +42,9 @@ global events:
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 import { CREATE_WEB_FILE } from '@/store/actions.type'
-import { EventBus } from '@/plugins/utils'
+import { EMIT } from '@/store/mutations.type'
 
 export default {
   name: 'url-upload-modal',
@@ -67,7 +67,7 @@ export default {
       this.loading = true
       await this.send({ url: this.input })
       this.$emit('upload')
-      EventBus.$emit('url-upload')
+      this.emit('Knaxim:FileAdded')
       this.$refs['modal'].hide()
     },
     onClose () {
@@ -82,6 +82,9 @@ export default {
     },
     ...mapActions({
       send: CREATE_WEB_FILE
+    }),
+    ...mapMutations({
+      emit: EMIT
     })
   },
   computed: {

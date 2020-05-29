@@ -1,7 +1,7 @@
 /**
  * knax-utils - small plugin for Knaxim to supply global utility functions.
  */
-import Vue from 'vue'
+// import Vue from 'vue'
 //
 // const install = function (Vue) {
 // }
@@ -46,7 +46,8 @@ export function humanReadableTime (time) {
  *
  * Please be sure to keep track of events you emit within your components.
  */
-export const EventBus = new Vue()
+// Deprecating in favor of new Vuex Event Bus module
+// export const EventBus = new Vue()
 
 export default {
   // install,
