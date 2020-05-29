@@ -1,5 +1,6 @@
 <script>
 import { PUT_FILE_FOLDER, LOAD_SERVER, DELETE_FILES } from '@/store/actions.type'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'batch-delete',
@@ -25,9 +26,16 @@ export default {
 
   computed: {
     ownedFiles () {
-
-    }
-  }
+      return this.files.filter((f) => {
+        return this.allOwned.reduce((owned, acc) => {
+          return acc || owned.id === f.id
+        }, false)
+      })
+    },
+    ...mapGetters({
+      allOwned: 'ownedFiles'
+    })
+  },
 
   methods: {
     async delete () {
@@ -38,7 +46,7 @@ export default {
         if (this.permanent) {
           let error = []
           try {
-            await this.$store.dispatch(DELETE_FILES, { ids: this.files.map(f => f.id) })
+            await this.$store.dispatch(DELETE_FILES, { ids: this.ownedFiles.map(f => f.id) })
           } catch {
             // TODO: Handle Error
           }
@@ -49,7 +57,7 @@ export default {
         } else {
           let noerror = true
           try {
-            await Promise.all(this.files.map(async file => {
+            await Promise.all(this.ownedFiles.map(async file => {
               await this.$store.dispatch(PUT_FILE_FOLDER, { fid: file.id, name: '_trash_', preventReload: true })
             })).finally(() => {
               this.$store.dispatch(LOAD_SERVER)
@@ -67,7 +75,7 @@ export default {
     createMsgBody () {
       const h = this.$createElement
       return h('b-list-group', [
-        h('b-list-group-item', 'Filename, Upload Date'), ...this.files.map((file) => {
+        h('b-list-group-item', 'Filename, Upload Date'), ...this.ownedFiles.map((file) => {
           return h('b-list-group-item',
             `${file.name}, ${file.date.upload}`)
         })
