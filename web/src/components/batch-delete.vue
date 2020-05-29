@@ -23,6 +23,12 @@ export default {
     })
   },
 
+  computed: {
+    ownedFiles () {
+
+    }
+  }
+
   methods: {
     async delete () {
       if (await this.$bvModal.msgBoxConfirm(this.createMsgBody(), {
