@@ -50,5 +50,3 @@ export const SEARCH = 'search'
 export const SEARCH_TAG = 'searchTag'
 
 export const NLP_DATA = 'nlpData'
-
-export const EMIT = 'emit'
