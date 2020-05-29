@@ -46,6 +46,7 @@ export function humanReadableTime (time) {
  *
  * Please be sure to keep track of events you emit within your components.
  */
+// Deprecating in favor of new Vuex Event Bus module
 // export const EventBus = new Vue()
 
 export default {
