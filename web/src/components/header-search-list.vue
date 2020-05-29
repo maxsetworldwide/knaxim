@@ -7,7 +7,7 @@
       </b-col>
     </b-row>
     <header-search-row
-      v-for="(row, indx) in rowInfo"
+      v-for="(row, indx) in rows"
       :key="indx"
       :webpage="row.webpage"
       :name="row.name"
@@ -70,7 +70,7 @@ export default {
     }
   },
   computed: {
-    rowInfo () {
+    rows () {
       return this.searchMatches
         .map((file) => {
           let splits = file.name.split('.')

@@ -4,20 +4,11 @@ import HeaderSearchList from '@/components/header-search-list'
 import HeaderSearchRow from '@/components/header-search-row'
 import { SEARCH, SEARCH_TAG } from '@/store/actions.type'
 import SearchService from '@/service/search'
-import { flushPromises } from './utils'
-import merge from 'lodash/merge'
+import { flushPromises, TestStore } from './utils'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
 
-let actions = {
-  [SEARCH] () {
-    return []
-  },
-  [SEARCH_TAG] () {
-    return []
-  }
-}
 const testUser = {
   id: 'testID',
   name: 'testName'
@@ -27,29 +18,33 @@ const testGroup = {
   name: 'groupName'
 }
 const testFind = 'testFindPhrase'
-const createStore = function (overwrites = {}) {
-  const defaultStoreObj = {
-    actions,
-    state: {
-      testActiveGroup: null,
-      testUser
+const testStore = new TestStore({
+  actions: {
+    [SEARCH] () {
+      return []
     },
-    getters: {
-      searchMatches: () => [],
-      searchLines: () => {},
-      activeGroup: (state) => state.testActiveGroup,
-      currentUser: (state) => state.testUser,
-      loading: () => false,
-      populateFiles: () => () => {}
-    },
-    mutations: {
-      testSetActiveGroup (state, payload) {
-        state.testActiveGroup = payload
-      }
+    [SEARCH_TAG] () {
+      return []
+    }
+  },
+  state: {
+    testActiveGroup: null,
+    testUser
+  },
+  getters: {
+    searchMatches: () => [],
+    searchLines: () => {},
+    activeGroup: (state) => state.testActiveGroup,
+    currentUser: (state) => state.testUser,
+    loading: () => false,
+    populateFiles: () => () => {}
+  },
+  mutations: {
+    testSetActiveGroup (state, payload) {
+      state.testActiveGroup = payload
     }
   }
-  return new Vuex.Store(merge(defaultStoreObj, overwrites))
-}
+})
 
 // API options for test-utils - mount, shallowMount, etc.:
 //   https://vue-test-utils.vuejs.org/api
@@ -63,7 +58,7 @@ const createStore = function (overwrites = {}) {
 const shallowMountFa = (
   options = { props: {}, methods: {}, computed: {}, store: null }
 ) => {
-  let store = options.store || createStore()
+  let store = options.store || testStore.createStore()
   return shallowMount(HeaderSearchList, {
     stubs: ['b-container'],
     store,
@@ -76,9 +71,6 @@ const shallowMountFa = (
       ...options.methods
     },
     computed: {
-      rows () {
-        return []
-      },
       ...options.computed
     }
   })
@@ -90,7 +82,7 @@ describe('HeaderSearchList', () => {
     expect(wrapper.is(HeaderSearchList)).toBe(true)
   })
   it('dispatches SEARCH', () => {
-    let store = createStore()
+    let store = testStore.createStore()
     spyOn(store, 'dispatch')
     shallowMountFa({ store })
     expect(store.dispatch).toHaveBeenCalledWith(SEARCH, {
@@ -103,7 +95,7 @@ describe('HeaderSearchList', () => {
     })
   })
   it('dispatches SEARCH_TAG', () => {
-    let store = createStore()
+    let store = testStore.createStore()
     spyOn(store, 'dispatch')
     const tag = 'testTag'
     shallowMountFa({ props: { tag }, store })
@@ -121,7 +113,7 @@ describe('HeaderSearchList', () => {
     })
   })
   it('searches when find changes', async () => {
-    let store = createStore()
+    let store = testStore.createStore()
     spyOn(store, 'dispatch')
     const wrapper = shallowMountFa({ store })
     const reducer = (acc, args) => (args[0] === SEARCH ? acc + 1 : acc)
@@ -133,7 +125,7 @@ describe('HeaderSearchList', () => {
     expect(postDispatchAmount).toEqual(preDispatchAmount + 1)
   })
   it('searches when active group changes', async () => {
-    let store = createStore()
+    let store = testStore.createStore()
     spyOn(store, 'dispatch')
     const wrapper = shallowMountFa({ store })
     const reducer = (acc, args) => (args[0] === SEARCH ? acc + 1 : acc)
@@ -151,7 +143,7 @@ describe('HeaderSearchList', () => {
     const fExt = 'test'
     const fName = 'testFName.' + fExt
     const fid = 'testfid'
-    const store = createStore({
+    const store = testStore.createStore({
       getters: {
         searchMatches: () => [{ name: fName, id: fid }]
       }
