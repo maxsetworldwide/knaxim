@@ -109,7 +109,9 @@ export default {
     },
     graphData () {
       let data = this.graphSource || []
-      data = data.slice(0, 7)
+      data = data.filter((datum) => {
+        return datum.word.length > 2
+      }).slice(0, 7)
       let result = []
       for (let val in data) {
         let { word, count } = data[val]
@@ -148,10 +150,9 @@ export default {
   created () {
     const { fid } = this
     Promise.allSettled([
-      this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 }),
-      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 }),
-      // grab 14 from resources so we can filter out duplicates from topics
-      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 14 })
+      this[NLP_DATA]({ fid, category: 't', start: 0, end: 20 }),
+      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 20 }),
+      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 20 })
     ]).finally(() => {
       if (!(this.graphSource && this.graphSource.length)) {
         this.$emit('no-data')
