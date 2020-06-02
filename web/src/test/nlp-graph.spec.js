@@ -2,7 +2,8 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import Vuex from 'vuex'
 import NlpGraph from '@/components/charts/nlp-graph'
 import DonutComplete from '@/components/charts/donut-complete'
-import { TestStore } from './utils'
+import { NLP_DATA } from '@/store/actions.type'
+import { flushPromises, TestStore } from './utils'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
@@ -42,7 +43,13 @@ const testStore = new TestStore({
       return {
         [testFid]: nlpArrays.resource
       }
+    },
+    nlpLoading () {
+      return false
     }
+  },
+  actions: {
+    [NLP_DATA] () {}
   }
 })
 
@@ -114,7 +121,7 @@ describe('NlpGraph', () => {
     }
     expect(spyFunc).toHaveBeenCalledWith(expectedArg)
   })
-  it('emits no-data when data is missing for chosen graph', () => {
+  it('emits no-data when data is missing for chosen graph', async () => {
     const store = testStore.createStore({
       getters: {
         nlpActions () {
@@ -123,6 +130,7 @@ describe('NlpGraph', () => {
       }
     })
     const wrapper = shallowMountFa({ store, props: { type: 'action' } })
+    await flushPromises()
     expect(wrapper.emitted('no-data').length).toEqual(1)
   })
   it('does not emit no-data when data is missing for a non chosen graph', () => {
