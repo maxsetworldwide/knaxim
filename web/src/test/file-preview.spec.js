@@ -1,29 +1,13 @@
 import { shallowMount, createLocalVue } from '@vue/test-utils'
 import Vuex from 'vuex'
 import FilePreview from '@/components/file-preview'
-import DonutComplete from '@/components/charts/donut-complete'
+import NlpGraph from '@/components/charts/nlp-graph'
+import { flushPromises } from './utils'
 
 const localVue = createLocalVue()
 localVue.use(Vuex)
 
 const testFid = 'testFid'
-const nlpArrays = {
-  topic: [
-    { count: 9, word: 'firstT' },
-    { count: 5, word: 'secondT' },
-    { count: 3, word: 'thirdT' }
-  ],
-  action: [
-    { count: 12, word: 'firstA' },
-    { count: 6, word: 'secondA' },
-    { count: 2, word: 'thirdA' }
-  ],
-  resource: [
-    { count: 10, word: 'firstR' },
-    { count: 3, word: 'secondR' },
-    { count: 1, word: 'thirdR' }
-  ]
-}
 const previewLines = ['test preview', 'with some lines']
 const getters = {
   filePreview () {
@@ -35,29 +19,10 @@ const getters = {
     }
     result[testFid] = obj
     return result
-  },
-  nlpTopics () {
-    let result = {}
-    result[testFid] = nlpArrays.topic
-    return result
-  },
-  nlpActions () {
-    let result = {}
-    result[testFid] = nlpArrays.action
-    return result
-  },
-  nlpResources () {
-    let result = {}
-    result[testFid] = nlpArrays.resource
-    return result
   }
 }
 let defaultStore = {
   getters
-}
-
-const $router = {
-  push: function () {}
 }
 
 const shallowMountFa = (
@@ -69,9 +34,6 @@ const shallowMountFa = (
       ...options.store
     }),
     localVue,
-    mocks: {
-      $router
-    },
     propsData: {
       fid: testFid,
       ...options.props
@@ -92,24 +54,16 @@ describe('FilePreview', () => {
   })
   it('contains the correct graphs', () => {
     const wrapper = shallowMountFa()
-    const donuts = wrapper.findAll(DonutComplete)
-    // order of the graphs matters.
-    const expectedGraphs = [
-      nlpArrays.topic,
-      nlpArrays.action,
-      nlpArrays.resource
-    ]
-    expect(donuts.length).toBe(expectedGraphs.length)
-    expectedGraphs.forEach((exp, idx) => {
-      let currDonut = donuts.at(idx)
-      let currExpectedProps = exp.map((data) => {
-        return {
-          data: data.count,
-          label: data.word
-        }
-      })
-      let currDataValsProp = currDonut.vm.$props.dataVals
-      expect(currDataValsProp).toEqual(currExpectedProps)
+    const graphs = wrapper.findAll(NlpGraph)
+    // Order of the graphs matters.
+    // Coupled with the props of each type defined in nlp-graph.vue. Unsure of a
+    // better way to do this.
+    const expectedGraphTypes = [['t', 'topic', 'topics'], ['a', 'action', 'actions'], ['r', 'resource', 'resources']]
+    expect(graphs.length).toBe(expectedGraphTypes.length)
+    expectedGraphTypes.forEach((exp, idx) => {
+      let currGraph = graphs.at(idx)
+      expect(currGraph.props('fid')).toEqual(testFid)
+      expect(exp).toContain(currGraph.props('type'))
     })
   })
   it('renders the preview lines', () => {
@@ -119,30 +73,10 @@ describe('FilePreview', () => {
       expect(html).toContain(line)
     })
   })
-  it('renders no graph when no data exists', () => {
-    const tempGetters = {
-      ...getters,
-      nlpActions () {
-        return {}
-      }
-    }
-    const store = { getters: tempGetters }
-    let wrapper = shallowMountFa({ store })
-    const donuts = wrapper.findAll(DonutComplete)
-    const expectedGraphs = [nlpArrays.topic, nlpArrays.resource]
-    expect(donuts.length).toBe(expectedGraphs.length)
-  })
-  it('pushes router link', () => {
-    spyOn($router, 'push')
-    const spyFunc = $router.push
+  it('renders no graph when no-data is emitted', async () => {
     let wrapper = shallowMountFa()
-    // first donut should be topic graph
-    const emittedLabel = 'label'
-    const tag = 'topic'
-    wrapper.find(DonutComplete).vm.$emit('click', emittedLabel)
-    const expectedArg = {
-      path: `/search/${emittedLabel}/tag/${tag}`
-    }
-    expect(spyFunc).toHaveBeenCalledWith(expectedArg)
+    wrapper.find(NlpGraph).vm.$emit('no-data')
+    await flushPromises()
+    expect(wrapper.findAll(NlpGraph).length).toBe(2)
   })
 })

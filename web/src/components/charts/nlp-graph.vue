@@ -105,7 +105,8 @@ export default {
       }
     },
     graphData () {
-      const data = this.graphSource.slice(0, 7)
+      let data = this.graphSource || []
+      data = data.slice(0, 7)
       let result = []
       for (let val in data) {
         let { word, count } = data[val]
@@ -138,7 +139,7 @@ export default {
     }
   },
   created () {
-    if (!this.graphSource.length) {
+    if (!(this.graphSource && this.graphSource.length)) {
       this.$emit('no-data')
     }
   }
