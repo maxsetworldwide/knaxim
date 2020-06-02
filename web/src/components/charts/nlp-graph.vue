@@ -16,22 +16,25 @@
 
 <template>
   <div>
-    <slot>
-      <h3>{{ propToType.title }}</h3>
-    </slot>
-    <donut-complete
-      :dataVals="graphData"
-      :colors="propToType.colors"
-      @click="handleGraphClick($event)"
-    />
+    <b-spinner v-if="nlpLoading" />
+    <div v-else>
+      <slot>
+        <h3>{{ propToType.title }}</h3>
+      </slot>
+      <donut-complete
+        :dataVals="graphData"
+        :colors="propToType.colors"
+        @click="handleGraphClick($event)"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import DonutComplete from '@/components/charts/donut-complete'
 import { Color } from '@/components/charts/presets'
-import { mapGetters } from 'vuex'
-// import { NLP_DATA } from '@/store/actions.type'
+import { mapGetters, mapActions } from 'vuex'
+import { NLP_DATA } from '@/store/actions.type'
 
 export default {
   name: 'nlp-graph',
@@ -117,11 +120,14 @@ export default {
       }
       return result
     },
-    ...mapGetters(['nlpTopics', 'nlpActions', 'nlpResources']),
+    ...mapGetters(['nlpLoading', 'nlpTopics', 'nlpActions', 'nlpResources']),
     // resources will want to filter out words that exist in topics
     modifiedResources () {
       const topicType = this.types.TOPIC
       const topicSrc = topicType.src.index ? this[topicType.src.dataLocation][this.fid] : this[topicType.src.dataLocation]
+      if (!topicSrc || !this.nlpResources[this.fid]) {
+        return []
+      }
       const topics = topicSrc.map((topic) => {
         return topic.word || ''
       }).filter((word) => {
@@ -136,12 +142,21 @@ export default {
     handleGraphClick (label) {
       const tag = this.propToType.tag
       this.$router.push({ path: `/search/${label}/tag/${tag}` })
-    }
+    },
+    ...mapActions([NLP_DATA])
   },
   created () {
-    if (!(this.graphSource && this.graphSource.length)) {
-      this.$emit('no-data')
-    }
+    const { fid } = this
+    Promise.allSettled([
+      this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 }),
+      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 }),
+      // grab 14 from resources so we can filter out duplicates from topics
+      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 14 })
+    ]).finally(() => {
+      if (!(this.graphSource && this.graphSource.length)) {
+        this.$emit('no-data')
+      }
+    })
   }
 }
 </script>

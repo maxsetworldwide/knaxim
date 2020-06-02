@@ -1,7 +1,6 @@
 <template>
   <div class="w-100">
-    <b-spinner v-if="nlpLoading" />
-    <b-container v-else>
+    <b-container>
       <b-row v-if="graphsExist.topic">
          <nlp-graph class="w-100" type="topic" :fid="fid" @no-data="graphsExist.topic = false" />
       </b-row>
@@ -16,8 +15,6 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
-import { NLP_DATA } from '@/store/actions.type'
 import NlpGraph from '@/components/charts/nlp-graph'
 
 export default {
@@ -39,18 +36,6 @@ export default {
         resource: true
       }
     }
-  },
-  computed: {
-    ...mapGetters(['nlpLoading'])
-  },
-  methods: {
-    ...mapActions([NLP_DATA])
-  },
-  created () {
-    const { fid } = this
-    this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 })
-    this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 })
-    this[NLP_DATA]({ fid, category: 'r', start: 0, end: 14 })
   }
 }
 </script>

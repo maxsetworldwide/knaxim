@@ -55,7 +55,7 @@
     </div>
   </template>
   <template v-slot:row-details="row">
-    <b-spinner v-if="filePreview[row.item.id].loading || nlpLoading" class="align-middle"></b-spinner>
+    <b-spinner v-if="filePreview[row.item.id].loading" class="align-middle"></b-spinner>
     <!-- <span v-else>{{ filePreview[row.item.id].lines ? filePreview[row.item.id].lines.join(' ') : '' }}</span> -->
     <file-preview v-else :fid="row.item.id"/>
   </template>
@@ -68,7 +68,7 @@
 import fileIcon from '@/components/file-icon'
 import filePreview from '@/components/file-preview'
 import { mapGetters, mapActions, mapMutations } from 'vuex'
-import { LOAD_OWNER, LOAD_PREVIEW, NLP_DATA } from '@/store/actions.type'
+import { LOAD_OWNER, LOAD_PREVIEW } from '@/store/actions.type'
 import { ON, OFF } from '@/store/mutations.type'
 import { humanReadableSize, humanReadableTime } from '@/plugins/utils'
 
@@ -195,7 +195,7 @@ export default {
         return acc || row._showDetails
       }, false)
     },
-    ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview', 'nlpLoading'])
+    ...mapGetters(['ownerNames', 'populateFiles', 'previewLoading', 'filePreview'])
   },
   methods: {
     sortDate () {
@@ -205,11 +205,6 @@ export default {
     openPreview (row) {
       row.toggleDetails()
       this[LOAD_PREVIEW](row.item)
-      const fid = row.item.id || ''
-      this[NLP_DATA]({ fid, category: 't', start: 0, end: 7 })
-      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 7 })
-      // grab 14 from resources so we can filter out duplicates from topics
-      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 14 })
     },
     expandALL () {
       const expand = !this.anyRowExpanded
@@ -251,7 +246,7 @@ export default {
       this.$emit('open', id)
     },
     // ...mapGetters(['populateFiles']),
-    ...mapActions([LOAD_OWNER, LOAD_PREVIEW, NLP_DATA]),
+    ...mapActions([LOAD_OWNER, LOAD_PREVIEW]),
     ...mapMutations({
       on: ON,
       off: OFF
