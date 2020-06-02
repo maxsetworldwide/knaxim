@@ -86,6 +86,13 @@ describe('NlpGraph', () => {
     const wrapper = shallowMountFa()
     expect(wrapper.is(NlpGraph)).toBe(true)
   })
+  it('dispatches NLP_DATA at least once', async () => {
+    const store = testStore.createStore()
+    spyOn(store, 'dispatch')
+    shallowMountFa({ store })
+    const calls = store.dispatch.calls.allArgs().map((call) => call[0])
+    expect(calls).toContain(NLP_DATA)
+  })
   it('passes the correct dataVals to donut-complete', () => {
     const wrapper = shallowMountFa({ props: { type: 'action' } })
     const expectedVals = nlpArrays.action.map((data) => {
