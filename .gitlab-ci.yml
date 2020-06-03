@@ -190,6 +190,16 @@ skyset:
     - cd pkg/skyset
     - go test -v
 
+srvjson:
+  stage: test
+  tags:
+    - golang
+  dependencies:
+    - serverBuild
+  script:
+    - cd pkg/srvjson
+    - go test -v
+
 query:
   stage: test
   tags:
