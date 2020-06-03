@@ -47,10 +47,10 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			return err
 		}
 		var wg sync.WaitGroup
-		wg.Add(10)
+		wg.Add(11)
 		indexctx, cancel := context.WithCancel(ctx)
 		defer cancel()
-		cherr := make(chan error, 8)
+		cherr := make(chan error, 11)
 		go func() {
 			//user
 			defer wg.Done()
@@ -177,7 +177,7 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			}
 		}()
 		go func() {
-			//tag
+			//filetags
 			defer wg.Done()
 			I := testclient.Database(d.DBName).Collection(d.CollNames["filetags"]).Indexes()
 			var err error
@@ -204,7 +204,7 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			}
 		}()
 		go func() {
-			//tag
+			//storetags
 			defer wg.Done()
 			I := testclient.Database(d.DBName).Collection(d.CollNames["storetags"]).Indexes()
 			var err error
@@ -227,7 +227,7 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			}
 		}()
 		go func() {
-			//group
+			//lines
 			defer wg.Done()
 			I := testclient.Database(d.DBName).Collection(d.CollNames["lines"]).Indexes()
 			var err error
@@ -274,6 +274,22 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 					Keys:    bson.M{"expire": 1},
 					Options: options.Index().SetExpireAfterSeconds(0),
 				},
+			}); err != nil {
+				select {
+				case cherr <- err:
+				case <-indexctx.Done():
+				}
+				return
+			}
+		}()
+		go func() {
+			//view
+			defer wg.Done()
+			I := testclient.Database(d.DBName).Collection(d.CollNames["view"]).Indexes()
+			var err error
+			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
+				Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "idx", Value: 1}},
+				Options: options.Index().SetUnique(true),
 			}); err != nil {
 				select {
 				case cherr <- err:
