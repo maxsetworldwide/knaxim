@@ -97,11 +97,15 @@ export default {
           return type
         }
       }
-      return null
+      return {
+        title: 'Unknown'
+      }
     },
     graphSource () {
       const src = this.propToType.src
-      if (src.index) {
+      if (!src) {
+        return []
+      } else if (src.index) {
         return this[src.dataLocation][this.fid]
       } else {
         return this[src.dataLocation]
@@ -126,8 +130,8 @@ export default {
     // resources will want to filter out words that exist in topics
     modifiedResources () {
       const topicType = this.types.TOPIC
-      const topicSrc = topicType.src.index ? this[topicType.src.dataLocation][this.fid] : this[topicType.src.dataLocation]
-      if (!topicSrc || !this.nlpResources[this.fid]) {
+      const topicSrc = (topicType.src.index ? this[topicType.src.dataLocation][this.fid] : this[topicType.src.dataLocation]) || []
+      if (!this.nlpResources[this.fid]) {
         return []
       }
       const topics = topicSrc.map((topic) => {
@@ -149,15 +153,16 @@ export default {
   },
   created () {
     const { fid } = this
-    Promise.allSettled([
-      this[NLP_DATA]({ fid, category: 't', start: 0, end: 20 }),
-      this[NLP_DATA]({ fid, category: 'a', start: 0, end: 20 }),
-      this[NLP_DATA]({ fid, category: 'r', start: 0, end: 20 })
-    ]).finally(() => {
-      if (!(this.graphSource && this.graphSource.length)) {
-        this.$emit('no-data')
-      }
-    })
+    const category = this.propToType.tag
+    if (category) {
+      this[NLP_DATA]({ fid, category, start: 0, end: 20 }).finally(() => {
+        if (!(this.graphSource && this.graphSource.length)) {
+          this.$emit('no-data')
+        }
+      })
+    } else {
+      this.$emit('no-data')
+    }
   }
 }
 </script>

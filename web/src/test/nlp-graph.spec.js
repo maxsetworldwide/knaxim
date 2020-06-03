@@ -49,7 +49,8 @@ const testStore = new TestStore({
     }
   },
   actions: {
-    [NLP_DATA] () {}
+    async [NLP_DATA] () {
+    }
   }
 })
 
@@ -86,12 +87,30 @@ describe('NlpGraph', () => {
     const wrapper = shallowMountFa()
     expect(wrapper.is(NlpGraph)).toBe(true)
   })
-  it('dispatches NLP_DATA at least once', async () => {
-    const store = testStore.createStore()
-    spyOn(store, 'dispatch')
-    shallowMountFa({ store })
-    const calls = store.dispatch.calls.allArgs().map((call) => call[0])
-    expect(calls).toContain(NLP_DATA)
+  it('dispatches NLP_DATA for the given type', () => {
+    const types = ['action', 'topic', 'resource']
+    types.forEach((type) => {
+      const store = testStore.createStore()
+      spyOn(store, 'dispatch').and.callThrough()
+      shallowMountFa({ store, props: { type } })
+      const calls = store.dispatch.calls.allArgs().map((call) => {
+        let result = { action: call[0] }
+        if (call.length > 1) {
+          const { fid, category } = call[1]
+          result = {
+            action: call[0],
+            fid,
+            category
+          }
+        }
+        return result
+      })
+      expect(calls).toContain({
+        action: NLP_DATA,
+        fid: testFid,
+        category: type
+      })
+    })
   })
   it('passes the correct dataVals to donut-complete', () => {
     const wrapper = shallowMountFa({ props: { type: 'action' } })
