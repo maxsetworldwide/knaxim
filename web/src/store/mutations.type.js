@@ -70,3 +70,5 @@ export const SET_NLP = 'setNLP'
 export const ON = 'on'
 export const OFF = 'off'
 export const EMIT = 'emit'
+
+export const SET_ACTIVE_FILES = 'setActiveFiles'

@@ -10,7 +10,8 @@ import {
   FILE_LOADING,
   SET_FILE,
   PROCESS_SERVER_STATE,
-  PUSH_ERROR
+  PUSH_ERROR,
+  SET_ACTIVE_FILES
 } from './mutations.type'
 
 const state = {
@@ -21,7 +22,8 @@ const state = {
     shared: []
   },
   groups: {},
-  public: []
+  public: [],
+  active: []
 }
 
 const actions = {
@@ -98,6 +100,9 @@ const mutations = {
         shared: server.groups[key].files.view || []
       }
     }
+  },
+  [SET_ACTIVE_FILES] (state, files) {
+    state.active = files
   }
 }
 
@@ -107,8 +112,6 @@ const getters = {
   },
   populateFiles (state) {
     return function (id) {
-      // console.log('id')
-      // console.log(id)
       if (typeof id === 'string') {
         return state.fileSet[id]
       }
@@ -133,6 +136,9 @@ const getters = {
     } else {
       return state.groups[getters.activeGroup.id].shared
     }
+  },
+  activeFiles (state) {
+    return state.active
   }
 }
 
