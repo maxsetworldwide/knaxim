@@ -33,12 +33,14 @@ events:
         <b-row align-h="center">
           <b-col cols="6">
             <b-form-input
+              list="share-modal-input"
               :state="validName"
               v-model="inputName"
               placeholder="Enter username or team name"
               autofocus
               debounce="400"
             />
+            <owner-dropdown id="share-modal-input" />
             <b-form-invalid-feedback>Name not found!</b-form-invalid-feedback>
           </b-col>
           <b-col class="text-center" cols="2">
@@ -81,13 +83,15 @@ import PermissionService from '@/service/permission'
 import UserService from '@/service/user'
 import GroupService from '@/service/group'
 import ShareViewer from '@/components/share-viewer'
+import OwnerDropdown from '@/components/owner-dropdown'
 import Vue from 'vue'
 import { LOAD_SERVER } from '@/store/actions.type'
 
 export default {
   name: 'share-modal',
   components: {
-    ShareViewer
+    ShareViewer,
+    OwnerDropdown
   },
   props: {
     id: {

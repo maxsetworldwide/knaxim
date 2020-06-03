@@ -26,7 +26,8 @@
         </b-list-group-item>
       </b-list-group>
       <b-modal id="add-modal" title="Add Member" @ok="addMember(name)">
-        <b-input name="team-name" v-model="name"/>
+        <b-input list="team-control-input" name="team-name" v-model="name"/>
+        <owner-dropdown id="team-control-input" />
       </b-modal>
     </b-col>
   </team-control>
@@ -34,12 +35,14 @@
 
 <script>
 import TeamControl from '@/components/team-control'
+import OwnerDropdown from '@/components/owner-dropdown'
 import { mapGetters } from 'vuex'
 
 export default {
   name: 'member-list',
   components: {
-    TeamControl
+    TeamControl,
+    OwnerDropdown
   },
   props: {
     selected: {
