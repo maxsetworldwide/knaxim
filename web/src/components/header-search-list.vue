@@ -24,7 +24,8 @@ import headerSearchRow from '@/components/header-search-row'
 import fileActions from '@/components/file-actions'
 import SearchService from '@/service/search'
 import { SEARCH, SEARCH_TAG } from '@/store/actions.type'
-import { mapGetters } from 'vuex'
+import { SET_ACTIVE_FILES } from '@/store/mutations.type'
+import { mapGetters, mapMutations } from 'vuex'
 
 export default {
   components: {
@@ -46,6 +47,9 @@ export default {
     },
     activeGroup () {
       this.search()
+    },
+    searchMatches (n) {
+      this.currentFiles(n.map(f => f.id))
     }
   },
   beforeMount () {
@@ -67,7 +71,10 @@ export default {
       } else {
         this.$store.dispatch(SEARCH, { find: this.find, acr: this.acr })
       }
-    }
+    },
+    ...mapMutations({
+      currentFiles: SET_ACTIVE_FILES
+    })
   },
   computed: {
     rows () {

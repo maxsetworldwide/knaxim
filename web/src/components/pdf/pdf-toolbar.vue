@@ -16,6 +16,11 @@ events:
 -->
 <template>
   <b-row align-v="end">
+    <b-col class="d-none d-md-flex" md="1">
+      <b-button v-if="navigation.prev" @click="openPrev" class="min-width-1em">
+        <b-icon icon="arrow-bar-left" class="icon" />
+      </b-button>
+    </b-col>
     <b-col cols="2">
       <file-actions singleFile :checkedFiles="[file]" />
     </b-col>
@@ -33,7 +38,7 @@ events:
     <b-col offset="1" offset-md="0" cols="6" md="4">
       <h4 class="title text-center">{{ file.name }}</h4>
     </b-col>
-    <b-col class="d-none d-md-flex" offset="1" md="1">
+    <b-col class="d-none d-md-flex" md="1">
       <b-button @click="increaseScale" class="min-width-3em">
         <svg>
           <use href="@/assets/app.svg#zoom-in"></use>
@@ -45,6 +50,11 @@ events:
         <svg>
           <use href="@/assets/app.svg#zoom-out"></use>
         </svg>
+      </b-button>
+    </b-col>
+    <b-col class="d-none d-md-flex" md="1">
+      <b-button v-if="navigation.next" @click="openNext" class="min-width-1em">
+        <b-icon icon="arrow-bar-right" class="icon" />
       </b-button>
     </b-col>
   </b-row>
@@ -70,7 +80,21 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['activeGroup', 'getFolder'])
+    navigation () {
+      let nav = {
+        prev: null,
+        next: null
+      }
+      let indx = this.activeFiles.findIndex(af => af === this.file.id)
+      if (indx > 0) {
+        nav.prev = this.activeFiles[indx - 1]
+      }
+      if (indx >= 0 && indx < this.activeFiles.length - 1) {
+        nav.next = this.activeFiles[indx + 1]
+      }
+      return nav
+    },
+    ...mapGetters(['activeFiles'])
   },
   methods: {
     increaseScale () {
@@ -83,6 +107,16 @@ export default {
       const pageNumber = parseInt(event.target.value, 10)
       if (isNaN(pageNumber) || pageNumber < 1) return
       this.$emit('page-input', pageNumber)
+    },
+    openPrev () {
+      if (this.navigation.prev) {
+        this.$router.push(`/file/${this.navigation.prev}`)
+      }
+    },
+    openNext () {
+      if (this.navigation.next) {
+        this.$router.push(`/file/${this.navigation.next}`)
+      }
     }
   },
   watch: {

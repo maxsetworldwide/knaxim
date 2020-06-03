@@ -39,8 +39,8 @@ import UploadModal from '@/components/modals/upload-modal'
 import FileActions from '@/components/file-actions'
 import FileTable from '@/components/file-table'
 import { LOAD_FOLDERS, GET_USER } from '@/store/actions.type'
-// import { ACTIVATE_FOLDER, DEACTIVATE_FOLDER } from '@/store/mutations.type'
-import { mapGetters } from 'vuex'
+import { SET_ACTIVE_FILES } from '@/store/mutations.type'
+import { mapGetters, mapMutations } from 'vuex'
 
 export default {
   name: 'file-list',
@@ -139,21 +139,19 @@ export default {
     },
     open (id) {
       this.$router.push(`/file/${id}`)
-    }
-    /*
-     * openFolder (name) {
-     *   this.$store.commit(ACTIVATE_FOLDER, name)
-     * },
-     * closeFolder (name) {
-     *   this.$store.commit(DEACTIVATE_FOLDER, name)
-     * }
-     */
+    },
+    ...mapMutations({
+      currentFiles: SET_ACTIVE_FILES
+    })
   },
   watch: {
     gid (n, o) {
       if (n !== o) {
         this.refresh()
       }
+    },
+    files (n) {
+      this.currentFiles(n)
     }
   },
   mounted () {
