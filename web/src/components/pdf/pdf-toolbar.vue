@@ -94,7 +94,7 @@ export default {
       }
       return nav
     },
-    ...mapGetters(['activeGroup', 'getFolder', 'activeFiles'])
+    ...mapGetters(['activeFiles'])
   },
   methods: {
     increaseScale () {
