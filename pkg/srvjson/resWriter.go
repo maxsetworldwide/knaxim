@@ -51,6 +51,9 @@ func (rw *ResponseWriter) Write(data []byte) (n int, err error) {
 	case string:
 		rw.data["message"] = fmt.Sprintf("%s%s", v, string(data))
 		return len(data), nil
+	case []byte:
+		rw.data["message"] = fmt.Sprintf("%s%s", string(v), string(data))
+		return len(data), nil
 	default:
 		rw.data["message"] = string(data)
 		return len(data), nil
@@ -78,5 +81,8 @@ func (rw *ResponseWriter) Set(key string, val interface{}) {
 // Flush writes the message and set key/value pairs to the underlying
 // http.ResponseWriter in json form.
 func (rw *ResponseWriter) Flush() error {
+	if stringer, ok := rw.data["message"].(fmt.Stringer); ok {
+		rw.data["message"] = stringer.String()
+	}
 	return json.NewEncoder(rw.Internal).Encode(rw.data)
 }
