@@ -27,9 +27,7 @@ export default {
   computed: {
     ownedFiles () {
       return this.files.filter((f) => {
-        return this.allOwned.reduce((owned, acc) => {
-          return acc || owned.id === f.id
-        }, false)
+        return f.isOwned
       })
     },
     ...mapGetters({
