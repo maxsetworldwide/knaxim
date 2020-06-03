@@ -1,4 +1,5 @@
 import FileService from '@/service/file'
+import PermissionService from '@/service/permission'
 import {
   LOAD_SERVER,
   CREATE_FILE,
@@ -48,7 +49,15 @@ const actions = {
   [CREATE_FILE] (context, params) {
     context.commit(FILE_LOADING, 1)
     return FileService.create(params)
-      .then(res => res.data)
+      .then(async res => {
+        if (context.getters.activeGroup) {
+          await PermissionService.share({
+            id: res.data.id,
+            targets: context.getters.activeGroup.id
+          })
+        }
+        return res.data
+      })
       .catch(err => context.commit(PUSH_ERROR, err.addDebug('action CREATE_FILE')))
       .finally(() => context.dispatch(LOAD_SERVER))
       .finally(() => {
