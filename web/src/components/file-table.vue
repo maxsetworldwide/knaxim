@@ -95,8 +95,8 @@ export default {
   data () {
     return {
       selected: false,
-      sortBy: '',
-      sortDesc: false,
+      sortBy: 'date',
+      sortDesc: true,
       columnHeaders: [
         {
           key: 'select'
