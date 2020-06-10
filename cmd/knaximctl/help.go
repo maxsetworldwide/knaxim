@@ -9,12 +9,16 @@ addRole
 removeRole
 updateFileCount
 updateFileSpace
+initDB
+addAcronyms
 `
 
 var helpstrs = map[string]string{
 	"help":            `display help message of actions`,
-	"addRole":         `adds a role to a user`,
-	"removeRole":      `removes a role to a user`,
-	"updateFileCount": `change the file count limit for a user`,
-	"updateFileSpace": `change the file space limit for a user`,
+	"addrole":         `adds a role to a user`,
+	"removerole":      `removes a role to a user`,
+	"updatefilecount": `change the file count limit for a user`,
+	"updatefilespace": `change the file space limit for a user`,
+	"initdb":          `initialize database`,
+	"addacronyms":     `add acyonyms to database`,
 }
