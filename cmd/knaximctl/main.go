@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -151,6 +152,32 @@ func main() {
 			log.Printf("unable to load acronyms: %s", err)
 			return
 		}
+	case "adduser":
+		setup(false)
+		if flag.NArg() < 3 {
+			fmt.Println(helpstrs["adduser"])
+			return
+		}
+		username := flag.Arg(1)
+		email := flag.Arg(2)
+		var pass string
+		if flag.NArg() == 3 {
+			pass = generatePass()
+		} else {
+			pass = flag.Arg(3)
+		}
+		u, err := newUser(username, email, pass)
+		if err != nil {
+			log.Printf("unable to add user: %s", err)
+			return
+		}
+		wrtr := json.NewEncoder(os.Stdout)
+		wrtr.SetIndent("", "\t")
+		if err = wrtr.Encode(u); err != nil {
+			log.Printf("unable to output user data: %s", err)
+			return
+		}
+		fmt.Printf("password: %s\n", pass)
 	default:
 		fmt.Println("unrecognized command word.")
 		fmt.Println(helpstr)

@@ -4,13 +4,15 @@ var helpstr = `knaximctl is for admin controls of a knaxim server
 command form: knaximctl [Options]... [Action] [Arguments]...
 
 Actions
-help
+
+addUser
 addRole
 removeRole
 updateFileCount
 updateFileSpace
 initDB
 addAcronyms
+help
 `
 
 var helpstrs = map[string]string{
@@ -21,4 +23,5 @@ var helpstrs = map[string]string{
 	"updatefilespace": `change the file space limit for a user`,
 	"initdb":          `initialize database`,
 	"addacronyms":     `add acyonyms to database`,
+	"adduser":         `add user to database knaximctl addUser [username] [email] [password,optional]`,
 }
