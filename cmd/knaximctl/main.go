@@ -132,8 +132,10 @@ func main() {
 			if answer != 'y' {
 				return
 			}
+			fmt.Println("\nInitializing database...")
 		}
 		setup(true)
+		fmt.Println("Done.")
 	case "addacronyms":
 		setup(false)
 		if flag.NArg() < 2 {
@@ -178,6 +180,17 @@ func main() {
 			return
 		}
 		fmt.Printf("password: %s\n", pass)
+	case "userinfo":
+		setup(false)
+		if flag.NArg() < 2 {
+			fmt.Println(helpstrs["userinfo"])
+			return
+		}
+		name := flag.Arg(1)
+		err := userInfo(name)
+		if err != nil {
+			log.Printf("unable to output user data: %s", err)
+		}
 	default:
 		fmt.Println("unrecognized command word.")
 		fmt.Println(helpstr)
