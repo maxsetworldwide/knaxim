@@ -16,12 +16,12 @@ help
 `
 
 var helpstrs = map[string]string{
-	"help":            `display help message of actions`,
-	"addrole":         `adds a role to a user`,
-	"removerole":      `removes a role to a user`,
-	"updatefilecount": `change the file count limit for a user`,
-	"updatefilespace": `change the file space limit for a user`,
-	"initdb":          `initialize database`,
-	"addacronyms":     `add acyonyms to database`,
-	"adduser":         `add user to database knaximctl addUser [username] [email] [password,optional]`,
+	"help":            "display help message of actions\nknaximctl help",
+	"addrole":         "adds a role to a user\nknaximctl addRole [username] [role]",
+	"removerole":      "removes a role to a user\nknaximctl removeRole [username] [role]",
+	"updatefilecount": "change the file count limit for a user\nknaimxctl updateFileCount [username] [amount]",
+	"updatefilespace": "change the file space limit for a user\nknaximctl updateFileSpace [username] [amount]",
+	"initdb":          "initialize database",
+	"addacronyms":     "add acyonyms to database",
+	"adduser":         "add user to database\nknaximctl addUser [username] [email] [password,optional]",
 }
