@@ -228,6 +228,9 @@ func (u *User) GetRoles() []string {
 
 // SetRole assigns user to role if v is true, removes role if v is false
 func (u *User) SetRole(k string, v bool) {
+	if u.Roles == nil {
+		u.Roles = make(map[string]bool)
+	}
 	u.Roles[k] = v
 }
 
