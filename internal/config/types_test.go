@@ -28,7 +28,7 @@ var testconfig = Configuration{
 	MaxFileTimeout:  Duration{time.Second * 7},
 	MinFileTimeout:  Duration{time.Second * 4},
 	DatabaseType:    "memory",
-	Database:        json.RawMessage(`{}`),
+	Database:        Raw{JSON: json.RawMessage(`{}`)},
 	DatabaseReset:   true,
 	Tika: Tika{
 		Type: "external",
@@ -73,6 +73,8 @@ file_timeout_rate: 5000000
 max_file_timeout: 7s
 min_file_timeout: 4s
 db_type: "memory"
+db:
+  empty: ""
 db_clear: True
 tika:
   type: "external"

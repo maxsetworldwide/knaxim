@@ -44,10 +44,12 @@ func ParseConfig(path string) error {
 	if err != nil {
 		return err
 	}
+	var isYAML bool
 	switch extensionRegex.FindString(path) {
 	case ".yml":
 		fallthrough
 	case ".yaml":
+		isYAML = true
 		err = yaml.NewDecoder(fp).Decode(&V)
 	default:
 		err = json.NewDecoder(fp).Decode(&V)
@@ -71,7 +73,12 @@ func ParseConfig(path string) error {
 	default:
 		return errors.New("Unrecognized config database type")
 	}
-	if err = json.Unmarshal(V.Database, DB); err != nil {
+	if isYAML {
+		err = V.Database.YAML.Decode(DB)
+	} else {
+		err = json.Unmarshal(V.Database.JSON, DB)
+	}
+	if err != nil {
 		return err
 	}
 	if V.Tika.Type == "local" {

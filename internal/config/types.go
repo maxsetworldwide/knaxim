@@ -84,14 +84,14 @@ type Configuration struct {
 	MaxFileTimeout       Duration     `json:"max_file_timeout" yaml:"max_file_timeout"`
 	MinFileTimeout       Duration     `json:"min_file_timeout" yaml:"min_file_timeout"`
 	ActiveFileProcessing int
-	DatabaseType         string          `json:"db_type" yaml:"db_type"`
-	Database             json.RawMessage `json:"db" yaml:"db"`
-	DatabaseReset        bool            `json:"db_clear" yaml:"db_clear"`
-	Tika                 Tika            `json:"tika" yaml:"tika"`
-	GotenPath            string          `json:"gotenpath" yaml:"gotenpath"`
-	FileLimit            int64           `json:"filelimit" yaml:"filelimit"`
-	FreeSpace            int             `json:"total_free_space" yaml:"total_free_space"`
-	MaxFileCount         int64           `json:"maxfilecount" yaml:"maxfilecount"`
+	DatabaseType         string `json:"db_type" yaml:"db_type"`
+	Database             Raw    `json:"db" yaml:"db"`
+	DatabaseReset        bool   `json:"db_clear" yaml:"db_clear"`
+	Tika                 Tika   `json:"tika" yaml:"tika"`
+	GotenPath            string `json:"gotenpath" yaml:"gotenpath"`
+	FileLimit            int64  `json:"filelimit" yaml:"filelimit"`
+	FreeSpace            int    `json:"total_free_space" yaml:"total_free_space"`
+	MaxFileCount         int64  `json:"maxfilecount" yaml:"maxfilecount"`
 	AdminKey             string
 	GuestUser            *Guest
 	SetupTimeout         Duration
@@ -103,4 +103,32 @@ type Configuration struct {
 	ErrorEmail  string `json:"error_email" yaml:"error_email"`
 	LogPath     string `json:"log_path" yaml:"log_path"`
 	PrivateMode bool
+}
+
+// Raw represents a value not to be decoded. Primarily for data fields that can hold a variety of data types
+type Raw struct {
+	JSON json.RawMessage
+	YAML *yaml.Node
+}
+
+// MarshalJSON output the contents of the JSON field
+func (r *Raw) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.JSON)
+}
+
+// UnmarshalJSON saves the byte slice in the JSON field
+func (r *Raw) UnmarshalJSON(b []byte) error {
+	r.JSON = json.RawMessage(b)
+	return nil
+}
+
+// MarshalYAML outputs the content of the YAML field
+func (r *Raw) MarshalYAML() (interface{}, error) {
+	return r.YAML, nil
+}
+
+// UnmarshalYAML saves the YAML node in the YAML field
+func (r *Raw) UnmarshalYAML(n *yaml.Node) error {
+	r.YAML = n
+	return nil
 }
