@@ -56,6 +56,43 @@ var testconfig = Configuration{
 	},
 }
 
+var testconfigyaml = []byte(`---
+address: "test.test"
+static: "/static/path"
+index: "/index/path"
+server:
+  addr: "0.0.0.0:8765"
+  readHeaderTimeout: 123456789
+cert:
+  cert: "/cert/file"
+  key:  "/key/file"
+  http_port: "5678"
+close_time: 5s
+basic_timeout: 1m
+file_timeout_rate: 5000000
+max_file_timeout: 7s
+min_file_timeout: 4s
+db_type: "memory"
+db_clear: True
+tika:
+  type: "external"
+gotenpath: "gotenburg.tst"
+filelimit: 12341
+total_free_space: 54321
+adminKey:  "helloboys"
+guestUser:
+  name:  "guestusername"
+  pass:  "guestpassword"
+  email: "guest@guest.guest"
+setupTimeout: 9m
+userTimeouts:
+  inactivity: 4h
+  total: 6h
+email:
+  from: "test@test.test"
+  server: "emailServer"
+...`)
+
 var testconfigjson = []byte(`{
   "Address": "test.test",
 	"static": "/static/path",

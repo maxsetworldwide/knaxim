@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math"
 	"os"
+	"regexp"
 
 	"git.maxset.io/web/knaxim/internal/database"
 	"git.maxset.io/web/knaxim/internal/database/memory"
@@ -12,6 +13,7 @@ import (
 	"git.maxset.io/web/knaxim/internal/handlers/spa"
 	"git.maxset.io/web/knaxim/pkg/srverror"
 	"github.com/google/go-tika/tika"
+	yaml "gopkg.in/yaml.v3"
 )
 
 // V => Configuration of Knaxim
@@ -34,13 +36,23 @@ var T struct {
 // assumption that the path is relevant to a single page application
 var StaticHandler spa.Handler
 
+var extensionRegex = regexp.MustCompile("\\.[^.]*$")
+
 // ParseConfig loads configuration file and populates global vars
 func ParseConfig(path string) error {
 	fp, err := os.Open(path)
 	if err != nil {
 		return err
 	}
-	if err = json.NewDecoder(fp).Decode(&V); err != nil {
+	switch extensionRegex.FindString(path) {
+	case ".yml":
+		fallthrough
+	case ".yaml":
+		err = yaml.NewDecoder(fp).Decode(&V)
+	default:
+		err = json.NewDecoder(fp).Decode(&V)
+	}
+	if err != nil {
 		return err
 	}
 	fp.Close()
