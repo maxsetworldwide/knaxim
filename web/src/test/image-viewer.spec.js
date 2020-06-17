@@ -22,6 +22,9 @@ const testStore = new TestStore({
       return function (id) {
         return state.fileset[id]
       }
+    },
+    activeFiles (state) {
+      return []
     }
   }
 })

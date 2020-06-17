@@ -59,6 +59,8 @@ export default {
   },
   methods: {
     refresh () {
+      this.viewExists = true
+      this.imageExists = true
       // Add fileID to Recents
       this.$store.commit(TOUCH, this.id)
       this.$store.dispatch(GET_FILE, this).then(data => {
