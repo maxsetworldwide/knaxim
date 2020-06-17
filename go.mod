@@ -38,4 +38,5 @@ require (
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/tools v0.0.0-20200225230052-807dcd883420 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
