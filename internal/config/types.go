@@ -67,6 +67,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, &(d.Duration))
 }
 
+// UnmarshalYAML Decodes Yaml value into a time.Duration
 func (d *Duration) UnmarshalYAML(n *yaml.Node) error {
 	return n.Decode(&(d.Duration))
 }
