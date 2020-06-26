@@ -1,21 +1,32 @@
 version: '3'
 services:
   server:
-    build: .
+    build:
+      context: .
+      dockerfile: ./cmd/knaxim/Dockerfile
     restart: "unless-stopped"
     ports:
       - "8005:80"
     volumes:
     # These are static files located on the host machine.
-      - web:/public
+      - web:/srv
     depends_on:
       - mongo
       - tika
       - gotenberg
+      - init
+    networks:
+      - app-plane
+  init:
+    build:
+      context: .
+      dockerfile: ./cmd/acronymloader/Dockerfile
+    depends_on:
+      - mongo
     networks:
       - app-plane
     environment:
-      - KNAXIMINIT
+      - KNAXIMINIT=restart
   mongo:
     image: mongo:latest
     restart: "unless-stopped"
