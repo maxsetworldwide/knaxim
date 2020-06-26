@@ -1,6 +1,6 @@
 {
-	"address": "localhost:8080",
-	"static": "/public",
+	"address": "localhost",
+	"static": "/srv",
 	"index": "/index.html",
 	"server":{
 		"Addr": "0.0.0.0:80",
