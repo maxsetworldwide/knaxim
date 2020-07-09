@@ -15,6 +15,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func initStoreIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["store"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys:    bson.M{"id": 1},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"id.hash": 1},
+			},
+		})
+	return err
+}
+
 // Storebase is a connection to the database with file store operations
 type Storebase struct {
 	Database

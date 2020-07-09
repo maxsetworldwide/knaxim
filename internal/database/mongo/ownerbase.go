@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -82,6 +83,62 @@ func (to trackOwners) getGroup(name string) types.GroupI {
 
 func (to trackOwners) getGroupByPermission(oname string) []types.GroupI {
 	return to.groupperms[oname]
+}
+
+func initUserIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["user"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys:    bson.M{"id": 1},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys:    bson.M{"name": 1},
+				Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"name": bson.M{"$exists": true}}),
+			},
+		})
+	return err
+}
+
+func initGroupIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["group"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys:    bson.M{"id": 1},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys:    bson.M{"name": 1},
+				Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"name": bson.M{"$exists": true}}),
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"own": 1},
+			},
+		})
+	return err
+}
+
+func initResetIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["reset"]).Indexes()
+	_, err := I.CreateMany(ctx, []mongo.IndexModel{
+		mongo.IndexModel{
+			Keys:    bson.M{"user": 1},
+			Options: options.Index().SetUnique(true),
+		},
+		mongo.IndexModel{
+			Keys:    bson.M{"key": 1},
+			Options: options.Index().SetUnique(true),
+		},
+		mongo.IndexModel{
+			Keys:    bson.M{"expire": 1},
+			Options: options.Index().SetExpireAfterSeconds(0),
+		},
+	})
+	return err
 }
 
 // Ownerbase is a connection to the databae with owner operations

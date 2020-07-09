@@ -6,7 +6,6 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -46,258 +45,35 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 		if err = testclient.Database(d.DBName).Drop(ctx); err != nil {
 			return err
 		}
+		initIndexes := []func(context.Context, *Database, *mongo.Client) error{
+			initViewIndex,
+			initFileIndex,
+			initUserIndex,
+			initResetIndex,
+			initGroupIndex,
+			initChunkIndex,
+			initStoreIndex,
+			initAcronymIndex,
+			initContentIndex,
+			initStoreTagIndex,
+			initFileTagsIndex,
+		}
 		var wg sync.WaitGroup
-		wg.Add(11)
+		wg.Add(len(initIndexes))
 		indexctx, cancel := context.WithCancel(ctx)
 		defer cancel()
-		cherr := make(chan error, 11)
-		go func() {
-			//user
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["user"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys:    bson.M{"id": 1},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys:    bson.M{"name": 1},
-						Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"name": bson.M{"$exists": true}}),
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
+		cherr := make(chan error, len(initIndexes))
+		for _, initI := range initIndexes {
+			go func(i func(context.Context, *Database, *mongo.Client) error) {
+				defer wg.Done()
+				if err := i(indexctx, d, testclient); err != nil {
+					select {
+					case cherr <- err:
+					case <-indexctx.Done():
+					}
 				}
-				return
-			}
-			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
-				Keys:    bson.M{"name": 1},
-				Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"name": bson.M{"$exists": true}}),
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//group
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["group"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys:    bson.M{"id": 1},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys:    bson.M{"name": 1},
-						Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"name": bson.M{"$exists": true}}),
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"own": 1},
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//file
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["file"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys:    bson.M{"id": 1},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"name": 1},
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"own": 1},
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-			}
-		}()
-		go func() {
-			//store
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["store"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys:    bson.M{"id": 1},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"id.hash": 1},
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//chunk
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["chunk"]).Indexes()
-			var err error
-			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
-				Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "idx", Value: 1}},
-				Options: options.Index().SetUnique(true),
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//filetags
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["filetags"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys: bson.D{
-							bson.E{Key: "owner", Value: 1},
-							bson.E{Key: "word", Value: 1},
-							bson.E{Key: "file", Value: 1},
-						},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"word": 1},
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//storetags
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["storetags"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(
-				indexctx,
-				[]mongo.IndexModel{
-					mongo.IndexModel{
-						Keys:    bson.D{bson.E{Key: "store", Value: 1}, bson.E{Key: "word", Value: 1}},
-						Options: options.Index().SetUnique(true),
-					},
-					mongo.IndexModel{
-						Keys: bson.M{"word": 1},
-					},
-				}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//lines
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["lines"]).Indexes()
-			var err error
-			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
-				Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "position", Value: 1}},
-				Options: options.Index().SetUnique(true),
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["acronym"]).Indexes()
-			var err error
-			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
-				Keys:    bson.D{bson.E{Key: "acronym", Value: 1}, bson.E{Key: "complete", Value: 1}},
-				Options: options.Index().SetUnique(true),
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["reset"]).Indexes()
-			var err error
-			if _, err = I.CreateMany(indexctx, []mongo.IndexModel{
-				mongo.IndexModel{
-					Keys:    bson.M{"user": 1},
-					Options: options.Index().SetUnique(true),
-				},
-				mongo.IndexModel{
-					Keys:    bson.M{"key": 1},
-					Options: options.Index().SetUnique(true),
-				},
-				mongo.IndexModel{
-					Keys:    bson.M{"expire": 1},
-					Options: options.Index().SetExpireAfterSeconds(0),
-				},
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
-		go func() {
-			//view
-			defer wg.Done()
-			I := testclient.Database(d.DBName).Collection(d.CollNames["view"]).Indexes()
-			var err error
-			if _, err = I.CreateOne(indexctx, mongo.IndexModel{
-				Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "idx", Value: 1}},
-				Options: options.Index().SetUnique(true),
-			}); err != nil {
-				select {
-				case cherr <- err:
-				case <-indexctx.Done():
-				}
-				return
-			}
-		}()
+			}(initI)
+		}
 		wg.Wait()
 		cherr <- nil
 		err := <-cherr

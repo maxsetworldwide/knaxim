@@ -13,6 +13,42 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func initFileTagsIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["filetags"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys: bson.D{
+					bson.E{Key: "owner", Value: 1},
+					bson.E{Key: "word", Value: 1},
+					bson.E{Key: "file", Value: 1},
+				},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"word": 1},
+			},
+		})
+	return err
+}
+
+func initStoreTagIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["storetags"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys:    bson.D{bson.E{Key: "store", Value: 1}, bson.E{Key: "word", Value: 1}},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"word": 1},
+			},
+		})
+	return err
+}
+
 // Tagbase is a connection to the database with tag operations
 type Tagbase struct {
 	Database

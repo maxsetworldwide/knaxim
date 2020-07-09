@@ -1,14 +1,26 @@
 package mongo
 
 import (
+	"context"
+
 	"git.maxset.io/web/knaxim/pkg/srverror"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"git.maxset.io/web/knaxim/internal/database/types"
 	"git.maxset.io/web/knaxim/internal/database/types/errors"
 )
+
+func initContentIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["lines"]).Indexes()
+	_, err := I.CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "position", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	return err
+}
 
 // Contentbase database connection with content lines operations
 type Contentbase struct {
