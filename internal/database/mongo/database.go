@@ -6,6 +6,7 @@ import (
 
 	"git.maxset.io/web/knaxim/internal/database"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -41,10 +42,19 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 	if err != nil {
 		return err
 	}
-	if reset {
+	dbnames, err := testclient.ListDatabaseNames(ctx, bson.M{
+		"name": d.DBName,
+	})
+	if err != nil {
+		return err
+	}
+	switch {
+	case reset:
 		if err = testclient.Database(d.DBName).Drop(ctx); err != nil {
 			return err
 		}
+		fallthrough
+	case len(dbnames) == 0:
 		initIndexes := []func(context.Context, *Database, *mongo.Client) error{
 			initViewIndex,
 			initFileIndex,
@@ -81,7 +91,6 @@ func (d *Database) Init(ctx context.Context, reset bool) error {
 			return err
 		}
 	}
-
 	return testclient.Disconnect(ctx)
 }
 
