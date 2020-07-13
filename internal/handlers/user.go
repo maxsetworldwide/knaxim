@@ -29,7 +29,7 @@ func AttachUser(r *mux.Router) {
 	if !config.V.PrivateMode {
 		r.HandleFunc("", createUser).Methods("PUT")
 	}
-	r.HandleFunc("/admin", createAdmin).Methods("PUT")
+	// r.HandleFunc("/admin", createAdmin).Methods("PUT")
 	r.HandleFunc("/login", loginUser).Methods("POST")
 	r.HandleFunc("/reset", sendReset).Methods("PUT")
 	r.HandleFunc("/reset", updateCredentialsReset).Methods("POST")
