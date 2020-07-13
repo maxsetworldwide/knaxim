@@ -20,6 +20,7 @@
 package mongo
 
 import (
+	"context"
 	"time"
 
 	"git.maxset.io/web/knaxim/internal/database/types"
@@ -30,6 +31,25 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func initFileIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["file"]).Indexes()
+	_, err := I.CreateMany(
+		ctx,
+		[]mongo.IndexModel{
+			mongo.IndexModel{
+				Keys:    bson.M{"id": 1},
+				Options: options.Index().SetUnique(true),
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"name": 1},
+			},
+			mongo.IndexModel{
+				Keys: bson.M{"own": 1},
+			},
+		})
+	return err
+}
 
 // Filebase is a database connection with file operations
 type Filebase struct {

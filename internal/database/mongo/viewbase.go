@@ -20,6 +20,7 @@
 package mongo
 
 import (
+	"context"
 	"fmt"
 
 	"git.maxset.io/web/knaxim/internal/database/types"
@@ -29,6 +30,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func initViewIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["view"]).Indexes()
+	_, err := I.CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "idx", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	return err
+}
 
 // Viewbase is a connection to the database with pdf view operations
 type Viewbase struct {

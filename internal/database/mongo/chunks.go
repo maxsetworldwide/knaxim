@@ -20,10 +20,23 @@
 package mongo
 
 import (
+	"context"
 	"errors"
 
 	"git.maxset.io/web/knaxim/internal/database/types"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+func initChunkIndex(ctx context.Context, d *Database, client *mongo.Client) error {
+	I := client.Database(d.DBName).Collection(d.CollNames["chunk"]).Indexes()
+	_, err := I.CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{bson.E{Key: "id", Value: 1}, bson.E{Key: "idx", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	})
+	return err
+}
 
 type contentchunk struct {
 	ID    types.StoreID `bson:"id"`
