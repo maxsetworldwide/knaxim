@@ -50,62 +50,77 @@ func TestUserAPI(t *testing.T) {
 			t.Fatalf("non success status code: %+#v", res)
 		}
 	})
-	t.Run("CreateAdminWrongKey", func(t *testing.T) {
-		vals := map[string]string{
-			"name":     "testadmin",
-			"pass":     "testPassAdmin!1",
-			"email":    "admin@example.com",
-			"adminkey": "thisKeyShouldBeWrong",
+	// t.Run("CreateAdminWrongKey", func(t *testing.T) {
+	// 	vals := map[string]string{
+	// 		"name":     "testadmin",
+	// 		"pass":     "testPassAdmin!1",
+	// 		"email":    "admin@example.com",
+	// 		"adminkey": "thisKeyShouldBeWrong",
+	// 	}
+	// 	jsonbytes, _ := json.Marshal(vals)
+	// 	req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
+	// 	req.Header.Add("Content-Type", "application/json")
+	// 	res := httptest.NewRecorder()
+	// 	testRouter.ServeHTTP(res, req)
+	// 	if res.Code != 400 {
+	// 		t.Fatalf("expected non success status code: %+#v", res)
+	// 	}
+	// })
+	// t.Run("CreateAdmin", func(t *testing.T) {
+	// 	vals := map[string]string{
+	// 		"name":     "testadmin",
+	// 		"pass":     "testPassAdmin!1",
+	// 		"email":    "admin@example.com",
+	// 		"adminkey": config.V.AdminKey,
+	// 	}
+	// 	jsonbytes, _ := json.Marshal(vals)
+	// 	req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
+	// 	req.Header.Add("Content-Type", "application/json")
+	// 	res := httptest.NewRecorder()
+	// 	testRouter.ServeHTTP(res, req)
+	// 	if res.Code != 200 {
+	// 		t.Fatalf("non success status code: %+#v", res)
+	// 	}
+	// })
+	// t.Run("AdminLoginWrongPassword", func(t *testing.T) {
+	// 	ldata := map[string]string{
+	// 		"name": "testadmin",
+	// 		"pass": "wrongPassword",
+	// 	}
+	// 	loginbody, _ := json.Marshal(ldata)
+	// 	loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
+	// 	loginreq.Header.Add("Content-Type", "application/json")
+	// 	res := httptest.NewRecorder()
+	// 	testRouter.ServeHTTP(res, loginreq)
+	// 	if res.Code != 404 {
+	// 		t.Fatalf("expected non success status code: %+#v", res)
+	// 	}
+	// })
+	// t.Run("AdminLogin", func(t *testing.T) {
+	// 	ldata := map[string]string{
+	// 		"name": "testadmin",
+	// 		"pass": "testPassAdmin!1",
+	// 	}
+	// 	loginbody, _ := json.Marshal(ldata)
+	// 	loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
+	// 	loginreq.Header.Add("Content-Type", "application/json")
+	// 	res := httptest.NewRecorder()
+	// 	testRouter.ServeHTTP(res, loginreq)
+	// 	if res.Code != 200 {
+	// 		t.Fatalf("login non success status code: %+#v", res)
+	// 	}
+	// 	cookies = res.Result().Cookies()
+	// })
+	t.Run("Login", func(t *testing.T) {
+		logindata := map[string]string{
+			"name": "testuser",
+			"pass": "testPass1!",
 		}
-		jsonbytes, _ := json.Marshal(vals)
-		req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
+		body, _ := json.Marshal(logindata)
+		req, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(body))
 		req.Header.Add("Content-Type", "application/json")
 		res := httptest.NewRecorder()
 		testRouter.ServeHTTP(res, req)
-		if res.Code != 400 {
-			t.Fatalf("expected non success status code: %+#v", res)
-		}
-	})
-	t.Run("CreateAdmin", func(t *testing.T) {
-		vals := map[string]string{
-			"name":     "testadmin",
-			"pass":     "testPassAdmin!1",
-			"email":    "admin@example.com",
-			"adminkey": config.V.AdminKey,
-		}
-		jsonbytes, _ := json.Marshal(vals)
-		req, _ := http.NewRequest("PUT", "/api/user/admin", bytes.NewReader(jsonbytes))
-		req.Header.Add("Content-Type", "application/json")
-		res := httptest.NewRecorder()
-		testRouter.ServeHTTP(res, req)
-		if res.Code != 200 {
-			t.Fatalf("non success status code: %+#v", res)
-		}
-	})
-	t.Run("AdminLoginWrongPassword", func(t *testing.T) {
-		ldata := map[string]string{
-			"name": "testadmin",
-			"pass": "wrongPassword",
-		}
-		loginbody, _ := json.Marshal(ldata)
-		loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
-		loginreq.Header.Add("Content-Type", "application/json")
-		res := httptest.NewRecorder()
-		testRouter.ServeHTTP(res, loginreq)
-		if res.Code != 404 {
-			t.Fatalf("expected non success status code: %+#v", res)
-		}
-	})
-	t.Run("AdminLogin", func(t *testing.T) {
-		ldata := map[string]string{
-			"name": "testadmin",
-			"pass": "testPassAdmin!1",
-		}
-		loginbody, _ := json.Marshal(ldata)
-		loginreq, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(loginbody))
-		loginreq.Header.Add("Content-Type", "application/json")
-		res := httptest.NewRecorder()
-		testRouter.ServeHTTP(res, loginreq)
 		if res.Code != 200 {
 			t.Fatalf("login non success status code: %+#v", res)
 		}
@@ -185,8 +200,8 @@ func TestUserAPI(t *testing.T) {
 	})
 	t.Run("ChangePass", func(t *testing.T) {
 		vals := map[string]string{
-			"oldpass": "testPassAdmin!1",
-			"newpass": "testPassAdmin!2",
+			"oldpass": "testPass1!",
+			"newpass": "testPass2!",
 		}
 		jsonbytes, _ := json.Marshal(vals)
 		req, _ := http.NewRequest("POST", "/api/user/pass", bytes.NewReader(jsonbytes))
