@@ -18,6 +18,6 @@ FROM alpine:3.12 AS production
 COPY --from=backend /go/bin/knaximctl /bin/knaximctl
 COPY container.config.json /etc/knaxim/conf.json
 COPY resource /resource
-COPY dockerrun.sh /bin/run.sh
+COPY init.sh /bin/run.sh
 RUN chmod 0755 /bin/run.sh
 CMD ["/bin/run.sh"]
