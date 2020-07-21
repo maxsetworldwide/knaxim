@@ -125,6 +125,42 @@ type Configuration struct {
 	PrivateMode bool
 }
 
+// MarshalJSON extracts data fields from configuration to generate json configuration
+func (c Configuration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"Address": c.Address,
+		"static":  c.StaticPath,
+		"index":   c.IndexPath,
+		"Server": map[string]interface{}{
+			"Addr":              c.Server.Addr,
+			"ReadHeaderTimeout": c.Server.ReadHeaderTimeout,
+		},
+		"cert":                 c.Cert,
+		"close_time":           c.GracefulTimeout,
+		"basic_timeout":        c.BasicTimeout,
+		"file_timeout_rate":    c.FileTimeoutRate,
+		"max_file_timeout":     c.MaxFileTimeout,
+		"min_file_timeout":     c.MinFileTimeout,
+		"ActiveFileProcessing": c.ActiveFileProcessing,
+		"db_type":              c.DatabaseType,
+		"db":                   c.Database,
+		"db_clear":             c.DatabaseReset,
+		"tika":                 c.Tika,
+		"gotenpath":            c.GotenPath,
+		"filelimit":            c.FileLimit,
+		"total_free_space":     c.FreeSpace,
+		"maxfilecount":         c.MaxFileCount,
+		"AdminKey":             c.AdminKey,
+		"GuestUser":            c.GuestUser,
+		"SetupTimeout":         c.SetupTimeout,
+		"UserTimeouts":         c.UserTimeouts,
+		"Email":                c.Email,
+		"error_email":          c.ErrorEmail,
+		"log_path":             c.LogPath,
+		"PrivateMode":          c.PrivateMode,
+	})
+}
+
 // Raw represents a value not to be decoded. Primarily for data fields that can hold a variety of data types
 type Raw struct {
 	JSON json.RawMessage

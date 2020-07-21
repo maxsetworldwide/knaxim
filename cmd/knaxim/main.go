@@ -20,6 +20,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -68,7 +69,11 @@ func setup() {
 	if err := config.ParseConfig(*confPath); err != nil {
 		log.Fatalln("unable to parse config:", err)
 	}
-	log.Printf("Configuration: %+v", config.V)
+	configmsg, err := json.MarshalIndent(config.V, "", "\t")
+	if err != nil {
+		log.Fatalln("unable to marshal config: ", err)
+	}
+	log.Printf("Configuration:\n%s", configmsg)
 	setupctx, cancel := context.WithTimeout(context.Background(), config.V.SetupTimeout.Duration)
 	defer cancel()
 	if err := config.DB.Init(setupctx, config.V.DatabaseReset); err != nil {
