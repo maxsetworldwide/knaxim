@@ -14,15 +14,6 @@ services:
       - mongo
       - tika
       - gotenberg
-      - init
-    networks:
-      - app-plane
-  init:
-    build:
-      context: .
-      dockerfile: ./cmd/acronymloader/Dockerfile
-    depends_on:
-      - mongo
     networks:
       - app-plane
     environment:
@@ -30,7 +21,6 @@ services:
   mongo:
     image: mongo:latest
     restart: "unless-stopped"
-    # Warning !!! port is mapped to host for Testing only!
     ports:
       - "27017:27017"
     networks:

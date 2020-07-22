@@ -33,7 +33,6 @@ import (
 )
 
 var configPath string
-var skipConfirmation = flag.Bool("y", false, "Automattically confirm user action")
 
 func init() {
 	flag.StringVar(&configPath, "config", "", "specify config file path")
@@ -68,7 +67,6 @@ func setup(initdb bool) {
 }
 
 func main() {
-	//fmt.Printf("%v\n", flag.Args())
 	if flag.NArg() == 0 {
 		fmt.Println(helpstr)
 		return
@@ -138,7 +136,13 @@ func main() {
 			return
 		}
 		vPrintf("complete\n")
+	case "cleardb":
+		fallthrough
 	case "initdb":
+		vPrintf("reseting the database...\n")
+		initArgs := flag.NewFlagSet("knaximctl/initDB", flag.ExitOnError)
+		skipConfirmation := initArgs.Bool("y", false, "do not wait for confirmation before resetting the database. Useful for scripts. Warning using this flag will cause the tool to delete the database without confirmation from the user.")
+		initArgs.Parse(flag.Args()[1:])
 		if !*skipConfirmation {
 			fmt.Print("Confirm that you wish to initialize the database, warning this will delete any preexisting data (y or n): ")
 			var answer byte
@@ -155,6 +159,7 @@ func main() {
 		setup(true)
 		fmt.Println("Done.")
 	case "addacronyms":
+		vPrintf("Adding Acronyms to database\n")
 		setup(false)
 		if flag.NArg() < 2 {
 			fmt.Println(helpstrs["addacronyms"])

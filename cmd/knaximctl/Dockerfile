@@ -11,18 +11,13 @@ COPY pkg ./pkg
 COPY internal ./internal
 COPY cmd ./cmd
 
-RUN CGO_ENABLED=0 GOOS=linux go install -a -installsuffix cgo -v ./cmd/knaxim
 RUN CGO_ENABLED=0 GOOS=linux go install -a -installsuffix cgo -v ./cmd/knaximctl
-
-# TODO: add build stage for webfiles
 
 FROM alpine:3.12 AS production
 
-COPY --from=backend /go/bin/knaxim /bin/knaxim
 COPY --from=backend /go/bin/knaximctl /bin/knaximctl
 COPY container.config.json /etc/knaxim/conf.json
-
 COPY resource /resource
-COPY runknaxim.sh /bin/run.sh
+COPY init.sh /bin/run.sh
 RUN chmod 0755 /bin/run.sh
 CMD ["/bin/run.sh"]
