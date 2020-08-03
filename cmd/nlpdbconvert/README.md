@@ -34,3 +34,18 @@ Running `mongorestore` then `go test` should be sufficient to run the tests as i
 * `-testuri URI` to specify the mongo URI, defaults to `mongodb://localhost:27017`.
 * `-testoldname OldName` to specify a different test database, defaults to `conversionTestOldDB`.
 * `-noclean` to leave the new database up so it can be inspected manually. The new database will have a name in the form of a UUID, and the name will be logged when running `go test` with `-v`.
+
+
+Copyright August 2020 Maxset Worldwide Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
