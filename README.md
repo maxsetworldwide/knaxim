@@ -1,17 +1,18 @@
-# TODO: Merge apipaths.txt into this document.
-
 # Knaxim
 
 knaxim 'knowledge maxim' is a file management using a nlp organizational paradigm.
 
-combination of server/knaxim and maxsetdev/knaxim-client
-
+- [History](#history)
 - [Commands](#commands)
 - [API](#api)
     - [Status Codes](#status-codes)
     - [Response & Format](#response-and-format)
 - [Container Resources](#container-resources)
     - [Volumes](#volumes)
+
+# History
+
+[ToDo]
 
 # API
 - [Status Codes](#status-codes)
