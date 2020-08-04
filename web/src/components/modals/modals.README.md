@@ -6,3 +6,18 @@ Modals are components just like everything else, but there are a few things to k
 - Modals can be placed anywhere in your template. I personally have been placing them wherever their trigger button is.
 - When styling the modal, you can use the `content-class` and other attributes of `b-modal`, however, if your css is scoped in your component, you will need to make the class `::v-deep`. If you know of or find a better way to do this, update this!
 - I have also made a confirmation modal which utilizes the "old" method of dynamically creating a modal and mounting it via a global function call. This is not very extensible at the moment, so making more of these is not recommended. Note that these modals don't utilize props. They only utilize data.
+
+
+Copyright August 2020 Maxset Worldwide Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
