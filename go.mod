@@ -1,4 +1,4 @@
-module git.maxset.io/web/knaxim
+module github.com/maxsetworldwide/knaxim
 
 go 1.12
 
