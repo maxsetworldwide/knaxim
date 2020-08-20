@@ -2,6 +2,13 @@
 
 knaxim 'knowledge maxim' is a file management using a nlp organizational paradigm.
 
+Core code and all amazing capabilities written and created by Devon Call. For
+any questions please contact Devon Call at callbrentdevon@gmail.com. Based on
+the paper titled SKYSET available on ARXIV.org. In my humble opinion this is a
+wonderful multipurpose NLP and Universal Text and Media Management platform for
+almost every hardware device running Linux for purposes of saving time finding
+and sorting massive amounts of documents and metadata.
+
 - [History](#history)
 - [Commands](#commands)
 - [API](#api)
@@ -9,10 +16,6 @@ knaxim 'knowledge maxim' is a file management using a nlp organizational paradig
     - [Response & Format](#response-and-format)
 - [Container Resources](#container-resources)
     - [Volumes](#volumes)
-
-# History
-
-[ToDo]
 
 # API
 - [Status Codes](#status-codes)
