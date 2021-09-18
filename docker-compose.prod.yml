@@ -68,7 +68,6 @@ services:
 
 volumes:
   web:
-  mongo:
-  mongo-cfg:
+  
 networks:
   app-plane:
