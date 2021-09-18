@@ -18,6 +18,6 @@ sudo systemctl start docker
 sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 mkdir -p /var/lib/mongodb
-mkdir /var/lib/mongodb/db
-mkdir /var/lib/mongodb/configdb
+mkdir -p /var/lib/mongodb/db
+mkdir -p /var/lib/mongodb/configdb
 
