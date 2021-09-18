@@ -5,8 +5,6 @@ services:
       context: .
       dockerfile: ./cmd/knaxim/Dockerfile
     restart: "unless-stopped"
-    ports:
-      - "8005:80"
     expose:
       - "80"
     volumes:
@@ -23,8 +21,8 @@ services:
   mongo:
     image: mongo:latest
     restart: "unless-stopped"
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     networks:
       - app-plane
     volumes:
@@ -34,17 +32,16 @@ services:
     image: lexpredict/tika-server:latest
     restart: "unless-stopped"
     # Warning !!! port is mapped to host for Testing only!
-    ports:
-      - "9998:9998"
+    expose:
+      - "9998"
     networks:
       - app-plane
   gotenberg:
     # May need to scale: https://thecodingmachine.github.io/gotenberg/#scalability.strategies.scaling
     image: thecodingmachine/gotenberg:latest # Should version be latest or 6?
     restart: "unless-stopped"
-    # Is port entry needed?
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     networks:
       - app-plane
     environment:
