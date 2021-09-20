@@ -17,7 +17,7 @@ services:
     networks:
       - app-plane
     environment:
-      - KNAXIMINIT=restart
+      - KNAXIMINIT=start
   mongo:
     image: mongo:latest
     restart: "unless-stopped"
